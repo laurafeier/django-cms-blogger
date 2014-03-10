@@ -4,13 +4,13 @@ from cms_layouts.models import Layout
 from .models import Blog
 
 
-class LayoutForm(forms.ModelForm):
-    # layout_type = forms.ChoiceField(
-    #     label='Layout Type', choices=Blog.LAYOUTS_CHOICES.items())
+class BlogLayoutForm(forms.ModelForm):
+    layout_type = forms.ChoiceField(
+        label='Layout Type', choices=Blog.LAYOUTS_CHOICES.items())
 
     class Meta:
         model = Layout
-        # fields = ('from_page', )
+        fields = ('layout_type', 'from_page')
 
 
 class BlogForm(forms.ModelForm):
