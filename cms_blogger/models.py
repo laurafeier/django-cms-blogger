@@ -76,7 +76,7 @@ class AbstractBlog(models.Model):
         return title
 
     def __unicode__(self):
-        return "<%s - %s>" % (self.title, self.site.domain, )
+        return self.title
 
 
 class Blog(AbstractBlog):
@@ -129,7 +129,7 @@ class BioPage(models.Model):
         return self.blog.site
 
     def __unicode__(self):
-        return "<%s: %s>" % (self.author_name.title(), self.blog)
+        return self.author_name.title()
 
 
 class BlogEntry(models.Model):
@@ -183,9 +183,16 @@ class BlogEntry(models.Model):
     def site(self):
         return self.blog.site
 
+    def get_text_instance(self):
+        if not self.content or not self.content.get_plugins():
+            return None
+        first_plugin = self.content.get_plugins()[0]
+        plg_instance, plg_cls = first_plugin.get_plugin_instance()
+        return plg_instance
+
     class Meta:
         verbose_name = "blog entries"
         verbose_name_plural = 'blog entries'
 
     def __unicode__(self):
-        return "<%s: %s>" % (self.title, self.blog)
+        return self.title

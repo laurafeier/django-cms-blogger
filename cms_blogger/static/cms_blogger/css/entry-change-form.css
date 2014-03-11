@@ -1,0 +1,9 @@
+div .field-end_publication{
+    display: table-cell;
+}
+div .field-start_publication{
+    display: table-cell;
+}
+div .field-body label{
+    margin-bottom: 10px
+}
