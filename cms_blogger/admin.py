@@ -66,6 +66,14 @@ class CustomAdmin(admin.ModelAdmin):
             return self.add_form
         return super(CustomAdmin, self).get_form(request, obj, **kwargs)
 
+    def get_fieldsets(self, request, obj=None):
+        if hasattr(self, 'change_form_fieldsets'):
+            if obj and obj.pk:
+                self.fieldsets = self.change_form_fieldsets
+            else:
+                self.fieldsets = getattr(self, 'add_form_fieldsets', ())
+        return super(CustomAdmin, self).get_fieldsets(request, obj)
+
 
 class BlogAdmin(CustomAdmin):
     inlines = [BlogLayoutInline, ]
@@ -74,6 +82,15 @@ class BlogAdmin(CustomAdmin):
     search_fields = ['title', 'site__name']
     list_display = ('title', 'slug', 'site')
     readonly_in_change_form = ['site', ]
+    change_form_fieldsets = (
+        ('Blog Metadata', {
+            'fields': ['title', 'slug', 'site'],
+        }),
+        ('Categories', {
+            'fields': ['categories'],
+        }),
+    )
+    prepopulated_fields = {"slug": ("title",)}
 
     def get_formsets(self, request, obj=None):
         if obj and obj.pk:
@@ -146,13 +163,6 @@ class BlogEntryAdmin(PlaceholderAdmin, CustomAdmin):
         entry = BlogEntry.objects.get(content=plugin.placeholder)
         setattr(request, 'current_page', entry.get_layout().from_page)
         return super(BlogEntryAdmin, self).edit_plugin(request, plugin_id)
-
-    def get_fieldsets(self, request, obj=None):
-        if obj and obj.pk:
-            self.fieldsets = self.change_form_fieldsets
-        else:
-            self.fieldsets = ()
-        return super(BlogEntryAdmin, self).get_fieldsets(request, obj)
 
 
 admin.site.register(Blog, BlogAdmin)
