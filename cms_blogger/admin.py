@@ -7,7 +7,8 @@ from cms.admin.placeholderadmin import PlaceholderAdmin
 from cms.utils import get_language_from_request
 from .models import Blog, BlogEntry
 from .forms import (
-    BlogLayoutForm, BlogForm, BlogEntryAddForm, BlogEntryChangeForm)
+    BlogLayoutForm, BlogForm, BlogAddForm, BlogEntryAddForm,
+    BlogEntryChangeForm)
 from cms_layouts.models import Layout
 from cms.models import Page, CMSPlugin
 
@@ -47,27 +48,32 @@ class BlogLayoutInline(GenericTabularInline):
     layout_customization.allow_tags = True
 
 
-class BlogAdmin(admin.ModelAdmin):
+class CustomAdmin(admin.ModelAdmin):
+
+    def get_readonly_fields(self, request, obj=None):
+        if hasattr(self, 'readonly_in_change_form'):
+            readonly_fields = set(ro for ro in self.readonly_fields)
+            if obj and obj.pk:
+                readonly_fields |= set(self.readonly_in_change_form)
+            else:
+                for el in self.readonly_in_change_form:
+                    readonly_fields.discard(el)
+            self.readonly_fields = list(readonly_fields)
+        return super(CustomAdmin, self).get_readonly_fields(request, obj)
+
+    def get_form(self, request, obj=None, **kwargs):
+        if not obj and hasattr(self, 'add_form'):
+            return self.add_form
+        return super(CustomAdmin, self).get_form(request, obj, **kwargs)
+
+
+class BlogAdmin(CustomAdmin):
     inlines = [BlogLayoutInline, ]
+    add_form = BlogAddForm
     form = BlogForm
     search_fields = ['title', 'site__name']
     list_display = ('title', 'slug', 'site')
-
-    def get_readonly_fields(self, request, obj=None):
-        readonly_fields = set(ro for ro in self.readonly_fields)
-        if obj and obj.pk:
-            readonly_fields.add('site')
-        else:
-            readonly_fields.discard('site')
-        self.readonly_fields = list(readonly_fields)
-        return super(BlogAdmin, self).get_readonly_fields(request, obj)
-
-    def get_form(self, request, obj=None, **kwargs):
-        form = super(BlogAdmin, self).get_form(request, obj, **kwargs)
-        if obj and obj.pk:
-            return form
-        form.base_fields.pop('categories', None)
-        return form
+    readonly_in_change_form = ['site', ]
 
     def get_formsets(self, request, obj=None):
         if obj and obj.pk:
@@ -85,7 +91,9 @@ class BlogAdmin(admin.ModelAdmin):
         return result
 
 
-class BlogEntryAdmin(PlaceholderAdmin):
+class BlogEntryAdmin(PlaceholderAdmin, CustomAdmin):
+    list_display = ('__str__', 'slug', 'pretty_blog')
+    search_fields = ('title', 'blog__title')
     add_form_template = 'admin/cms_blogger/entry_add_form.html'
     add_form = BlogEntryAddForm
     form = BlogEntryChangeForm
@@ -99,18 +107,13 @@ class BlogEntryAdmin(PlaceholderAdmin):
                 'meta_keywords'],
         }),)
 
+    def pretty_blog(self, obj):
+        return "%s - %s" % (obj.blog, obj.blog.site)
+
     def get_form(self, request, obj=None, **kwargs):
         if not obj:
             return self.add_form
         return super(BlogEntryAdmin, self).get_form(request, obj, **kwargs)
-
-    def save_form(self, request, form, change):
-        obj = super(BlogEntryAdmin, self).save_form(request, form, change)
-        if not change:
-            # TODO get or create draft per user
-            obj.title = "DRAFT %d %s" % (request.user.id, obj.blog.title)
-            obj.slug = slugify(obj.title)
-        return obj
 
     def save_model(self, request, obj, form, change):
         super(BlogEntryAdmin, self).save_model(request, obj, form, change)
@@ -144,22 +147,13 @@ class BlogEntryAdmin(PlaceholderAdmin):
         setattr(request, 'current_page', entry.get_layout().from_page)
         return super(BlogEntryAdmin, self).edit_plugin(request, plugin_id)
 
-    def get_readonly_fields(self, request, obj=None):
-        readonly_fields = set(ro for ro in self.readonly_fields)
-        if obj and obj.pk:
-            readonly_fields |= set(self.readonly_in_change_form)
-        else:
-            for el in self.readonly_in_change_form:
-                readonly_fields.discard(el)
-        self.readonly_fields = list(readonly_fields)
-        return super(BlogEntryAdmin, self).get_readonly_fields(request, obj)
-
     def get_fieldsets(self, request, obj=None):
         if obj and obj.pk:
             self.fieldsets = self.change_form_fieldsets
         else:
             self.fieldsets = ()
         return super(BlogEntryAdmin, self).get_fieldsets(request, obj)
+
 
 admin.site.register(Blog, BlogAdmin)
 admin.site.register(BlogEntry, BlogEntryAdmin)

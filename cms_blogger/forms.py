@@ -2,6 +2,7 @@ from django import forms
 from django.core.exceptions import ValidationError
 from django.conf import settings
 from django.utils.datastructures import SortedDict
+from django.template.defaultfilters import slugify
 from cms.plugin_pool import plugin_pool
 from cms.plugins.text.settings import USE_TINYMCE
 from cms.plugins.text.widgets.wymeditor_widget import WYMEditor
@@ -24,7 +25,7 @@ class BlogForm(forms.ModelForm):
         model = Blog
 
     def clean_slug(self):
-        return self.cleaned_data.get('slug', '').lower()
+        return slugify(self.cleaned_data.get('slug', ''))
 
     def clean_site(self):
         site = self.cleaned_data.get('site')
@@ -36,6 +37,12 @@ class BlogForm(forms.ModelForm):
         except Exception as e:
             raise ValidationError("%s" % e)
         return site
+
+class BlogAddForm(BlogForm):
+
+    def __init__(self, *args, **kwargs):
+        self.base_fields.pop('categories', None)
+        super(BlogAddForm, self).__init__(*args, **kwargs)
 
 
 class BlogEntryAddForm(forms.ModelForm):
@@ -71,3 +78,6 @@ class BlogEntryChangeForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super(BlogEntryChangeForm, self).__init__(*args, **kwargs)
         self.fields['body'].initial = self.instance.get_text_instance().body
+
+    def clean_slug(self):
+        return slugify(self.cleaned_data.get('slug', ''))

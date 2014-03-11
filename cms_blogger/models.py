@@ -158,12 +158,11 @@ class BlogEntry(models.Model):
     meta_description = models.TextField(_('Description Meta'), blank=True)
     meta_keywords = models.CharField(_('Keywords Meta'), blank=True, max_length=120)
 
-
     def get_layout(self):
         return self.blog.get_entry_layout()
 
     def get_title_obj(self):
-        title = BlogTitle()
+        title = LayoutTitle()
         title.page_title = self.title
         title.slug = self.slug
         title.meta_description = self.meta_description
@@ -177,7 +176,6 @@ class BlogEntry(models.Model):
             'month': self.creation_date.strftime('%m'),
             'day': self.creation_date.strftime('%d'),
             'entry_slug': self.slug})
-
 
     @property
     def site(self):
@@ -193,6 +191,7 @@ class BlogEntry(models.Model):
     class Meta:
         verbose_name = "blog entries"
         verbose_name_plural = 'blog entries'
+        unique_together = (("slug", "creation_date", "blog"),)
 
     def __unicode__(self):
-        return self.title
+        return self.title or "<Draft Empty Blog Entry>"

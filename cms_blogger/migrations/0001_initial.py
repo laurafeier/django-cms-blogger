@@ -47,8 +47,14 @@ class Migration(SchemaMigration):
         ))
         db.send_create_signal('cms_blogger', ['BlogEntry'])
 
+        # Adding unique constraint on 'BlogEntry', fields ['slug', 'creation_date', 'blog']
+        db.create_unique('cms_blogger_blogentry', ['slug', 'creation_date', 'blog_id'])
+
 
     def backwards(self, orm):
+        # Removing unique constraint on 'BlogEntry', fields ['slug', 'creation_date', 'blog']
+        db.delete_unique('cms_blogger_blogentry', ['slug', 'creation_date', 'blog_id'])
+
         # Removing unique constraint on 'Blog', fields ['slug', 'site']
         db.delete_unique('cms_blogger_blog', ['slug', 'site_id'])
 
@@ -84,7 +90,7 @@ class Migration(SchemaMigration):
             'title': ('django.db.models.fields.CharField', [], {'max_length': '255'})
         },
         'cms_blogger.blogentry': {
-            'Meta': {'object_name': 'BlogEntry'},
+            'Meta': {'unique_together': "(('slug', 'creation_date', 'blog'),)", 'object_name': 'BlogEntry'},
             'abstract': ('django.db.models.fields.TextField', [], {'max_length': '400', 'blank': 'True'}),
             'author': ('django.db.models.fields.CharField', [], {'max_length': '255'}),
             'blog': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['cms_blogger.Blog']"}),
