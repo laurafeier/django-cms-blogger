@@ -42,6 +42,7 @@ class BlogAddForm(BlogForm):
 
     def __init__(self, *args, **kwargs):
         self.base_fields.pop('categories', None)
+        self.base_fields.pop('entries_slugs_with_date', None)
         super(BlogAddForm, self).__init__(*args, **kwargs)
 
 

@@ -83,7 +83,7 @@ class BlogAdmin(CustomAdmin):
     readonly_in_change_form = ['site', ]
     change_form_fieldsets = (
         ('Blog Metadata', {
-            'fields': ['title', 'slug', 'site'],
+            'fields': ['title', 'slug', 'site', 'entries_slugs_with_date'],
         }),
         ('Categories', {
             'fields': ['categories'],
@@ -113,6 +113,15 @@ class BlogEntryAdmin(CustomAdmin, PlaceholderAdmin):
                 'end_publication', 'is_published', 'meta_description',
                 'meta_keywords'],
         }),)
+
+    def get_readonly_fields(self, request, obj=None):
+        readonly_fields = set(ro for ro in self.readonly_fields)
+        if obj and obj.blog and obj.blog.entries_slugs_with_date:
+            readonly_fields.add('creation_date')
+        else:
+            readonly_fields.discard('creation_date')
+        self.readonly_fields = list(readonly_fields)
+        return super(BlogEntryAdmin, self).get_readonly_fields(request, obj)
 
     def add_plugin(self, request):
         # sice there is no placeholder displayed in the change form, plugins

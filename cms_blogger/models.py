@@ -3,6 +3,7 @@ from django.utils.translation import ugettext_lazy as _
 from django.utils import timezone
 from django.contrib.sites.models import Site
 from django.contrib.contenttypes.models import ContentType
+from django.contrib.contenttypes.generic import GenericRelation
 from django.utils.translation import get_language
 from django.db.models import signals
 from django.dispatch import receiver
@@ -24,12 +25,19 @@ class AbstractBlog(models.Model):
             'http://www.sitename.org/blog/BLOG-SLUG/blog-entry-name'))
     site = models.ForeignKey(
         Site, help_text=_('The site for this blog.'), verbose_name=_("site"))
+    entries_slugs_with_date = models.BooleanField(
+        help_text=_('Select this option if you want your entries to use '
+                    'creation date with their slugs; '
+                    'http://www.sitename.org/blog/BLOG-SLUG'
+                    '/YYYY/MM/DD/blog-entry-name'))
     categories = TagField(
         null=True, blank=True,
         help_text='Use this admin to create a list of categories to organize'
                   ' content in the blog. Each category will create a '
                   'collection page for posts tagged with one of these '
                   'categories.')
+
+    layouts = GenericRelation(Layout)
 
     class Meta:
         unique_together = (("slug", "site"),)
@@ -49,13 +57,6 @@ class AbstractBlog(models.Model):
 
     def layout_type_display(self, layout_type):
         return AbstractBlog.LAYOUTS_CHOICES[layout_type]
-
-    @property
-    def layouts(self):
-        if not self.pk:
-            return Layout.objects.get_empty_query_set()
-        ct = ContentType.objects.get_for_model(self._meta.concrete_model)
-        return Layout.objects.filter(object_id=self.id, content_type=ct)
 
     def _get_layout_for_type(self, layout_type):
         try:
@@ -190,11 +191,17 @@ class BlogEntry(models.Model):
 
     @models.permalink
     def get_absolute_url(self):
-        return ('cms_blogger.views.entry_page', (), {
-            'year': self.creation_date.year,
-            'month': self.creation_date.strftime('%m'),
-            'day': self.creation_date.strftime('%d'),
-            'entry_slug': self.slug})
+        if self.blog.entries_slugs_with_date:
+            return ('cms_blogger.views.entry_page', (), {
+                'blog_slug': self.blog.slug,
+                'year': self.creation_date.year,
+                'month': self.creation_date.strftime('%m'),
+                'day': self.creation_date.strftime('%d'),
+                'entry_slug': self.slug})
+        return ('cms_blogger.views.entry_or_bio_page', (), {
+            'blog_slug': self.blog.slug,
+            'slug': self.slug})
+
 
     @property
     def site(self):
@@ -227,7 +234,7 @@ class BlogEntry(models.Model):
 @receiver(signals.post_save, sender=Blog)
 def autogenerate_layout_from_home_page(instance, **kwargs):
     is_new_blog = kwargs.get('created')
-    if is_new_blog and not instance.layouts:
+    if is_new_blog and instance.layouts.count() == 0:
         from cms.models import Page
         # this might fail but there's already validation in the blog add form
         cms_home_page = Page.objects.get_home(instance.site)

@@ -14,6 +14,7 @@ class Migration(SchemaMigration):
             ('title', self.gf('django.db.models.fields.CharField')(max_length=255)),
             ('slug', self.gf('django.db.models.fields.SlugField')(max_length=50)),
             ('site', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['sites.Site'])),
+            ('entries_slugs_with_date', self.gf('django.db.models.fields.BooleanField')(default=False)),
             ('categories', self.gf('tagging.fields.TagField')(null=True)),
         ))
         db.send_create_signal('cms_blogger', ['Blog'])
@@ -85,6 +86,7 @@ class Migration(SchemaMigration):
         'cms_blogger.blog': {
             'Meta': {'unique_together': "(('slug', 'site'),)", 'object_name': 'Blog'},
             'categories': ('tagging.fields.TagField', [], {'null': 'True'}),
+            'entries_slugs_with_date': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'site': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['sites.Site']"}),
             'slug': ('django.db.models.fields.SlugField', [], {'max_length': '50'}),
