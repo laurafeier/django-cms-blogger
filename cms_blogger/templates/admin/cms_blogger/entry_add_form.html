@@ -3,12 +3,20 @@
 
 {% block submit_buttons_bottom %}
 <script type="text/javascript">
-django.jQuery('#id_blog').change(function() {
-    $ = django.jQuery
-    var form = $(this).closest('form');
-    var input = $("<input>").attr("type", "hidden").attr("name", "_continue").val("Save");
-    form.append($(input));
-    form.submit();
-});
+django.jQuery(document).ready(function() {
+
+    django.jQuery('#id_blog').change(function() {
+        $ = django.jQuery
+        var form = $(this).closest('form');
+        var input = $("<input>").attr("type", "hidden").attr("name", "_continue").val("Save");
+        form.append($(input));
+        form.submit();
+    });
+
+    var blog_choices_select = django.jQuery('#id_blog option[value!=""]');
+    if(blog_choices_select.length == 1){
+        blog_choices_select.first().attr('selected', 'selected').trigger('change');
+    }
+})
 </script>
 {% endblock %}
