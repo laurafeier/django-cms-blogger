@@ -20,7 +20,7 @@ setup(
     version='0.1',
     description='Django CMS blogging tool that lets users create blogs '
                 'using layouts created from CMS pages.',
-    long_description = open(README, 'r').read(),
+    long_description=open(README, 'r').read(),
     author='Laura Feier',
     author_email='feierlaura10@gmail.com',
     packages=find_packages(),

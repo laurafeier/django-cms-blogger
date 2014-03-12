@@ -2,9 +2,7 @@ from django.contrib import admin
 from django.contrib.contenttypes.generic import (
     GenericTabularInline, BaseGenericInlineFormSet)
 from django.shortcuts import get_object_or_404
-from django.template.defaultfilters import slugify
 from cms.admin.placeholderadmin import PlaceholderAdmin
-from cms.utils import get_language_from_request
 from .models import Blog, BlogEntry
 from .forms import (
     BlogLayoutForm, BlogForm, BlogAddForm, BlogEntryAddForm,
@@ -35,8 +33,9 @@ class BlogLayoutInline(GenericTabularInline):
             available_pages = Page.objects.on_site(obj.site)
         else:
             available_pages = Page.objects.get_empty_query_set()
-        formSet.form.base_fields['from_page'].queryset = available_pages
-        formSet.form.base_fields['from_page'].widget.can_add_related = False
+        page_field = formSet.form.base_fields['from_page']
+        page_field.queryset = available_pages
+        page_field.widget.can_add_related = False
         return formSet
 
     def layout_customization(self, obj):
@@ -93,28 +92,19 @@ class BlogAdmin(CustomAdmin):
     prepopulated_fields = {"slug": ("title",)}
 
     def get_formsets(self, request, obj=None):
+        # don't show layout inline in add view
         if obj and obj.pk:
             return super(BlogAdmin, self).get_formsets(request, obj)
         return []
 
-    def save_model(self, request, obj, form, change):
-        result = super(BlogAdmin, self).save_model(request, obj, form, change)
-        if not obj.layouts:
-            from cms.models import Page
-            cms_home_page = Page.objects.get_home(obj.site)
-            default_layout = Layout.objects.create(
-                from_page=cms_home_page, layout_type=Blog.ALL,
-                content_object=obj)
-        return result
 
-
-class BlogEntryAdmin(PlaceholderAdmin, CustomAdmin):
-    list_display = ('__str__', 'slug', 'pretty_blog')
+class BlogEntryAdmin(CustomAdmin, PlaceholderAdmin):
+    list_display = ('__str__', 'slug', 'blog')
     search_fields = ('title', 'blog__title')
     add_form_template = 'admin/cms_blogger/entry_add_form.html'
     add_form = BlogEntryAddForm
     form = BlogEntryChangeForm
-    readonly_in_change_form = ['blog',]
+    readonly_in_change_form = ['blog', ]
     change_form_fieldsets = (
         (None, {
             'fields': [
@@ -123,27 +113,6 @@ class BlogEntryAdmin(PlaceholderAdmin, CustomAdmin):
                 'end_publication', 'is_published', 'meta_description',
                 'meta_keywords'],
         }),)
-
-    def pretty_blog(self, obj):
-        return "%s - %s" % (obj.blog, obj.blog.site)
-
-    def get_form(self, request, obj=None, **kwargs):
-        if not obj:
-            return self.add_form
-        return super(BlogEntryAdmin, self).get_form(request, obj, **kwargs)
-
-    def save_model(self, request, obj, form, change):
-        super(BlogEntryAdmin, self).save_model(request, obj, form, change)
-        if not change:
-            if obj.content and obj.content.pk and not obj.content.get_plugins():
-                from cms.api import add_plugin
-                language = get_language_from_request(request)
-                add_plugin(obj.content, 'TextPlugin', 'en',
-                           body='Add text HERE!!')
-        else:
-            text_plugin = obj.get_text_instance()
-            text_plugin.body = form.cleaned_data['body']
-            text_plugin.save()
 
     def add_plugin(self, request):
         # sice there is no placeholder displayed in the change form, plugins

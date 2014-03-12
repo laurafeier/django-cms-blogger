@@ -44,16 +44,17 @@ class Migration(SchemaMigration):
             ('is_published', self.gf('django.db.models.fields.BooleanField')(default=False)),
             ('meta_description', self.gf('django.db.models.fields.TextField')(blank=True)),
             ('meta_keywords', self.gf('django.db.models.fields.CharField')(max_length=120, blank=True)),
+            ('draft_id', self.gf('django.db.models.fields.IntegerField')(null=True, blank=True)),
         ))
         db.send_create_signal('cms_blogger', ['BlogEntry'])
 
-        # Adding unique constraint on 'BlogEntry', fields ['slug', 'creation_date', 'blog']
-        db.create_unique('cms_blogger_blogentry', ['slug', 'creation_date', 'blog_id'])
+        # Adding unique constraint on 'BlogEntry', fields ['slug', 'blog', 'draft_id']
+        db.create_unique('cms_blogger_blogentry', ['slug', 'blog_id', 'draft_id'])
 
 
     def backwards(self, orm):
-        # Removing unique constraint on 'BlogEntry', fields ['slug', 'creation_date', 'blog']
-        db.delete_unique('cms_blogger_blogentry', ['slug', 'creation_date', 'blog_id'])
+        # Removing unique constraint on 'BlogEntry', fields ['slug', 'blog', 'draft_id']
+        db.delete_unique('cms_blogger_blogentry', ['slug', 'blog_id', 'draft_id'])
 
         # Removing unique constraint on 'Blog', fields ['slug', 'site']
         db.delete_unique('cms_blogger_blog', ['slug', 'site_id'])
@@ -90,12 +91,13 @@ class Migration(SchemaMigration):
             'title': ('django.db.models.fields.CharField', [], {'max_length': '255'})
         },
         'cms_blogger.blogentry': {
-            'Meta': {'unique_together': "(('slug', 'creation_date', 'blog'),)", 'object_name': 'BlogEntry'},
+            'Meta': {'unique_together': "(('slug', 'blog', 'draft_id'),)", 'object_name': 'BlogEntry'},
             'abstract': ('django.db.models.fields.TextField', [], {'max_length': '400', 'blank': 'True'}),
             'author': ('django.db.models.fields.CharField', [], {'max_length': '255'}),
             'blog': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['cms_blogger.Blog']"}),
             'content': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'article_entry'", 'null': 'True', 'to': "orm['cms.Placeholder']"}),
             'creation_date': ('django.db.models.fields.DateField', [], {'default': 'datetime.datetime.now', 'db_index': 'True'}),
+            'draft_id': ('django.db.models.fields.IntegerField', [], {'null': 'True', 'blank': 'True'}),
             'end_publication': ('django.db.models.fields.DateTimeField', [], {'db_index': 'True', 'null': 'True', 'blank': 'True'}),
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'is_published': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),

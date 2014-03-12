@@ -1,7 +1,6 @@
 from django import forms
 from django.core.exceptions import ValidationError
 from django.conf import settings
-from django.utils.datastructures import SortedDict
 from django.template.defaultfilters import slugify
 from cms.plugin_pool import plugin_pool
 from cms.plugins.text.settings import USE_TINYMCE
@@ -38,6 +37,7 @@ class BlogForm(forms.ModelForm):
             raise ValidationError("%s" % e)
         return site
 
+
 class BlogAddForm(BlogForm):
 
     def __init__(self, *args, **kwargs):
@@ -64,8 +64,9 @@ def _get_text_editor_widget():
 
 
 class BlogEntryChangeForm(forms.ModelForm):
-    body = forms.CharField(label='Blog Entry',
-        widget=_get_text_editor_widget(), required=True)
+    body = forms.CharField(
+        label='Blog Entry', required=True,
+        widget=_get_text_editor_widget())
 
     class Media:
         js = ("cms_blogger/js/jQuery-patch.js",)
@@ -77,7 +78,23 @@ class BlogEntryChangeForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super(BlogEntryChangeForm, self).__init__(*args, **kwargs)
-        self.fields['body'].initial = self.instance.get_text_instance().body
+        self.fields['body'].initial = self.instance.body
+        # prepare for save
+        self.instance.draft_id = None
+
+    def clean_body(self):
+        body = self.cleaned_data.get('body')
+        self.instance.body = body
+        return body
 
     def clean_slug(self):
-        return slugify(self.cleaned_data.get('slug', ''))
+        slug = slugify(self.cleaned_data.get('slug', ''))
+        blog_id = self.instance.blog_id
+        try:
+            BlogEntry.objects.exclude(pk=self.instance.pk).get(
+                slug=slug, blog=blog_id, draft_id=None)
+        except BlogEntry.DoesNotExist:
+            pass
+        else:
+            raise ValidationError("Entry with the same slug already exists.")
+        return slug
