@@ -115,6 +115,15 @@ class BlogEntryAdmin(CustomAdmin, PlaceholderAdmin):
                 'meta_keywords'],
         }),)
 
+
+
+    def get_prepopulated_fields(self, request, obj=None):
+        if obj and obj.pk:
+            self.prepopulated_fields = {"slug": ("title",)}
+        else:
+            self.prepopulated_fields = {}
+        return super(BlogEntryAdmin, self).get_prepopulated_fields(request, obj)
+
     def get_readonly_fields(self, request, obj=None):
         readonly_fields = set(ro for ro in self.readonly_fields)
         if obj and obj.blog and not obj.blog.entries_slugs_with_date:
