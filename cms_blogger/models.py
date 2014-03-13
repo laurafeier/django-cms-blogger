@@ -202,7 +202,6 @@ class BlogEntry(models.Model):
             'blog_slug': self.blog.slug,
             'slug': self.slug})
 
-
     @property
     def site(self):
         return self.blog.site

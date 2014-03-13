@@ -102,6 +102,7 @@ class BlogEntryAdmin(CustomAdmin, PlaceholderAdmin):
     list_display = ('__str__', 'slug', 'blog')
     search_fields = ('title', 'blog__title')
     add_form_template = 'admin/cms_blogger/entry_add_form.html'
+    change_form_template = 'admin/cms_blogger/entry_change_form.html'
     add_form = BlogEntryAddForm
     form = BlogEntryChangeForm
     readonly_in_change_form = ['blog', ]
@@ -116,7 +117,7 @@ class BlogEntryAdmin(CustomAdmin, PlaceholderAdmin):
 
     def get_readonly_fields(self, request, obj=None):
         readonly_fields = set(ro for ro in self.readonly_fields)
-        if obj and obj.blog and obj.blog.entries_slugs_with_date:
+        if obj and obj.blog and not obj.blog.entries_slugs_with_date:
             readonly_fields.add('creation_date')
         else:
             readonly_fields.discard('creation_date')
