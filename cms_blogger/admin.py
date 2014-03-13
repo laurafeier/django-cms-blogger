@@ -1,6 +1,7 @@
 from django.contrib import admin
 from django.contrib.contenttypes.generic import (
     GenericTabularInline, BaseGenericInlineFormSet)
+from django.core.urlresolvers import reverse
 from django.shortcuts import get_object_or_404
 from cms.admin.placeholderadmin import PlaceholderAdmin
 from .models import Blog, BlogEntry
@@ -40,8 +41,12 @@ class BlogLayoutInline(GenericTabularInline):
 
     def layout_customization(self, obj):
         if obj.id:
-            opts = self.model._meta
-            return "<a href='#' target='_blank'>Customize Layout content</a>"
+            pattern = 'admin:%s_%s_change' % (obj._meta.app_label,
+                                              obj._meta.module_name)
+            url = reverse(pattern,  args=[obj.id])
+            url_tag = ("<a href='%s' target='_blank'>Customize Layout "
+                       "content</a>" % url)
+            return url_tag
         else:
             return "(save to customize layout)"
     layout_customization.allow_tags = True
