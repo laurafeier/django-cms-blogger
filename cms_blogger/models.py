@@ -26,10 +26,12 @@ class AbstractBlog(models.Model):
     site = models.ForeignKey(
         Site, help_text=_('The site for this blog.'), verbose_name=_("site"))
     entries_slugs_with_date = models.BooleanField(
-        help_text=_('Select this option if you want your entries to use '
-                    'creation date with their slugs; '
-                    'http://www.sitename.org/blog/BLOG-SLUG'
-                    '/YYYY/MM/DD/blog-entry-name'))
+        _("Insert dates in blog entry URLs"),
+        help_text=_(
+            'Blogs that are frequently update, especially news-themed blogs,'
+            ' often insert dates /2014/03/15/ into their URLs for blog '
+            'entries. To insert the date into all blog entries for this blog,'
+            ' select ON.\n'))
     categories = TagField(
         null=True, blank=True,
         help_text='Use this admin to create a list of categories to organize'
@@ -85,14 +87,31 @@ class AbstractBlog(models.Model):
 
 
 class Blog(AbstractBlog):
+    # definitions of the blog model features go here
+
+    # social media integration
+    enable_facebook = models.BooleanField(default=True,
+        help_text=_('TODO help_text'))
+    enable_twitter = models.BooleanField(default=True,
+        help_text=_('TODO help_text'))
+    # disqus integration
+    enable_disqus = models.BooleanField(default=True,
+        help_text=_('TODO help_text'))
+    disqus_shortname = models.CharField(
+        max_length=255, blank=True, null=True,
+        help_text=_('TODO help_text'))
+    disable_disqus_for_mobile = models.BooleanField(
+        _('DISABLE Disqus commenting at mobile breakpoints (<480)'),
+        default=False, help_text=_(
+            'Select ON to hide comments on phone sized mobile devices.'))
 
     def get_layout(self):
-        return self.blog.get_landing_layout()
+        return self.get_landing_layout()
 
     @property
     def content(self):
         # some content
-        return Placeholder.objects.get(id=65613)
+        return Placeholder()
 
     @models.permalink
     def get_absolute_url(self):
@@ -111,7 +130,7 @@ class BioPage(models.Model):
     @property
     def content(self):
         # some content
-        return Placeholder.objects.get(id=65623)
+        return Placeholder()
 
     @property
     def slug(self):
@@ -180,6 +199,19 @@ class BlogEntry(models.Model):
 
     def get_layout(self):
         return self.blog.get_entry_layout()
+
+    def extra_html_content(self):
+        extra_html_content = ['']
+        if self.blog and self.blog.enable_disqus:
+            from django.template import Context
+            from django.template.loader import get_template
+            context = Context({
+                'disqus_shortname': self.blog.disqus_shortname,
+                'disable_on_mobile': self.blog.disable_disqus_for_mobile
+                })
+            thread_template = get_template("cms_blogger/disqus_thread.html")
+            extra_html_content.append(thread_template.render(context))
+        return ''.join(extra_html_content)
 
     def get_title_obj(self):
         title = LayoutTitle()

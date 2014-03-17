@@ -37,13 +37,19 @@ class BlogForm(forms.ModelForm):
             raise ValidationError("%s" % e)
         return site
 
+    def clean_disqus_shortname(self):
+        disqus_enabled = self.cleaned_data.get('enable_disqus', None)
+        disqus_shortname = self.cleaned_data.get('disqus_shortname', None)
+        if disqus_enabled and not disqus_shortname:
+            raise ValidationError('Disqus shortname required.')
+        return disqus_shortname
+
 
 class BlogAddForm(BlogForm):
 
-    def __init__(self, *args, **kwargs):
-        self.base_fields.pop('categories', None)
-        self.base_fields.pop('entries_slugs_with_date', None)
-        super(BlogAddForm, self).__init__(*args, **kwargs)
+    class Meta:
+        model = Blog
+        fields = ('site', 'title', 'slug', )
 
 
 class BlogEntryAddForm(forms.ModelForm):

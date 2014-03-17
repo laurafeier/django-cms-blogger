@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django.db import models
 from django.contrib.contenttypes.generic import (
     GenericTabularInline, BaseGenericInlineFormSet)
 from django.core.urlresolvers import reverse
@@ -8,11 +9,13 @@ from .models import Blog, BlogEntry
 from .forms import (
     BlogLayoutForm, BlogForm, BlogAddForm, BlogEntryAddForm,
     BlogEntryChangeForm)
+from .widgets import ToggleWidget
 from cms_layouts.models import Layout
 from cms.models import Page, CMSPlugin
 
 
 class BlogLayoutInlineFormSet(BaseGenericInlineFormSet):
+
 
     def clean(self):
         # TODO validation for layout types
@@ -26,6 +29,7 @@ class BlogLayoutInline(GenericTabularInline):
     extra = 0
     max_num = len(Blog.LAYOUTS_CHOICES.items())
     formset = BlogLayoutInlineFormSet
+    description = 'TODO help text'
 
     def get_formset(self, request, obj=None, **kwargs):
         formSet = super(BlogLayoutInline, self).get_formset(
@@ -83,15 +87,32 @@ class BlogAdmin(CustomAdmin):
     inlines = [BlogLayoutInline, ]
     add_form = BlogAddForm
     form = BlogForm
+    change_form_template = 'admin/cms_blogger/blog_change_form.html'
     search_fields = ['title', 'site__name']
     list_display = ('title', 'slug', 'site')
     readonly_in_change_form = ['site', ]
+    formfield_overrides = {
+        models.BooleanField: {'widget': ToggleWidget}
+    }
     change_form_fieldsets = (
-        ('Blog Metadata', {
-            'fields': ['title', 'slug', 'site', 'entries_slugs_with_date'],
+        ('Blog setup', {
+            'fields': ['site', 'title', 'slug', 'entries_slugs_with_date'],
+            'classes': ('extrapretty', ),
+            'description': 'TODO description'
         }),
         ('Categories', {
             'fields': ['categories'],
+            'classes': ('extrapretty', ),
+        }),
+        ('Social media and commentig integration', {
+            'fields': ['enable_facebook', 'enable_twitter'],
+            'classes': ('collapse', 'extrapretty', )
+        }),
+        ('Disqus commentig integration', {
+            'fields': ['enable_disqus', 'disqus_shortname',
+                       'disable_disqus_for_mobile'],
+            'classes': ('wide', 'extrapretty', ),
+            'description': 'TODO description'
         }),
     )
     prepopulated_fields = {"slug": ("title",)}
@@ -114,13 +135,11 @@ class BlogEntryAdmin(CustomAdmin, PlaceholderAdmin):
     change_form_fieldsets = (
         (None, {
             'fields': [
-                'title', 'blog', 'slug', 'creation_date', 'author',
-                'abstract', 'body', 'start_publication',
-                'end_publication', 'is_published', 'meta_description',
+                'title', 'blog', ('slug', 'creation_date'), 'author',
+                'abstract', 'body', ('is_published', 'start_publication',
+                'end_publication'), 'meta_description',
                 'meta_keywords'],
         }),)
-
-
 
     def get_prepopulated_fields(self, request, obj=None):
         if obj and obj.pk:
