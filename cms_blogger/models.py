@@ -57,24 +57,14 @@ class AbstractBlog(models.Model):
         ENTRY_PAGE: 'Blog Entry Page',
         BIO_PAGE: 'Blog Bio Page'}
 
-    def layout_type_display(self, layout_type):
-        return AbstractBlog.LAYOUTS_CHOICES[layout_type]
-
-    def _get_layout_for_type(self, layout_type):
+    def get_layout_for(self, layout_type):
+        if layout_type not in AbstractBlog.LAYOUTS_CHOICES.keys():
+            raise NotImplementedError
         try:
             return self.layouts.filter(layout_type__in=[
                 layout_type, AbstractBlog.ALL]).order_by('-layout_type')[0]
         except IndexError:
             return None
-
-    def get_landing_layout(self):
-        return self._get_layout_for_type(AbstractBlog.LANDING_PAGE)
-
-    def get_bio_layout(self):
-        return self._get_layout_for_type(AbstractBlog.BIO_PAGE)
-
-    def get_entry_layout(self):
-        return self._get_layout_for_type(AbstractBlog.ENTRY_PAGE)
 
     def get_title_obj(self):
         title = LayoutTitle()
@@ -105,32 +95,103 @@ class Blog(AbstractBlog):
         default=False, help_text=_(
             'Select ON to hide comments on phone sized mobile devices.'))
 
+    @property
+    def header(self):
+        return Placeholder()
+
+
+class BlogRelatedPage(models.Model):
+
+    uses_layout_type = None
+    blog = models.ForeignKey(Blog)
+
     def get_layout(self):
-        return self.get_landing_layout()
+        return self.blog.get_layout_for(self.uses_layout_type)
+
+    class Meta:
+        abstract = True
 
     @property
-    def content(self):
-        # some content
-        return Placeholder()
+    def header(self):
+        return self.blog.header
+
+    @property
+    def site(self):
+        return self.blog.site
+
+    def get_title_obj(self):
+        raise NotImplementedError
+
+    def get_absolute_url(self):
+        raise NotImplementedError
+
+
+class ModelWithCMSContent(models.Model):
+    """
+    Adds a placeholder field for a model.
+    It automatically generates an text plugin for the content the first time
+        the model gets saved.(This is done through the post_save signal)
+    """
+    content = PlaceholderField('content')
+
+    def __init__(self, *args, **kwargs):
+        super(ModelWithCMSContent, self).__init__(*args, **kwargs)
+        self._set_initial_body()
+
+    def _set_initial_body(self):
+        if self.pk:
+            plugin = self.get_attached_plugin()
+            self.body = getattr(plugin, 'body')
+        else:
+            self.body = 'Sample content'
+
+    def save_body(self):
+        plugin = self.get_attached_plugin()
+        if plugin.body != self.body:
+            plugin.body = self.body
+            plugin.save()
+
+    @property
+    def body(self):
+        return self._body
+
+    @body.setter
+    def body(self, value):
+        self._body = value
+
+    def get_attached_plugin(self):
+        if not self.content or not self.content.get_plugins():
+            from cms.api import add_plugin
+            new_plugin = add_plugin(
+                self.content, 'TextPlugin', get_language(), body=self.body)
+            return new_plugin
+        first_plugin = self.content.get_plugins()[0]
+        plg_instance, plg_cls = first_plugin.get_plugin_instance()
+        return plg_instance
+
+    class Meta:
+        abstract = True
+
+
+class LandingPage(BlogRelatedPage):
+
+    uses_layout_type = Blog.LANDING_PAGE
 
     @models.permalink
     def get_absolute_url(self):
         return ('cms_blogger.views.landing_page', (), {
-            'blog_slug': self.slug})
+            'blog_slug': self.blog.slug})
 
 
-class BioPage(models.Model):
+class BioPage(BlogRelatedPage):
 
-    blog = models.ForeignKey(Blog)
+    uses_layout_type = Blog.BIO_PAGE
     author_name = models.CharField(max_length=255)
-
-    def get_layout(self):
-        return self.blog.get_bio_layout()
 
     @property
     def content(self):
-        # some content
-        return Placeholder()
+        #TODO
+        return self.blog.content
 
     @property
     def slug(self):
@@ -148,17 +209,14 @@ class BioPage(models.Model):
         title.slug = self.slug
         return title
 
-    @property
-    def site(self):
-        return self.blog.site
-
     def __unicode__(self):
         return self.author_name.title()
 
 
-class BlogEntry(models.Model):
+class BlogEntryPage(BlogRelatedPage, ModelWithCMSContent):
 
-    blog = models.ForeignKey(Blog)
+    uses_layout_type = Blog.ENTRY_PAGE
+
     title = models.CharField(_('title'), max_length=120)
     slug = models.SlugField(
         _('slug'), max_length=255,
@@ -167,9 +225,10 @@ class BlogEntry(models.Model):
         _('creation date'),
         db_index=True, default=timezone.now,
         help_text=_("Used to build the entry's URL."))
+
     author = models.CharField(_('Blog Author'), max_length=255)
     abstract = models.TextField(_('Abstract'), blank=True, max_length=400)
-    content = PlaceholderField('content', related_name='article_entry')
+
     start_publication = models.DateTimeField(
         _('start publication'),
         db_index=True, blank=True, null=True,
@@ -179,10 +238,10 @@ class BlogEntry(models.Model):
         db_index=True, blank=True, null=True,
         help_text=_('End date of publication.'))
     is_published = models.BooleanField(_('is published'), blank=True)
+
     meta_description = models.TextField(_('Description Meta'), blank=True)
     meta_keywords = models.CharField(
         _('Keywords Meta'), blank=True, max_length=120)
-
     # needed to take care of autogenerated entries with empty title and slug.
     #   a user may have multiple new draft entries which means a user should
     #   be able to have more entries with empty slug and title. In order for
@@ -192,26 +251,18 @@ class BlogEntry(models.Model):
     #   least once
     draft_id = models.IntegerField(blank=True, null=True)
 
-    def __init__(self, *args, **kwargs):
-        super(BlogEntry, self).__init__(*args, **kwargs)
-        text_plugin = self.get_text_instance()
-        self.body = getattr(text_plugin, 'body', 'Sample entry text')
-
-    def get_layout(self):
-        return self.blog.get_entry_layout()
-
     def extra_html_content(self):
-        extra_html_content = ['']
-        if self.blog and self.blog.enable_disqus:
-            from django.template import Context
-            from django.template.loader import get_template
-            context = Context({
-                'disqus_shortname': self.blog.disqus_shortname,
-                'disable_on_mobile': self.blog.disable_disqus_for_mobile
-                })
-            thread_template = get_template("cms_blogger/disqus_thread.html")
-            extra_html_content.append(thread_template.render(context))
-        return ''.join(extra_html_content)
+        if not self.blog or not self.blog.enable_disqus:
+            return ''
+
+        from django.template import Context
+        from django.template.loader import get_template
+        context = Context({
+            'disqus_shortname': self.blog.disqus_shortname,
+            'disable_on_mobile': self.blog.disable_disqus_for_mobile
+            })
+        thread_template = get_template("cms_blogger/disqus_thread.html")
+        return thread_template.render(context)
 
     def get_title_obj(self):
         title = LayoutTitle()
@@ -234,25 +285,6 @@ class BlogEntry(models.Model):
             'blog_slug': self.blog.slug,
             'slug': self.slug})
 
-    @property
-    def site(self):
-        return self.blog.site
-
-    @property
-    def body(self):
-        return self._body
-
-    @body.setter
-    def body(self, value):
-        self._body = value
-
-    def get_text_instance(self):
-        if not self.content or not self.content.get_plugins():
-            return None
-        first_plugin = self.content.get_plugins()[0]
-        plg_instance, plg_cls = first_plugin.get_plugin_instance()
-        return plg_instance
-
     class Meta:
         verbose_name = "blog entries"
         verbose_name_plural = 'blog entries'
@@ -262,33 +294,15 @@ class BlogEntry(models.Model):
         return self.title or "<Draft Empty Blog Entry>"
 
 
-@receiver(signals.post_save, sender=Blog)
-def autogenerate_layout_from_home_page(instance, **kwargs):
-    is_new_blog = kwargs.get('created')
-    if is_new_blog and instance.layouts.count() == 0:
-        from cms.models import Page
-        # this might fail but there's already validation in the blog add form
-        cms_home_page = Page.objects.get_home(instance.site)
-        default_layout = Layout.objects.create(
-            from_page=cms_home_page, layout_type=Blog.ALL,
-            content_object=instance)
-
-
-@receiver(signals.post_save, sender=BlogEntry)
-def autogenerate_draft_if_new(instance, **kwargs):
+@receiver(signals.post_save, sender=BlogEntryPage)
+def mark_draft(instance, **kwargs):
     is_new_entry = kwargs.get('created')
-    placeholder = instance.content
-    entry_as_queryset = BlogEntry.objects.filter(pk=instance.pk)
+    entry_as_queryset = BlogEntryPage.objects.filter(pk=instance.pk)
     if is_new_entry:
         # set draft_id with the same value as the pk to make sure it's unique
         instance.draft_id = instance.pk
         # do an update in order to not trigger save signals
         entry_as_queryset.update(draft_id=instance.pk)
-        # add text plugin to the placeholder
-        if placeholder and not placeholder.get_plugins():
-            from cms.api import add_plugin
-            add_plugin(placeholder, 'TextPlugin', get_language(),
-                       body=instance.body)
     else:
         # do not mark it as not draft until it has a slug and a blog assigned
         # draft_id is set to None in the change form also but it's good to
@@ -296,8 +310,9 @@ def autogenerate_draft_if_new(instance, **kwargs):
         #   programmatically will behave in the same way
         if instance.draft_id and instance.slug and instance.blog_id:
             entry_as_queryset.update(draft_id=None)
-        # save text plugin body
-        text_plugin = instance.get_text_instance()
-        if text_plugin:
-            text_plugin.body = instance.body
-            text_plugin.save()
+
+
+@receiver(signals.post_save, sender=BlogEntryPage)
+def attach_plugin_to_body(instance, **kwargs):
+    instance.save_body()
+

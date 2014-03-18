@@ -27,6 +27,13 @@ class Migration(SchemaMigration):
         # Adding unique constraint on 'Blog', fields ['slug', 'site']
         db.create_unique('cms_blogger_blog', ['slug', 'site_id'])
 
+        # Adding model 'LandingPage'
+        db.create_table('cms_blogger_landingpage', (
+            ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
+            ('blog', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['cms_blogger.Blog'])),
+        ))
+        db.send_create_signal('cms_blogger', ['LandingPage'])
+
         # Adding model 'BioPage'
         db.create_table('cms_blogger_biopage', (
             ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
@@ -35,16 +42,16 @@ class Migration(SchemaMigration):
         ))
         db.send_create_signal('cms_blogger', ['BioPage'])
 
-        # Adding model 'BlogEntry'
-        db.create_table('cms_blogger_blogentry', (
+        # Adding model 'BlogEntryPage'
+        db.create_table('cms_blogger_blogentrypage', (
             ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
             ('blog', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['cms_blogger.Blog'])),
+            ('content', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['cms.Placeholder'], null=True)),
             ('title', self.gf('django.db.models.fields.CharField')(max_length=120)),
             ('slug', self.gf('django.db.models.fields.SlugField')(max_length=255)),
             ('creation_date', self.gf('django.db.models.fields.DateField')(default=datetime.datetime.now, db_index=True)),
             ('author', self.gf('django.db.models.fields.CharField')(max_length=255)),
             ('abstract', self.gf('django.db.models.fields.TextField')(max_length=400, blank=True)),
-            ('content', self.gf('django.db.models.fields.related.ForeignKey')(related_name='article_entry', null=True, to=orm['cms.Placeholder'])),
             ('start_publication', self.gf('django.db.models.fields.DateTimeField')(db_index=True, null=True, blank=True)),
             ('end_publication', self.gf('django.db.models.fields.DateTimeField')(db_index=True, null=True, blank=True)),
             ('is_published', self.gf('django.db.models.fields.BooleanField')(default=False)),
@@ -52,15 +59,15 @@ class Migration(SchemaMigration):
             ('meta_keywords', self.gf('django.db.models.fields.CharField')(max_length=120, blank=True)),
             ('draft_id', self.gf('django.db.models.fields.IntegerField')(null=True, blank=True)),
         ))
-        db.send_create_signal('cms_blogger', ['BlogEntry'])
+        db.send_create_signal('cms_blogger', ['BlogEntryPage'])
 
-        # Adding unique constraint on 'BlogEntry', fields ['slug', 'blog', 'draft_id']
-        db.create_unique('cms_blogger_blogentry', ['slug', 'blog_id', 'draft_id'])
+        # Adding unique constraint on 'BlogEntryPage', fields ['slug', 'blog', 'draft_id']
+        db.create_unique('cms_blogger_blogentrypage', ['slug', 'blog_id', 'draft_id'])
 
 
     def backwards(self, orm):
-        # Removing unique constraint on 'BlogEntry', fields ['slug', 'blog', 'draft_id']
-        db.delete_unique('cms_blogger_blogentry', ['slug', 'blog_id', 'draft_id'])
+        # Removing unique constraint on 'BlogEntryPage', fields ['slug', 'blog', 'draft_id']
+        db.delete_unique('cms_blogger_blogentrypage', ['slug', 'blog_id', 'draft_id'])
 
         # Removing unique constraint on 'Blog', fields ['slug', 'site']
         db.delete_unique('cms_blogger_blog', ['slug', 'site_id'])
@@ -68,11 +75,14 @@ class Migration(SchemaMigration):
         # Deleting model 'Blog'
         db.delete_table('cms_blogger_blog')
 
+        # Deleting model 'LandingPage'
+        db.delete_table('cms_blogger_landingpage')
+
         # Deleting model 'BioPage'
         db.delete_table('cms_blogger_biopage')
 
-        # Deleting model 'BlogEntry'
-        db.delete_table('cms_blogger_blogentry')
+        # Deleting model 'BlogEntryPage'
+        db.delete_table('cms_blogger_blogentrypage')
 
 
     models = {
@@ -131,12 +141,12 @@ class Migration(SchemaMigration):
             'slug': ('django.db.models.fields.SlugField', [], {'max_length': '50'}),
             'title': ('django.db.models.fields.CharField', [], {'max_length': '255'})
         },
-        'cms_blogger.blogentry': {
-            'Meta': {'unique_together': "(('slug', 'blog', 'draft_id'),)", 'object_name': 'BlogEntry'},
+        'cms_blogger.blogentrypage': {
+            'Meta': {'unique_together': "(('slug', 'blog', 'draft_id'),)", 'object_name': 'BlogEntryPage'},
             'abstract': ('django.db.models.fields.TextField', [], {'max_length': '400', 'blank': 'True'}),
             'author': ('django.db.models.fields.CharField', [], {'max_length': '255'}),
             'blog': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['cms_blogger.Blog']"}),
-            'content': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'article_entry'", 'null': 'True', 'to': "orm['cms.Placeholder']"}),
+            'content': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['cms.Placeholder']", 'null': 'True'}),
             'creation_date': ('django.db.models.fields.DateField', [], {'default': 'datetime.datetime.now', 'db_index': 'True'}),
             'draft_id': ('django.db.models.fields.IntegerField', [], {'null': 'True', 'blank': 'True'}),
             'end_publication': ('django.db.models.fields.DateTimeField', [], {'db_index': 'True', 'null': 'True', 'blank': 'True'}),
@@ -147,6 +157,11 @@ class Migration(SchemaMigration):
             'slug': ('django.db.models.fields.SlugField', [], {'max_length': '255'}),
             'start_publication': ('django.db.models.fields.DateTimeField', [], {'db_index': 'True', 'null': 'True', 'blank': 'True'}),
             'title': ('django.db.models.fields.CharField', [], {'max_length': '120'})
+        },
+        'cms_blogger.landingpage': {
+            'Meta': {'object_name': 'LandingPage'},
+            'blog': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['cms_blogger.Blog']"}),
+            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'})
         },
         'cms_layouts.layout': {
             'Meta': {'object_name': 'Layout'},

@@ -5,10 +5,10 @@ from django.contrib.contenttypes.generic import (
 from django.core.urlresolvers import reverse
 from django.shortcuts import get_object_or_404
 from cms.admin.placeholderadmin import PlaceholderAdmin
-from .models import Blog, BlogEntry
+from .models import Blog, BlogEntryPage
 from .forms import (
-    BlogLayoutForm, BlogForm, BlogAddForm, BlogEntryAddForm,
-    BlogEntryChangeForm)
+    BlogLayoutForm, BlogForm, BlogAddForm, BlogEntryPageAddForm,
+    BlogEntryPageChangeForm)
 from .widgets import ToggleWidget
 from cms_layouts.models import Layout
 from cms.models import Page, CMSPlugin
@@ -34,6 +34,12 @@ class BlogLayoutInline(GenericTabularInline):
     def get_formset(self, request, obj=None, **kwargs):
         formSet = super(BlogLayoutInline, self).get_formset(
             request, obj, **kwargs)
+        # show one form if there are no layouts
+        if obj and obj.layouts.count() == 0:
+            formSet.extra = 1
+        else:
+            formSet.extra = 0
+
         if obj:
             available_pages = Page.objects.on_site(obj.site)
         else:
@@ -124,13 +130,13 @@ class BlogAdmin(CustomAdmin):
         return []
 
 
-class BlogEntryAdmin(CustomAdmin, PlaceholderAdmin):
+class BlogEntryPageAdmin(CustomAdmin, PlaceholderAdmin):
     list_display = ('__str__', 'slug', 'blog')
     search_fields = ('title', 'blog__title')
     add_form_template = 'admin/cms_blogger/entry_add_form.html'
     change_form_template = 'admin/cms_blogger/entry_change_form.html'
-    add_form = BlogEntryAddForm
-    form = BlogEntryChangeForm
+    add_form = BlogEntryPageAddForm
+    form = BlogEntryPageChangeForm
     readonly_in_change_form = ['blog', ]
     change_form_fieldsets = (
         (None, {
@@ -146,7 +152,7 @@ class BlogEntryAdmin(CustomAdmin, PlaceholderAdmin):
             self.prepopulated_fields = {"slug": ("title",)}
         else:
             self.prepopulated_fields = {}
-        return super(BlogEntryAdmin, self).get_prepopulated_fields(request, obj)
+        return super(BlogEntryPageAdmin, self).get_prepopulated_fields(request, obj)
 
     def get_readonly_fields(self, request, obj=None):
         readonly_fields = set(ro for ro in self.readonly_fields)
@@ -155,7 +161,7 @@ class BlogEntryAdmin(CustomAdmin, PlaceholderAdmin):
         else:
             readonly_fields.discard('creation_date')
         self.readonly_fields = list(readonly_fields)
-        return super(BlogEntryAdmin, self).get_readonly_fields(request, obj)
+        return super(BlogEntryPageAdmin, self).get_readonly_fields(request, obj)
 
     def add_plugin(self, request):
         # sice there is no placeholder displayed in the change form, plugins
@@ -165,17 +171,17 @@ class BlogEntryAdmin(CustomAdmin, PlaceholderAdmin):
         #   admin add_plugin view to work
         post_data = request.POST.copy()
         if 'parent_id' in post_data:
-            entry = get_object_or_404(BlogEntry, pk=post_data['parent_id'])
-            post_data['parent_id'] = entry.get_text_instance().pk
+            entry = get_object_or_404(BlogEntryPage, pk=post_data['parent_id'])
+            post_data['parent_id'] = entry.get_attached_plugin().pk
             request.POST = post_data
-        return super(BlogEntryAdmin, self).add_plugin(request)
+        return super(BlogEntryPageAdmin, self).add_plugin(request)
 
     def edit_plugin(self, request, plugin_id):
         plugin = get_object_or_404(CMSPlugin, pk=plugin_id)
-        entry = BlogEntry.objects.get(content=plugin.placeholder)
+        entry = BlogEntryPage.objects.get(content=plugin.placeholder)
         setattr(request, 'current_page', entry.get_layout().from_page)
-        return super(BlogEntryAdmin, self).edit_plugin(request, plugin_id)
+        return super(BlogEntryPageAdmin, self).edit_plugin(request, plugin_id)
 
 
 admin.site.register(Blog, BlogAdmin)
-admin.site.register(BlogEntry, BlogEntryAdmin)
+admin.site.register(BlogEntryPage, BlogEntryPageAdmin)

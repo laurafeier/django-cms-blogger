@@ -1,5 +1,22 @@
 {% extends 'admin/change_form.html' %}
 
+{% block form_top %}
+{% if adminform.form.missing_layouts %}
+<style type="text/css">
+.errornote li {
+    padding: inherit;
+    margin: inherit;
+    border: inherit;
+    color: inherit;
+    background: inherit;
+}
+</style>
+<div class='errornote' style='font-weight:bold;'>
+    {{adminform.form.missing_layouts}}
+</div>
+{% endif %}
+{% endblock %}
+
 {% block inline_field_sets %}
 {% for inline_admin_formset in inline_admin_formsets %}
     {% if inline_admin_formset.opts.description %}

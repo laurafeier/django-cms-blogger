@@ -2,11 +2,12 @@ from django import forms
 from django.core.exceptions import ValidationError
 from django.conf import settings
 from django.template.defaultfilters import slugify
+from django.forms.util import ErrorList
 from cms.plugin_pool import plugin_pool
 from cms.plugins.text.settings import USE_TINYMCE
 from cms.plugins.text.widgets.wymeditor_widget import WYMEditor
 from cms_layouts.models import Layout
-from .models import Blog, BlogEntry
+from .models import Blog, BlogEntryPage
 
 
 class BlogLayoutForm(forms.ModelForm):
@@ -22,6 +23,16 @@ class BlogForm(forms.ModelForm):
 
     class Meta:
         model = Blog
+
+    def __init__(self, *args, **kwargs):
+        super(BlogForm, self).__init__(*args, **kwargs)
+        if (not self.is_bound and self.instance and
+                self.instance.layouts.count() == 0):
+            self.missing_layouts = ErrorList([
+                "This blog is missing a layout. "
+                "Add one in the Layouts section."])
+        else:
+            self.missing_layouts = False
 
     def clean_slug(self):
         return slugify(self.cleaned_data.get('slug', ''))
@@ -52,10 +63,10 @@ class BlogAddForm(BlogForm):
         fields = ('site', 'title', 'slug', )
 
 
-class BlogEntryAddForm(forms.ModelForm):
+class BlogEntryPageAddForm(forms.ModelForm):
 
     class Meta:
-        model = BlogEntry
+        model = BlogEntryPage
         fields = ('blog', )
 
 
@@ -70,7 +81,7 @@ def _get_text_editor_widget():
         return WYMEditor(installed_plugins=plugins)
 
 
-class BlogEntryChangeForm(forms.ModelForm):
+class BlogEntryPageChangeForm(forms.ModelForm):
     body = forms.CharField(
         label='Blog Entry', required=True,
         widget=_get_text_editor_widget())
@@ -80,11 +91,11 @@ class BlogEntryChangeForm(forms.ModelForm):
         css = {"all": ("cms_blogger/css/entry-change-form.css", )}
 
     class Meta:
-        model = BlogEntry
+        model = BlogEntryPage
         exclude = ('content', )
 
     def __init__(self, *args, **kwargs):
-        super(BlogEntryChangeForm, self).__init__(*args, **kwargs)
+        super(BlogEntryPageChangeForm, self).__init__(*args, **kwargs)
         self.fields['body'].initial = self.instance.body
         # prepare for save
         self.instance.draft_id = None
@@ -98,9 +109,9 @@ class BlogEntryChangeForm(forms.ModelForm):
         slug = slugify(self.cleaned_data.get('slug', ''))
         blog_id = self.instance.blog_id
         try:
-            BlogEntry.objects.exclude(pk=self.instance.pk).get(
+            BlogEntryPage.objects.exclude(pk=self.instance.pk).get(
                 slug=slug, blog=blog_id, draft_id=None)
-        except BlogEntry.DoesNotExist:
+        except BlogEntryPage.DoesNotExist:
             pass
         else:
             raise ValidationError("Entry with the same slug already exists.")
