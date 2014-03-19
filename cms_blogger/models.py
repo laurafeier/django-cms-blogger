@@ -16,28 +16,17 @@ class AbstractBlog(models.Model):
 
     title = models.CharField(
         _("title"), max_length=255, blank=False, null=False,
-        help_text=_('This is the name of the blog; it can be modified later; '
-                    'it is only exposed to site viewers as part of the Page'
-                    ' Title/SEO fields.'))
+        help_text=_('Blog Title'))
     slug = models.SlugField(
-        _("slug"), help_text=_(
-            'This is the URL scheme where the blog will reside; '
-            'http://www.sitename.org/blog/BLOG-SLUG/blog-entry-name'))
+        _("slug"), help_text=_('Blog Slug'))
     site = models.ForeignKey(
-        Site, help_text=_('The site for this blog.'), verbose_name=_("site"))
+        Site, help_text=_('Blog Site'), verbose_name=_("site"))
     entries_slugs_with_date = models.BooleanField(
-        _("Insert dates in blog entry URLs"),
-        help_text=_(
-            'Blogs that are frequently update, especially news-themed blogs,'
-            ' often insert dates /2014/03/15/ into their URLs for blog '
-            'entries. To insert the date into all blog entries for this blog,'
-            ' select ON.\n'))
+        _("Dates in blog entry URLs"),
+        help_text=_('Blog Entries With Slugs'))
     categories = TagField(
         null=True, blank=True,
-        help_text='Use this admin to create a list of categories to organize'
-                  ' content in the blog. Each category will create a '
-                  'collection page for posts tagged with one of these '
-                  'categories.')
+        help_text=_('Blog Categories'))
 
     layouts = GenericRelation(Layout)
 
@@ -80,19 +69,25 @@ class Blog(AbstractBlog):
     # definitions of the blog model features go here
 
     # social media integration
-    enable_facebook = models.BooleanField(default=True,
-        help_text=_('TODO help_text'))
-    enable_twitter = models.BooleanField(default=True,
-        help_text=_('TODO help_text'))
+    enable_facebook = models.BooleanField(
+        _('Facebook integration'), default=True,
+        help_text=_('Blog Facebook integration'))
+    enable_twitter = models.BooleanField(
+        _('Twitter integration'), default=True,
+        help_text=_('Blog Twitter integration'))
+    email_account_link = models.BooleanField(
+        default=True,
+        help_text=_('Blog Email integration'))
+
     # disqus integration
-    enable_disqus = models.BooleanField(default=True,
-        help_text=_('TODO help_text'))
+    enable_disqus = models.BooleanField(default=True)
     disqus_shortname = models.CharField(
         max_length=255, blank=True, null=True,
-        help_text=_('TODO help_text'))
+        help_text=_('Blog Disqus Shortname'))
     disable_disqus_for_mobile = models.BooleanField(
         _('DISABLE Disqus commenting at mobile breakpoints (<480)'),
-        default=False, help_text=_(
+        default=False,
+        help_text=_(
             'Select ON to hide comments on phone sized mobile devices.'))
 
     @property

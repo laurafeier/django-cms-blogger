@@ -23,7 +23,7 @@
         <script type="text/javascript">
         django.jQuery(document).ready(function() {
             var for_module_id = '{{ inline_admin_formset.formset.prefix }}-group';
-            var description = '{{inline_admin_formset.opts.description}}';
+            var description = '{{inline_admin_formset.opts.description|safe}}';
             var style = "padding-bottom: 10px; border-bottom: 1px solid #eee;"
             django.jQuery("#" + for_module_id + " h2").first().after(
                 "<div class='description' style='" + style + "'>" + description + "</div>" );

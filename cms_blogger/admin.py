@@ -1,5 +1,6 @@
 from django.contrib import admin
 from django.db import models
+from django.utils.translation import ugettext_lazy as _
 from django.contrib.contenttypes.generic import (
     GenericTabularInline, BaseGenericInlineFormSet)
 from django.core.urlresolvers import reverse
@@ -29,7 +30,9 @@ class BlogLayoutInline(GenericTabularInline):
     extra = 0
     max_num = len(Blog.LAYOUTS_CHOICES.items())
     formset = BlogLayoutInlineFormSet
-    description = 'TODO help text'
+    description = _("Blog Layouts description")
+    verbose_name = _("Blog Layouts Chooser")
+    verbose_name_plural = _("Blog Layouts Chooser")
 
     def get_formset(self, request, obj=None, **kwargs):
         formSet = super(BlogLayoutInline, self).get_formset(
@@ -104,21 +107,22 @@ class BlogAdmin(CustomAdmin):
         ('Blog setup', {
             'fields': ['site', 'title', 'slug', 'entries_slugs_with_date'],
             'classes': ('extrapretty', ),
-            'description': 'TODO description'
+            'description': _('Blog Setup Description')
         }),
         ('Categories', {
             'fields': ['categories'],
             'classes': ('extrapretty', ),
         }),
         ('Social media and commentig integration', {
-            'fields': ['enable_facebook', 'enable_twitter'],
+            'fields': ['enable_facebook', 'enable_twitter',
+                       'email_account_link'],
             'classes': ('collapse', 'extrapretty', )
         }),
         ('Disqus commentig integration', {
             'fields': ['enable_disqus', 'disqus_shortname',
                        'disable_disqus_for_mobile'],
             'classes': ('wide', 'extrapretty', ),
-            'description': 'TODO description'
+            'description': _('Blog Disqus commentig Description')
         }),
     )
     prepopulated_fields = {"slug": ("title",)}

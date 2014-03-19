@@ -26,7 +26,7 @@ class BlogForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super(BlogForm, self).__init__(*args, **kwargs)
-        if (not self.is_bound and self.instance and
+        if (not self.is_bound and self.instance and self.instance.pk and
                 self.instance.layouts.count() == 0):
             self.missing_layouts = ErrorList([
                 "This blog is missing a layout. "
