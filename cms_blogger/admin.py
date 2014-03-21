@@ -4,12 +4,16 @@ from django.utils.translation import ugettext_lazy as _
 from django.contrib.contenttypes.generic import (
     GenericTabularInline, BaseGenericInlineFormSet)
 from django.core.urlresolvers import reverse
-from django.shortcuts import get_object_or_404
+from django.conf.urls.defaults import patterns, url
+from django.conf import settings
+from django.shortcuts import get_object_or_404, render_to_response
+from django.template.context import RequestContext
 from cms.admin.placeholderadmin import PlaceholderAdmin
 from .models import Blog, BlogEntryPage
 from .forms import (
     BlogLayoutForm, BlogForm, BlogAddForm, BlogEntryPageAddForm,
     BlogEntryPageChangeForm)
+from .blog_changelist import BlogChangeList
 from .widgets import ToggleWidget
 from cms_layouts.models import Layout
 from cms.models import Page, CMSPlugin
@@ -57,7 +61,7 @@ class BlogLayoutInline(GenericTabularInline):
             pattern = 'admin:%s_%s_change' % (obj._meta.app_label,
                                               obj._meta.module_name)
             url = reverse(pattern,  args=[obj.id])
-            url_tag = ("<a href='%s' target='_blank'>Customize Layout "
+            url_tag = ("<a href='%s'>Customize Layout "
                        "content</a>" % url)
             return url_tag
         else:
@@ -66,6 +70,11 @@ class BlogLayoutInline(GenericTabularInline):
 
 
 class CustomAdmin(admin.ModelAdmin):
+
+    def get_changelist(self, request, **kwargs):
+        if hasattr(self, 'custom_changelist_class'):
+            return self.custom_changelist_class
+        return super(CustomAdmin, self).get_changelist(request, **kwargs)
 
     def get_readonly_fields(self, request, obj=None):
         if hasattr(self, 'readonly_in_change_form'):
@@ -93,24 +102,25 @@ class CustomAdmin(admin.ModelAdmin):
 
 
 class BlogAdmin(CustomAdmin):
+    custom_changelist_class = BlogChangeList
     inlines = [BlogLayoutInline, ]
     add_form = BlogAddForm
     form = BlogForm
-    change_form_template = 'admin/cms_blogger/blog_change_form.html'
     search_fields = ['title', 'site__name']
     list_display = ('title', 'slug', 'site')
-    readonly_in_change_form = ['site', ]
+    readonly_in_change_form = ['site', 'location_in_navigation']
     formfield_overrides = {
         models.BooleanField: {'widget': ToggleWidget}
     }
     change_form_fieldsets = (
         ('Blog setup', {
-            'fields': ['site', 'title', 'slug', 'entries_slugs_with_date'],
+            'fields': ['site', 'title', 'slug', 'entries_slugs_with_date',
+                       'categories'],
             'classes': ('extrapretty', ),
             'description': _('Blog Setup Description')
         }),
-        ('Categories', {
-            'fields': ['categories'],
+        ('Navigation', {
+            'fields': ['location_in_navigation'],
             'classes': ('extrapretty', ),
         }),
         ('Social media and commentig integration', {
@@ -121,11 +131,20 @@ class BlogAdmin(CustomAdmin):
         ('Disqus commentig integration', {
             'fields': ['enable_disqus', 'disqus_shortname',
                        'disable_disqus_for_mobile'],
-            'classes': ('wide', 'extrapretty', ),
+            'classes': ('wide', 'extrapretty', 'collapse'),
             'description': _('Blog Disqus commentig Description')
         }),
     )
     prepopulated_fields = {"slug": ("title",)}
+
+    def location_in_navigation(self, obj):
+        if obj.id:
+            url = reverse('admin:cms_blogger-navigation-tool', args=[obj.id])
+            return ("<a href='%s' onclick='return showAddAnotherPopup(this);'"
+                    ">Select Location</a>" % url)
+        else:
+            return "(save first)"
+    location_in_navigation.allow_tags = True
 
     def get_formsets(self, request, obj=None):
         # don't show layout inline in add view
@@ -133,12 +152,26 @@ class BlogAdmin(CustomAdmin):
             return super(BlogAdmin, self).get_formsets(request, obj)
         return []
 
+    def get_urls(self):
+        urls = super(BlogAdmin, self).get_urls()
+        url_patterns = patterns('',
+            url(r'^(?P<blog_id>\d+)/navigation_tool/$',
+                self.admin_site.admin_view(self.navigation_tool),
+                name='cms_blogger-navigation-tool'), )
+        url_patterns.extend(urls)
+        return url_patterns
+
+    def navigation_tool(self, request, blog_id):
+        blog = get_object_or_404(Blog, id=blog_id)
+        context = RequestContext(request)
+        return render_to_response(
+            'admin/cms_blogger/blog/navigation.html', context)
+
 
 class BlogEntryPageAdmin(CustomAdmin, PlaceholderAdmin):
     list_display = ('__str__', 'slug', 'blog')
     search_fields = ('title', 'blog__title')
-    add_form_template = 'admin/cms_blogger/entry_add_form.html'
-    change_form_template = 'admin/cms_blogger/entry_change_form.html'
+    add_form_template = 'admin/cms_blogger/blogentrypage/add_form.html'
     add_form = BlogEntryPageAddForm
     form = BlogEntryPageChangeForm
     readonly_in_change_form = ['blog', ]

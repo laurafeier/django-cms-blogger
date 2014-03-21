@@ -19,7 +19,7 @@ class Migration(SchemaMigration):
             ('enable_facebook', self.gf('django.db.models.fields.BooleanField')(default=True)),
             ('enable_twitter', self.gf('django.db.models.fields.BooleanField')(default=True)),
             ('email_account_link', self.gf('django.db.models.fields.BooleanField')(default=True)),
-            ('enable_disqus', self.gf('django.db.models.fields.BooleanField')(default=True)),
+            ('enable_disqus', self.gf('django.db.models.fields.BooleanField')(default=False)),
             ('disqus_shortname', self.gf('django.db.models.fields.CharField')(max_length=255, null=True, blank=True)),
             ('disable_disqus_for_mobile', self.gf('django.db.models.fields.BooleanField')(default=False)),
         ))
@@ -134,7 +134,7 @@ class Migration(SchemaMigration):
             'disable_disqus_for_mobile': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
             'disqus_shortname': ('django.db.models.fields.CharField', [], {'max_length': '255', 'null': 'True', 'blank': 'True'}),
             'email_account_link': ('django.db.models.fields.BooleanField', [], {'default': 'True'}),
-            'enable_disqus': ('django.db.models.fields.BooleanField', [], {'default': 'True'}),
+            'enable_disqus': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
             'enable_facebook': ('django.db.models.fields.BooleanField', [], {'default': 'True'}),
             'enable_twitter': ('django.db.models.fields.BooleanField', [], {'default': 'True'}),
             'entries_slugs_with_date': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),

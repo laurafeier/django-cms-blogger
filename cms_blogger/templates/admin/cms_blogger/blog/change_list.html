@@ -1,0 +1,51 @@
+{% extends "admin/change_list.html" %}
+{% load admin_list i18n %}
+
+{% block extrastyle %}
+{{block.super}}
+<style type="text/css">
+#site-selector {
+    float:left;
+    margin-top:2px;
+    margin-left:5px;
+    margin-right:10px;
+}
+</style>
+{% endblock %}
+
+{% block extrahead %}
+{{block.super}}
+<script type="text/javascript" src="{{ STATIC_URL }}cms_blogger/js/jQuery-patch.js"></script>
+<script type="text/javascript" src="{{ STATIC_URL }}cms/js/libs/classy.min.js"></script>
+<script type="text/javascript" src="{{ STATIC_URL }}cms/js/plugins/cms.setup.js"></script>
+<script type="text/javascript" src="{{ STATIC_URL }}cms/js/plugins/cms.base.js"></script>
+
+<script type="text/javascript">
+CMS.$(document).unbind('ready.cms_blogger')
+CMS.$(document).bind('ready.cms_blogger', function(){
+    CMS.$('#site-select').change(function(event){
+            var id = this.value;
+            var url = window.location.href;
+            //url = insert_into_url(url, "site__exact", id);
+            url = CMS.API.Helpers.setUrl(document.location, {
+                'addParam': "site__exact=" + id,
+                'removeParam': "site__exact"
+            });
+            window.location.href = url;
+        });
+})
+</script>
+{% endblock %}
+
+{% block search %}
+{% if cl.has_access_to_multiple_sites %}
+    <div id="site-selector">{% trans "Blogs on:" %}
+        <select id="site-select">{% for site in cl.sites %}
+            <option {% ifequal site.pk cl.current_site.pk %}selected {% endifequal %}value="{{ site.pk }}">{{ site.name }}</option>{% endfor %}
+        </select>
+    </div>
+{% else %}
+    <input type="hidden" id="site-select" value="{{ cl.sites.0.pk }}">
+{% endif %}
+{% search_form cl %}
+{% endblock %}

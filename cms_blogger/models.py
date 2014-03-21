@@ -80,7 +80,7 @@ class Blog(AbstractBlog):
         help_text=_('Blog Email integration'))
 
     # disqus integration
-    enable_disqus = models.BooleanField(default=True)
+    enable_disqus = models.BooleanField(default=False)
     disqus_shortname = models.CharField(
         max_length=255, blank=True, null=True,
         help_text=_('Blog Disqus Shortname'))

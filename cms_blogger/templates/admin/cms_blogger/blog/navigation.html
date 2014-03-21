@@ -1,0 +1,73 @@
+{% extends "admin/base_site.html" %}
+{% load menu_tags %}
+
+{% block breadcrumbs %}
+{% endblock %}
+
+{% block extrastyle %}
+<link rel="stylesheet" type="text/css" href="{{STATIC_URL}}cms_blogger/css/jqtree.css">
+<link rel="stylesheet" type="text/css" href="{{STATIC_URL}}cms_blogger/css/jqtree-extension.css">
+{% endblock %}
+{% block extrahead %}
+<script type="text/javascript" src="{{STATIC_URL}}cms_blogger/js/jquery-1.9.1.min.js"></script>
+<script type="text/javascript" src="{{STATIC_URL}}cms_blogger/js/tree.jquery.js"></script>
+<script type="text/javascript" src="{{STATIC_URL}}cms_blogger/js/jquery.editinplace.js"></script>
+<script type="text/javascript">
+var data = [{% show_menu 0 1 1 100 'admin/cms_blogger/blog/menu_nodes.html' %}];
+var tree;
+
+$(function() {
+    tree = $('#nav-tree').tree({
+        data: data,
+        dragAndDrop: true,
+        autoOpen: true,
+        onCanSelectNode: function(node) {
+            if(node.selectedNode === true){
+                return true;
+            }
+            return false;
+        },
+        onCanMove: function(node) {
+            if(node.selectedNode === true){
+                return true;
+            }
+            return false;
+        },
+        onCanMoveTo: function(moved_node, target_node, position) {
+            console.log(target_node.getLevel());
+            if (target_node.getLevel() == 2 && position == 'inside') {
+                return false;
+            }
+            return true;
+        },
+        onCreateLi: function(node, $li) {
+            if(node.selectedNode === true){
+                $li.find('.jqtree-title').addClass('inplace-editor').editInPlace({
+                    callback: function(unused, enteredText) {
+                        tree.tree('updateNode', node, enteredText);
+                        return enteredText;
+                    },
+                    show_buttons: true,
+                    bg_over: "purple",
+                    bg_out: "transparent",
+                    hover_class: "inplace-hovered",
+                });
+            }
+        }
+
+    });
+    tree.tree('appendNode', {label: 'new_node', id: 'blog_item', selectedNode: true});
+    var blog_node = tree.tree('getNodeById', 'blog_item');
+    tree.tree('selectNode', blog_node);
+    tree.tree('scrollToNode', blog_node);
+    tree.bind( 'tree.select', function(event) {
+        if (!event.node) {
+            tree.tree('selectNode', event.previous_node)
+        }});
+});
+</script>
+{% endblock %}
+
+{% block content %}
+<div id='nav-tree'></div>
+{% endblock %}

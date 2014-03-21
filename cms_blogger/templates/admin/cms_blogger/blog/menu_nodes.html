@@ -1,0 +1,10 @@
+{% load menu_tags %}
+{% for child in children %}
+{
+    label: '{{ child.get_menu_title }}',
+    id: {{child.id}},
+    children: [{% if child.children %}
+        {% show_menu from_level to_level extra_inactive extra_active template "" "" child %}
+    {% endif %}]
+},
+{% endfor %}
