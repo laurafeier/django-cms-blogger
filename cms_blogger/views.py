@@ -21,7 +21,7 @@ def entry_page(request, blog_slug, year, month, day, entry_slug):
 
 
 def landing_page(request, blog_slug):
-    return HttpResponse('Blog River Missing')
+    return HttpResponse('Missing Landing Page content')
 
 
 def entry_or_bio_page(request, blog_slug, slug):

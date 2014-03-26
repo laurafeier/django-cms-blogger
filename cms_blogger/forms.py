@@ -34,19 +34,16 @@ class BlogForm(forms.ModelForm):
         else:
             self.missing_layouts = False
 
+    def clean_in_navigation(self):
+        in_navigation = self.cleaned_data.get('in_navigation', False)
+        if in_navigation:
+            if not self.instance.navigation_node:
+                raise ValidationError(
+                    "Choose a location in the navigation menu")
+        return in_navigation
+
     def clean_slug(self):
         return slugify(self.cleaned_data.get('slug', ''))
-
-    def clean_site(self):
-        site = self.cleaned_data.get('site')
-        if not site:
-            return site
-        from cms.models import Page
-        try:
-            cms_home_page = Page.objects.get_home(site)
-        except Exception as e:
-            raise ValidationError("%s" % e)
-        return site
 
     def clean_disqus_shortname(self):
         disqus_enabled = self.cleaned_data.get('enable_disqus', None)
@@ -56,11 +53,11 @@ class BlogForm(forms.ModelForm):
         return disqus_shortname
 
 
-class BlogAddForm(BlogForm):
+class BlogAddForm(forms.ModelForm):
 
     class Meta:
         model = Blog
-        fields = ('site', 'title', 'slug', )
+        fields = ('title', 'slug', 'site')
 
 
 class BlogEntryPageAddForm(forms.ModelForm):

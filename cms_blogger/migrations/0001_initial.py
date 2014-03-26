@@ -8,6 +8,16 @@ from django.db import models
 class Migration(SchemaMigration):
 
     def forwards(self, orm):
+        # Adding model 'BlogNavigationNode'
+        db.create_table('cms_blogger_blognavigationnode', (
+            ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
+            ('text', self.gf('django.db.models.fields.CharField')(max_length=15)),
+            ('position', self.gf('django.db.models.fields.PositiveIntegerField')()),
+            ('parent_node_id', self.gf('django.db.models.fields.IntegerField')(db_index=True, null=True, blank=True)),
+            ('modified_at', self.gf('django.db.models.fields.DateField')(auto_now=True, db_index=True, blank=True)),
+        ))
+        db.send_create_signal('cms_blogger', ['BlogNavigationNode'])
+
         # Adding model 'Blog'
         db.create_table('cms_blogger_blog', (
             ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
@@ -16,6 +26,8 @@ class Migration(SchemaMigration):
             ('site', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['sites.Site'])),
             ('entries_slugs_with_date', self.gf('django.db.models.fields.BooleanField')(default=False)),
             ('categories', self.gf('tagging.fields.TagField')(null=True)),
+            ('in_navigation', self.gf('django.db.models.fields.BooleanField')(default=False)),
+            ('navigation_node', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['cms_blogger.BlogNavigationNode'], null=True, on_delete=models.SET_NULL, blank=True)),
             ('enable_facebook', self.gf('django.db.models.fields.BooleanField')(default=True)),
             ('enable_twitter', self.gf('django.db.models.fields.BooleanField')(default=True)),
             ('email_account_link', self.gf('django.db.models.fields.BooleanField')(default=True)),
@@ -27,13 +39,6 @@ class Migration(SchemaMigration):
 
         # Adding unique constraint on 'Blog', fields ['slug', 'site']
         db.create_unique('cms_blogger_blog', ['slug', 'site_id'])
-
-        # Adding model 'LandingPage'
-        db.create_table('cms_blogger_landingpage', (
-            ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
-            ('blog', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['cms_blogger.Blog'])),
-        ))
-        db.send_create_signal('cms_blogger', ['LandingPage'])
 
         # Adding model 'BioPage'
         db.create_table('cms_blogger_biopage', (
@@ -73,11 +78,11 @@ class Migration(SchemaMigration):
         # Removing unique constraint on 'Blog', fields ['slug', 'site']
         db.delete_unique('cms_blogger_blog', ['slug', 'site_id'])
 
+        # Deleting model 'BlogNavigationNode'
+        db.delete_table('cms_blogger_blognavigationnode')
+
         # Deleting model 'Blog'
         db.delete_table('cms_blogger_blog')
-
-        # Deleting model 'LandingPage'
-        db.delete_table('cms_blogger_landingpage')
 
         # Deleting model 'BioPage'
         db.delete_table('cms_blogger_biopage')
@@ -139,6 +144,8 @@ class Migration(SchemaMigration):
             'enable_twitter': ('django.db.models.fields.BooleanField', [], {'default': 'True'}),
             'entries_slugs_with_date': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'in_navigation': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
+            'navigation_node': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['cms_blogger.BlogNavigationNode']", 'null': 'True', 'on_delete': 'models.SET_NULL', 'blank': 'True'}),
             'site': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['sites.Site']"}),
             'slug': ('django.db.models.fields.SlugField', [], {'max_length': '50'}),
             'title': ('django.db.models.fields.CharField', [], {'max_length': '255'})
@@ -160,10 +167,13 @@ class Migration(SchemaMigration):
             'start_publication': ('django.db.models.fields.DateTimeField', [], {'db_index': 'True', 'null': 'True', 'blank': 'True'}),
             'title': ('django.db.models.fields.CharField', [], {'max_length': '120'})
         },
-        'cms_blogger.landingpage': {
-            'Meta': {'object_name': 'LandingPage'},
-            'blog': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['cms_blogger.Blog']"}),
-            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'})
+        'cms_blogger.blognavigationnode': {
+            'Meta': {'object_name': 'BlogNavigationNode'},
+            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'modified_at': ('django.db.models.fields.DateField', [], {'auto_now': 'True', 'db_index': 'True', 'blank': 'True'}),
+            'parent_node_id': ('django.db.models.fields.IntegerField', [], {'db_index': 'True', 'null': 'True', 'blank': 'True'}),
+            'position': ('django.db.models.fields.PositiveIntegerField', [], {}),
+            'text': ('django.db.models.fields.CharField', [], {'max_length': '15'})
         },
         'cms_layouts.layout': {
             'Meta': {'object_name': 'Layout'},

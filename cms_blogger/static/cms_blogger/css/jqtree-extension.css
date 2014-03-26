@@ -91,3 +91,7 @@ ul.jqtree-tree ul.jqtree_common{
 #nav-tree ul li input.editInPlace-active{
     color: black;
 }
+
+#nav-tree ul li div.blog-node{
+    background-color: #8fbc8f;
+}

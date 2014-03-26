@@ -1,15 +1,20 @@
 from django.contrib import admin
-from django.db import models
-from django.utils.translation import ugettext_lazy as _
+from django.contrib.sites.models import Site
 from django.contrib.contenttypes.generic import (
     GenericTabularInline, BaseGenericInlineFormSet)
+from django.db import models
+from django.forms import HiddenInput
+from django.utils.translation import ugettext_lazy as _
 from django.core.urlresolvers import reverse
+from django.core.exceptions import PermissionDenied
 from django.conf.urls.defaults import patterns, url
 from django.conf import settings
 from django.shortcuts import get_object_or_404, render_to_response
 from django.template.context import RequestContext
+from django.http import HttpResponse
+
 from cms.admin.placeholderadmin import PlaceholderAdmin
-from .models import Blog, BlogEntryPage
+from .models import Blog, BlogEntryPage, BlogNavigationNode
 from .forms import (
     BlogLayoutForm, BlogForm, BlogAddForm, BlogEntryPageAddForm,
     BlogEntryPageChangeForm)
@@ -89,29 +94,37 @@ class CustomAdmin(admin.ModelAdmin):
 
     def get_form(self, request, obj=None, **kwargs):
         if not obj and hasattr(self, 'add_form'):
-            return self.add_form
+            self.form = self.add_form
+            # reset declared_fieldsets
+            self.fieldsets = getattr(self, 'add_form_fieldsets', ())
+        elif obj and hasattr(self, 'change_form'):
+            self.form = self.change_form
+            # reset declared_fieldsets
+            self.fieldsets = getattr(self, 'change_form_fieldsets', ())
         return super(CustomAdmin, self).get_form(request, obj, **kwargs)
-
-    def get_fieldsets(self, request, obj=None):
-        if hasattr(self, 'change_form_fieldsets'):
-            if obj and obj.pk:
-                self.fieldsets = self.change_form_fieldsets
-            else:
-                self.fieldsets = getattr(self, 'add_form_fieldsets', ())
-        return super(CustomAdmin, self).get_fieldsets(request, obj)
 
 
 class BlogAdmin(CustomAdmin):
     custom_changelist_class = BlogChangeList
     inlines = [BlogLayoutInline, ]
     add_form = BlogAddForm
-    form = BlogForm
+    change_form = BlogForm
     search_fields = ['title', 'site__name']
     list_display = ('title', 'slug', 'site')
     readonly_in_change_form = ['site', 'location_in_navigation']
     formfield_overrides = {
         models.BooleanField: {'widget': ToggleWidget}
     }
+    add_form_fieldsets = (
+        (None, {
+            'fields': ['title', 'slug'],
+            'classes': ('general',)
+            }),
+        ('Hidden', {
+            'fields': ('site',),
+            'classes': ('hide-me',),
+            })
+    )
     change_form_fieldsets = (
         ('Blog setup', {
             'fields': ['site', 'title', 'slug', 'entries_slugs_with_date',
@@ -120,7 +133,7 @@ class BlogAdmin(CustomAdmin):
             'description': _('Blog Setup Description')
         }),
         ('Navigation', {
-            'fields': ['location_in_navigation'],
+            'fields': ['in_navigation', 'location_in_navigation'],
             'classes': ('extrapretty', ),
         }),
         ('Social media and commentig integration', {
@@ -137,11 +150,22 @@ class BlogAdmin(CustomAdmin):
     )
     prepopulated_fields = {"slug": ("title",)}
 
+    def get_form(self, request, obj=None, **kwargs):
+        formCls = super(BlogAdmin, self).get_form(request, obj, **kwargs)
+
+        if not obj and 'site' in formCls.base_fields:
+            site_field = formCls.base_fields['site']
+            site_field.choices = []
+            site_field.widget = HiddenInput()
+            site_field.initial = Site.objects.get_current().pk
+
+        return formCls
+
     def location_in_navigation(self, obj):
         if obj.id:
             url = reverse('admin:cms_blogger-navigation-tool', args=[obj.id])
             return ("<a href='%s' onclick='return showAddAnotherPopup(this);'"
-                    ">Select Location</a>" % url)
+                    "><button type='button'>Select Location</button></a>" % url)
         else:
             return "(save first)"
     location_in_navigation.allow_tags = True
@@ -162,8 +186,35 @@ class BlogAdmin(CustomAdmin):
         return url_patterns
 
     def navigation_tool(self, request, blog_id):
+        if not "_popup" in request.REQUEST:
+            raise PermissionDenied
         blog = get_object_or_404(Blog, id=blog_id)
+
+        if request.method == 'POST':
+            data = {
+                'parent_node_id': request.POST.get('parent_node_id') or None,
+                'text': request.POST.get('text') or blog.title[:15],
+                'position': int(request.POST.get('position'))
+            }
+            nav_node = blog.navigation_node
+            if not nav_node:
+                new_node = BlogNavigationNode.objects.create(**data)
+                new_node.blog_set.add(blog)
+            else:
+                for attname, value in data.items():
+                    setattr(nav_node, attname, value)
+                nav_node.save()
+            return HttpResponse('<script type="text/javascript">' +
+                                'window.close();' +
+                                '</script>')
         context = RequestContext(request)
+        context.update({
+            'current_site': Site.objects.get_current(),
+            'title': 'Edit navigation menu'
+        })
+
+        if blog.navigation_node:
+            context.update({'initial_blog_node': blog.navigation_node,})
         return render_to_response(
             'admin/cms_blogger/blog/navigation.html', context)
 
@@ -173,7 +224,7 @@ class BlogEntryPageAdmin(CustomAdmin, PlaceholderAdmin):
     search_fields = ('title', 'blog__title')
     add_form_template = 'admin/cms_blogger/blogentrypage/add_form.html'
     add_form = BlogEntryPageAddForm
-    form = BlogEntryPageChangeForm
+    change_form = BlogEntryPageChangeForm
     readonly_in_change_form = ['blog', ]
     change_form_fieldsets = (
         (None, {

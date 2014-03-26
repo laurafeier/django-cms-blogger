@@ -5,9 +5,11 @@ from django.contrib.sites.models import Site
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes.generic import GenericRelation
 from django.utils.translation import get_language
+from django.template.defaultfilters import slugify
 from django.db.models import signals
 from django.dispatch import receiver
 from cms.models.fields import PlaceholderField
+from cms.models import Page
 from cms_layouts.models import LayoutTitle, Layout
 from tagging.fields import TagField
 
@@ -15,7 +17,7 @@ from tagging.fields import TagField
 class AbstractBlog(models.Model):
 
     title = models.CharField(
-        _("title"), max_length=255, blank=False, null=False,
+        _('title'), max_length=255, blank=False, null=False,
         help_text=_('Blog Title'))
     slug = models.SlugField(
         _("slug"), help_text=_('Blog Slug'))
@@ -65,8 +67,36 @@ class AbstractBlog(models.Model):
         return "%s - %s" % (self.title, self.site.name)
 
 
+class BlogNavigationNode(models.Model):
+    # menu text button
+    text = models.CharField(max_length=15)
+    # position index in child nodes
+    position = models.PositiveIntegerField()
+    # parent navigation node id (blog nav nodes will have negative integers
+    #  in order to not have id clashes with the ones from pages)
+    parent_node_id = models.IntegerField(blank=True, null=True, db_index=True)
+    modified_at = models.DateField(auto_now=True, db_index=True)
+
+    @property
+    def blog(self):
+        attached_blog = self.blog_set.all()[:1]
+        return attached_blog[0] if attached_blog else None
+
+    def get_absolute_url(self):
+        return self.blog.get_absolute_url() if self.blog else ''
+
+    def is_visible(self):
+        return self.blog.in_navigation if self.blog else False
+
 class Blog(AbstractBlog):
     # definitions of the blog model features go here
+
+    # blog navigation
+    in_navigation = models.BooleanField(
+        _('Add blog to navigation'), default=False,
+        help_text=_('Blog navigation'))
+    navigation_node = models.ForeignKey(
+        BlogNavigationNode, null=True, blank=True, on_delete=models.SET_NULL)
 
     # social media integration
     enable_facebook = models.BooleanField(
@@ -93,6 +123,14 @@ class Blog(AbstractBlog):
     @property
     def header(self):
         return Placeholder()
+
+    @models.permalink
+    def get_absolute_url(self):
+        return ('cms_blogger.views.landing_page', (), {
+            'blog_slug': self.slug})
+
+    def get_layout(self):
+        return self.get_layout_for(Blog.LANDING_PAGE)
 
 
 class BlogRelatedPage(models.Model):
@@ -168,16 +206,6 @@ class ModelWithCMSContent(models.Model):
         abstract = True
 
 
-class LandingPage(BlogRelatedPage):
-
-    uses_layout_type = Blog.LANDING_PAGE
-
-    @models.permalink
-    def get_absolute_url(self):
-        return ('cms_blogger.views.landing_page', (), {
-            'blog_slug': self.blog.slug})
-
-
 class BioPage(BlogRelatedPage):
 
     uses_layout_type = Blog.BIO_PAGE
@@ -190,13 +218,13 @@ class BioPage(BlogRelatedPage):
 
     @property
     def slug(self):
-        return self.author_name.lower().replace(' ', '-')
+        return slugify(self.author_name)
 
     @models.permalink
     def get_absolute_url(self):
-        return ('cms_blogger.views.bio_page', (), {
+        return ('cms_blogger.views.entry_or_bio_page', (), {
             'blog_slug': self.blog.slug,
-            'author_slug': self.slug})
+            'slug': self.slug})
 
     def get_title_obj(self):
         title = LayoutTitle()
