@@ -2,9 +2,12 @@ from django.contrib import admin
 from django.contrib.sites.models import Site
 from django.contrib.contenttypes.generic import (
     GenericTabularInline, BaseGenericInlineFormSet)
+from django.contrib.admin.templatetags.admin_static import static
 from django.db import models
 from django.forms import HiddenInput
+from django.utils.html import escape, escapejs
 from django.utils.translation import ugettext_lazy as _
+from django.utils.safestring import mark_safe
 from django.core.urlresolvers import reverse
 from django.core.exceptions import PermissionDenied
 from django.conf.urls.defaults import patterns, url
@@ -14,14 +17,16 @@ from django.template.context import RequestContext
 from django.http import HttpResponse
 
 from cms.admin.placeholderadmin import PlaceholderAdmin
+from cms.models import Page, CMSPlugin
+
+from cms_layouts.models import Layout
+
 from .models import Blog, BlogEntryPage, BlogNavigationNode
 from .forms import (
     BlogLayoutForm, BlogForm, BlogAddForm, BlogEntryPageAddForm,
     BlogEntryPageChangeForm)
 from .blog_changelist import BlogChangeList
 from .widgets import ToggleWidget
-from cms_layouts.models import Layout
-from cms.models import Page, CMSPlugin
 
 
 class BlogLayoutInlineFormSet(BaseGenericInlineFormSet):
@@ -133,8 +138,8 @@ class BlogAdmin(CustomAdmin):
             'description': _('Blog Setup Description')
         }),
         ('Navigation', {
-            'fields': ['in_navigation', 'location_in_navigation'],
-            'classes': ('extrapretty', ),
+            'fields': [('in_navigation', 'location_in_navigation'), ],
+            'classes': ('extrapretty',),
         }),
         ('Social media and commentig integration', {
             'fields': ['enable_facebook', 'enable_twitter',
@@ -164,11 +169,24 @@ class BlogAdmin(CustomAdmin):
     def location_in_navigation(self, obj):
         if obj.id:
             url = reverse('admin:cms_blogger-navigation-tool', args=[obj.id])
-            return ("<a href='%s' onclick='return showAddAnotherPopup(this);'"
-                    "><button type='button'>Select Location</button></a>" % url)
+            name = 'navigation_node'
+            output = []
+            output.append(
+                u'<span id="id_%s_pretty">%s</span>' % (
+                    name, obj.navigation_node if obj.navigation_node else ''))
+            output.append(
+                u'<a href="%s" class="add-another" id="add_id_%s" '
+                'onclick="return showNavigationPopup(this);"> ' % (
+                    url, name))
+            output.append(
+                u'<img src="%s" width="16" height="16" alt="%s" /></a>' % (
+                    static('admin/img/selector-search.gif'), _('Lookup')))
+
+            return mark_safe(u''.join(output))
         else:
             return "(save first)"
     location_in_navigation.allow_tags = True
+    location_in_navigation.short_description = 'Select location'
 
     def get_formsets(self, request, obj=None):
         # don't show layout inline in add view
@@ -186,8 +204,10 @@ class BlogAdmin(CustomAdmin):
         return url_patterns
 
     def navigation_tool(self, request, blog_id):
-        if not "_popup" in request.REQUEST:
+        if (request.method not in ['GET', 'POST'] or
+                not "_popup" in request.REQUEST):
             raise PermissionDenied
+
         blog = get_object_or_404(Blog, id=blog_id)
 
         if request.method == 'POST':
@@ -204,13 +224,17 @@ class BlogAdmin(CustomAdmin):
                 for attname, value in data.items():
                     setattr(nav_node, attname, value)
                 nav_node.save()
-            return HttpResponse('<script type="text/javascript">' +
-                                'window.close();' +
-                                '</script>')
+            return HttpResponse(
+                '<!DOCTYPE html><html><head><title></title></head><body>'
+                '<script type="text/javascript">opener.closeNavigationPopup'
+                '(window, "%s", "%s");</script></body></html>' % \
+                    # escape() calls force_unicode.
+                    (escape(nav_node.pk), escapejs(nav_node)))
         context = RequestContext(request)
         context.update({
             'current_site': Site.objects.get_current(),
-            'title': 'Edit navigation menu'
+            'title': 'Edit navigation menu',
+            'is_popup': "_popup" in request.REQUEST
         })
 
         if blog.navigation_node:

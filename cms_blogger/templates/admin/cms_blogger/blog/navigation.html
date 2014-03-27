@@ -86,7 +86,7 @@ $(function() {
 <div id='nav-tree'></div>
 <form action="." method="post">
 {% csrf_token %}
-<input type="hidden" value="1" name="_popup"/>
+{% if is_popup %}<input type="hidden" name="_popup" value="1" />{% endif %}
 <div class="submit-row">
 <input type="submit" value="Save" class="default" name="_save" id='submit-form'>
 </div>

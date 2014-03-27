@@ -1,13 +1,18 @@
 {% extends 'admin/change_form.html' %}
 {% load i18n %}
 
-{% block extrahead %}
+{% block extrastyle %}
 {{block.super}}
 <style type="text/css">
 .hide-me {
     display: none;
 }
 </style>
+{% endblock %}
+
+{% block extrahead %}
+{{block.super}}
+<script type="text/javascript" src="{{ STATIC_URL }}cms_blogger/js/popupHandler.js"></script>
 {% endblock %}
 
 {% block form_top %}

@@ -3,7 +3,6 @@
 # This file is distributed under the same license as the PACKAGE package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
 #
-#, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
@@ -117,7 +116,7 @@ msgstr ""
 
 #: models.py:93
 msgid "Blog navigation"
-msgstr "ON allows users to email the post's abstract and a link to it."
+msgstr "ON allows users to display this blog in the navigation menu."
 
 #: models.py:99
 msgid "Facebook integration"
