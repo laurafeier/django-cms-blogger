@@ -6,7 +6,7 @@ from django.contrib.admin.templatetags.admin_static import static
 from django.db import models
 from django.forms import HiddenInput
 from django.utils.html import escape, escapejs
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import get_language, ugettext_lazy as _
 from django.utils.safestring import mark_safe
 from django.core.urlresolvers import reverse
 from django.core.exceptions import PermissionDenied
@@ -17,10 +17,9 @@ from django.template.context import RequestContext
 from django.http import HttpResponse
 
 from cms.admin.placeholderadmin import PlaceholderAdmin
-from cms.models import Page, CMSPlugin
+from cms.models import Title, CMSPlugin
 
 from cms_layouts.models import Layout
-
 from .models import Blog, BlogEntryPage, BlogNavigationNode
 from .forms import (
     BlogLayoutForm, BlogForm, BlogAddForm, BlogEntryPageAddForm,
@@ -58,12 +57,13 @@ class BlogLayoutInline(GenericTabularInline):
             formSet.extra = 0
 
         if obj:
-            available_pages = Page.objects.on_site(obj.site)
+            available_choices = Title.objects.filter(
+                page__site=obj.site,
+                language=get_language()).values_list('page', 'title')
         else:
-            available_pages = Page.objects.get_empty_query_set()
+            available_choices = Title.objects.get_empty_query_set()
         page_field = formSet.form.base_fields['from_page']
-        page_field.queryset = available_pages
-        page_field.widget.can_add_related = False
+        page_field.widget.choices = available_choices
         return formSet
 
     def layout_customization(self, obj):

@@ -6,6 +6,7 @@ from django.forms.util import ErrorList
 from cms.plugin_pool import plugin_pool
 from cms.plugins.text.settings import USE_TINYMCE
 from cms.plugins.text.widgets.wymeditor_widget import WYMEditor
+from cms.models import Page
 from cms_layouts.models import Layout
 from .models import Blog, BlogEntryPage
 
@@ -13,10 +14,22 @@ from .models import Blog, BlogEntryPage
 class BlogLayoutForm(forms.ModelForm):
     layout_type = forms.ChoiceField(
         label='Layout Type', choices=Blog.LAYOUTS_CHOICES.items())
+    from_page = forms.IntegerField(widget=forms.Select())
 
     class Meta:
         model = Layout
         fields = ('layout_type', 'from_page')
+
+    def clean_from_page(self):
+        from_page_id = self.cleaned_data.get('from_page', None)
+        if not from_page_id:
+            raise ValidationError('Select a page for this layout.')
+        try:
+            return Page.objects.get(id=from_page_id)
+        except Page.DoesNotExist:
+            raise ValidationError(
+                'This page does not exist. Refresh this form and select an '
+                'existing page.')
 
 
 class BlogForm(forms.ModelForm):
