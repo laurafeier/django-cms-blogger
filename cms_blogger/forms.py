@@ -12,7 +12,7 @@ from cms.models import Page
 from cms_layouts.models import Layout
 from cms_layouts.slot_finder import (
     get_fixed_section_slots, MissingRequiredPlaceholder)
-from .models import Blog, BlogEntryPage
+from .models import Blog, BlogEntryPage, BlogCategory
 
 
 class BlogLayoutInlineFormSet(BaseGenericInlineFormSet):
@@ -106,6 +106,7 @@ class BlogLayoutForm(forms.ModelForm):
 
 
 class BlogForm(forms.ModelForm):
+    categories = forms.CharField()
 
     class Meta:
         model = Blog
@@ -119,6 +120,22 @@ class BlogForm(forms.ModelForm):
                 "Add one in the Layouts section."])
         else:
             self.missing_layouts = False
+
+    def clean_categories(self):
+        categories = self.cleaned_data.get('categories', '')
+        if not categories:
+            raise ValidationError("Add at least one category.")
+        categories_names = [name.strip() for name in categories.split(',')]
+        if len(categories) != len(set(categories)):
+            raise ValidationError(
+                "Category names not unique.")
+        blog = self.instance
+        category_objs = []
+        for name in categories_names:
+            category = BlogCategory()
+            category.name = name
+            category_objs.append(category)
+        return category_objs
 
     def clean_in_navigation(self):
         in_navigation = self.cleaned_data.get('in_navigation', False)

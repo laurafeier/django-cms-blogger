@@ -11,7 +11,6 @@ from django.dispatch import receiver
 from cms.models.fields import PlaceholderField
 from cms.models import Page
 from cms_layouts.models import LayoutTitle, Layout
-from tagging.fields import TagField
 
 
 class AbstractBlog(models.Model):
@@ -26,9 +25,6 @@ class AbstractBlog(models.Model):
     entries_slugs_with_date = models.BooleanField(
         _("Dates in blog entry URLs"),
         help_text=_('Blog Entries With Slugs'))
-    categories = TagField(
-        null=True, blank=True,
-        help_text=_('Blog Categories'))
 
     layouts = GenericRelation(Layout)
 
@@ -315,6 +311,20 @@ class BlogEntryPage(BlogRelatedPage, ModelWithCMSContent):
 
     def __unicode__(self):
         return self.title or "<Draft Empty Blog Entry>"
+
+
+class BlogCategory(models.Model):
+
+    name = models.CharField(_('name'), max_length=30, db_index=True)
+    blog = models.ForeignKey(Blog, related_name='categories')
+    blog_entry = models.ForeignKey(BlogEntryPage,
+        null=True, blank=True, related_name='categories')
+
+    def __unicode__(self):
+        return self.name
+
+    class Meta:
+        unique_together = (("name", 'blog'),)
 
 
 @receiver(signals.post_save, sender=BlogEntryPage)

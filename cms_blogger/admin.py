@@ -177,6 +177,10 @@ class BlogAdmin(CustomAdmin):
     location_in_navigation.allow_tags = True
     location_in_navigation.short_description = 'Select location'
 
+    def save_related(self, request, form, formsets, change):
+        super(BlogAdmin, self).save_related(request, form, formsets, change)
+        form.instance.categories = form.cleaned_data.get('categories', [])
+
     def get_formsets(self, request, obj=None):
         # don't show layout inline in add view
         if obj and obj.pk:

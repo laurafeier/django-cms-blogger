@@ -25,7 +25,6 @@ class Migration(SchemaMigration):
             ('slug', self.gf('django.db.models.fields.SlugField')(max_length=50)),
             ('site', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['sites.Site'])),
             ('entries_slugs_with_date', self.gf('django.db.models.fields.BooleanField')(default=False)),
-            ('categories', self.gf('tagging.fields.TagField')(null=True)),
             ('in_navigation', self.gf('django.db.models.fields.BooleanField')(default=False)),
             ('navigation_node', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['cms_blogger.BlogNavigationNode'], null=True, on_delete=models.SET_NULL, blank=True)),
             ('enable_facebook', self.gf('django.db.models.fields.BooleanField')(default=True)),
@@ -70,8 +69,23 @@ class Migration(SchemaMigration):
         # Adding unique constraint on 'BlogEntryPage', fields ['slug', 'blog', 'draft_id']
         db.create_unique('cms_blogger_blogentrypage', ['slug', 'blog_id', 'draft_id'])
 
+        # Adding model 'BlogCategory'
+        db.create_table('cms_blogger_blogcategory', (
+            ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
+            ('name', self.gf('django.db.models.fields.CharField')(max_length=30, db_index=True)),
+            ('blog', self.gf('django.db.models.fields.related.ForeignKey')(related_name='categories', to=orm['cms_blogger.Blog'])),
+            ('blog_entry', self.gf('django.db.models.fields.related.ForeignKey')(blank=True, related_name='categories', null=True, to=orm['cms_blogger.BlogEntryPage'])),
+        ))
+        db.send_create_signal('cms_blogger', ['BlogCategory'])
+
+        # Adding unique constraint on 'BlogCategory', fields ['name', 'blog']
+        db.create_unique('cms_blogger_blogcategory', ['name', 'blog_id'])
+
 
     def backwards(self, orm):
+        # Removing unique constraint on 'BlogCategory', fields ['name', 'blog']
+        db.delete_unique('cms_blogger_blogcategory', ['name', 'blog_id'])
+
         # Removing unique constraint on 'BlogEntryPage', fields ['slug', 'blog', 'draft_id']
         db.delete_unique('cms_blogger_blogentrypage', ['slug', 'blog_id', 'draft_id'])
 
@@ -89,6 +103,9 @@ class Migration(SchemaMigration):
 
         # Deleting model 'BlogEntryPage'
         db.delete_table('cms_blogger_blogentrypage')
+
+        # Deleting model 'BlogCategory'
+        db.delete_table('cms_blogger_blogcategory')
 
 
     models = {
@@ -135,7 +152,6 @@ class Migration(SchemaMigration):
         },
         'cms_blogger.blog': {
             'Meta': {'unique_together': "(('slug', 'site'),)", 'object_name': 'Blog'},
-            'categories': ('tagging.fields.TagField', [], {'null': 'True'}),
             'disable_disqus_for_mobile': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
             'disqus_shortname': ('django.db.models.fields.CharField', [], {'max_length': '255', 'null': 'True', 'blank': 'True'}),
             'email_account_link': ('django.db.models.fields.BooleanField', [], {'default': 'True'}),
@@ -149,6 +165,13 @@ class Migration(SchemaMigration):
             'site': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['sites.Site']"}),
             'slug': ('django.db.models.fields.SlugField', [], {'max_length': '50'}),
             'title': ('django.db.models.fields.CharField', [], {'max_length': '255'})
+        },
+        'cms_blogger.blogcategory': {
+            'Meta': {'unique_together': "(('name', 'blog'),)", 'object_name': 'BlogCategory'},
+            'blog': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'categories'", 'to': "orm['cms_blogger.Blog']"}),
+            'blog_entry': ('django.db.models.fields.related.ForeignKey', [], {'blank': 'True', 'related_name': "'categories'", 'null': 'True', 'to': "orm['cms_blogger.BlogEntryPage']"}),
+            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'name': ('django.db.models.fields.CharField', [], {'max_length': '30', 'db_index': 'True'})
         },
         'cms_blogger.blogentrypage': {
             'Meta': {'unique_together': "(('slug', 'blog', 'draft_id'),)", 'object_name': 'BlogEntryPage'},
