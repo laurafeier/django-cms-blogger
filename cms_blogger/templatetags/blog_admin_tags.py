@@ -14,6 +14,12 @@ def site_url(site):
     return "http://%s%s" % (site.domain, home_page_path)
 
 
+@register.simple_tag(takes_context=True)
+def current_site(context):
+    from django.contrib.sites.models import Site
+    return Site.objects.get_current()
+
+
 @register.inclusion_tag('admin/prepopulated_fields_js.html', takes_context=True)
 def initial_empty_prepopulated_fields_js(context):
     """

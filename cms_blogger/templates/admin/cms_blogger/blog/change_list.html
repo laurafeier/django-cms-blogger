@@ -1,6 +1,20 @@
 {% extends "admin/change_list.html" %}
 {% load admin_list i18n %}
 
+{% block content_title %}
+{% if title %}
+<h1>
+<span style="font-size: small; font-weight: normal;">
+{% if not cl.has_access_to_multiple_sites %}
+    {{ cl.sites.0.name }}{% else %}{{ cl.current_site.name }}
+{% endif %}
+&#10148;
+</span>
+{{ title }}
+</h1>
+{% endif %}
+{% endblock %}
+
 {% block extrastyle %}
 {{block.super}}
 <style type="text/css">

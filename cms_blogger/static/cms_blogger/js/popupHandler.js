@@ -34,8 +34,7 @@ function showNavigationPopup(triggeringLink, pWin) {
     return false;
 }
 
-function closeNavigationPopup(win, newID, newRepr) {
-    newID = html_unescape(newID);
+function closeNavigationPopup(win, newRepr) {
     newRepr = html_unescape(newRepr);
     var name = windowname_to_id(win.name);
     var pretty_repr = name + '_pretty';

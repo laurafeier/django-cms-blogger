@@ -7,37 +7,102 @@ from django.contrib.contenttypes.generic import BaseGenericInlineFormSet
 from cms.plugin_pool import plugin_pool
 from cms.plugins.text.settings import USE_TINYMCE
 from cms.plugins.text.widgets.wymeditor_widget import WYMEditor
+from cms.utils.plugins import get_placeholders
 from cms.models import Page
 from cms_layouts.models import Layout
+from cms_layouts.slot_finder import (
+    get_fixed_section_slots, MissingRequiredPlaceholder)
 from .models import Blog, BlogEntryPage
 
 
 class BlogLayoutInlineFormSet(BaseGenericInlineFormSet):
 
-
     def clean(self):
-        pass
+        if any(self.errors):
+            return
+        data = self.cleaned_data
+        data_to_delete = filter(lambda x: x.get('DELETE', False), data)
+        data = filter(lambda x: not x.get('DELETE', False), data)
+
+        if len(data) < 1:
+            raise ValidationError('At least one layout is required!')
+
+        if len(data) > len(Blog.LAYOUTS_CHOICES):
+            raise ValidationError(
+                'There can be a maximum of %d layouts.' % \
+                    len(Blog.LAYOUTS_CHOICES))
+
+        submitted_layout_types = [layout.get('layout_type')
+                                  for layout in data]
+
+        if len(submitted_layout_types) != len(set(submitted_layout_types)):
+            raise ValidationError(
+                "You can have only one layout for each layout type.")
+
+        specific_layout_types = [layout_type
+            for layout_type in Blog.LAYOUTS_CHOICES.keys()
+            if layout_type != Blog.ALL]
+
+        if Blog.ALL not in submitted_layout_types:
+            # check if there are layouts for all of the rest types
+            if not all([specific_layout_type in submitted_layout_types
+                        for specific_layout_type in specific_layout_types]):
+                pretty_specific_layout_types = (
+                    Blog.LAYOUTS_CHOICES[layout_type]
+                    for layout_type in specific_layout_types)
+                raise ValidationError(
+                    "If you do not have a layout for %s you need to specify "
+                    "a layout for all the rest layout types: %s" % (
+                        Blog.LAYOUTS_CHOICES[Blog.ALL],
+                        ', '.join(pretty_specific_layout_types)))
 
 
 class BlogLayoutForm(forms.ModelForm):
-    layout_type = forms.ChoiceField(
-        label='Layout Type', choices=Blog.LAYOUTS_CHOICES.items())
-    from_page = forms.IntegerField(widget=forms.Select())
+    layout_type = forms.IntegerField(
+        label='Layout Type',
+        widget=forms.Select(choices=Blog.LAYOUTS_CHOICES.items()))
+    from_page = forms.IntegerField(
+        label='Inheriting layout from page', widget=forms.Select())
 
     class Meta:
         model = Layout
         fields = ('layout_type', 'from_page')
+
+    def clean_layout_type(self):
+        layout_type = self.cleaned_data.get('layout_type', None)
+        if layout_type == None:
+            raise ValidationError("Layout Type required")
+        if layout_type not in Blog.LAYOUTS_CHOICES.keys():
+            raise ValidationError(
+                "Not a valid Layout Type. Valid choices are: %s" % (
+                    ', '.join(Blog.LAYOUTS_CHOICES.values())))
+        return layout_type
 
     def clean_from_page(self):
         from_page_id = self.cleaned_data.get('from_page', None)
         if not from_page_id:
             raise ValidationError('Select a page for this layout.')
         try:
-            return Page.objects.get(id=from_page_id)
+            page = Page.objects.get(id=from_page_id)
         except Page.DoesNotExist:
             raise ValidationError(
                 'This page does not exist. Refresh this form and select an '
                 'existing page.')
+        try:
+            slots = get_placeholders(page.get_template())
+            fixed_slots = get_fixed_section_slots(slots)
+            return page
+        except MissingRequiredPlaceholder, e:
+            raise ValidationError(
+                "Page %s is missing a required placeholder "
+                "named %s. Choose a different page for this layout that"
+                " has the required placeholder or just add this "
+                "placeholder in the page template." % (page, e.slot, ))
+        except Exception, page_exception:
+            raise ValidationError(
+                "Error found while scanning template from page %s: %s. "
+                "Change page with a valid one or fix this error." % (
+                    page, page_exception))
 
 
 class BlogForm(forms.ModelForm):

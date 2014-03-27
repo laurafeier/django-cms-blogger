@@ -1,10 +1,9 @@
 from django.contrib import admin
 from django.contrib.sites.models import Site
 from django.contrib.contenttypes.generic import GenericTabularInline
-from django.contrib.admin.templatetags.admin_static import static
 from django.db import models
 from django.forms import HiddenInput
-from django.utils.html import escape, escapejs
+from django.utils.html import escapejs
 from django.utils.translation import get_language, ugettext_lazy as _
 from django.utils.safestring import mark_safe
 from django.core.urlresolvers import reverse
@@ -163,15 +162,14 @@ class BlogAdmin(CustomAdmin):
             name = 'navigation_node'
             output = []
             output.append(
-                u'<span id="id_%s_pretty">%s</span>' % (
-                    name, obj.navigation_node if obj.navigation_node else ''))
-            output.append(
                 u'<a href="%s" class="add-another" id="add_id_%s" '
                 'onclick="return showNavigationPopup(this);"> ' % (
                     url, name))
             output.append(
-                u'<img src="%s" width="16" height="16" alt="%s" /></a>' % (
-                    static('admin/img/selector-search.gif'), _('Lookup')))
+                u'<button>Open Navigation Tool</button></a>')
+            output.append(
+                u'<span id="id_%s_pretty">%s</span>' % (
+                    name, obj.navigation_node if obj.navigation_node else ''))
 
             return mark_safe(u''.join(output))
         else:
@@ -218,9 +216,8 @@ class BlogAdmin(CustomAdmin):
             return HttpResponse(
                 '<!DOCTYPE html><html><head><title></title></head><body>'
                 '<script type="text/javascript">opener.closeNavigationPopup'
-                '(window, "%s", "%s");</script></body></html>' % \
-                    # escape() calls force_unicode.
-                    (escape(nav_node.pk), escapejs(nav_node)))
+                '(window, "%s");</script></body></html>' % \
+                    (escapejs(nav_node)), )
         context = RequestContext(request)
         context.update({
             'current_site': Site.objects.get_current(),
