@@ -3,12 +3,20 @@ from django.core.exceptions import ValidationError
 from django.conf import settings
 from django.template.defaultfilters import slugify
 from django.forms.util import ErrorList
+from django.contrib.contenttypes.generic import BaseGenericInlineFormSet
 from cms.plugin_pool import plugin_pool
 from cms.plugins.text.settings import USE_TINYMCE
 from cms.plugins.text.widgets.wymeditor_widget import WYMEditor
 from cms.models import Page
 from cms_layouts.models import Layout
 from .models import Blog, BlogEntryPage
+
+
+class BlogLayoutInlineFormSet(BaseGenericInlineFormSet):
+
+
+    def clean(self):
+        pass
 
 
 class BlogLayoutForm(forms.ModelForm):

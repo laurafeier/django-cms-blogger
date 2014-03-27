@@ -33,6 +33,11 @@
 {% endblock %}
 
 {% block inline_field_sets %}
+<script type="text/javascript">django.jQuery(document).ready(function() {
+    var blog_setup = django.jQuery('fieldset').first();
+    django.jQuery('#cms_layouts-layout-content_type-object_id-group').insertAfter(blog_setup);
+});
+</script>
 {% for inline_admin_formset in inline_admin_formsets %}
     {% if inline_admin_formset.opts.description %}
         <script type="text/javascript">

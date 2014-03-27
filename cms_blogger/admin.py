@@ -1,7 +1,6 @@
 from django.contrib import admin
 from django.contrib.sites.models import Site
-from django.contrib.contenttypes.generic import (
-    GenericTabularInline, BaseGenericInlineFormSet)
+from django.contrib.contenttypes.generic import GenericTabularInline
 from django.contrib.admin.templatetags.admin_static import static
 from django.db import models
 from django.forms import HiddenInput
@@ -23,17 +22,9 @@ from cms_layouts.models import Layout
 from .models import Blog, BlogEntryPage, BlogNavigationNode
 from .forms import (
     BlogLayoutForm, BlogForm, BlogAddForm, BlogEntryPageAddForm,
-    BlogEntryPageChangeForm)
+    BlogEntryPageChangeForm, BlogLayoutInlineFormSet)
 from .blog_changelist import BlogChangeList
 from .widgets import ToggleWidget
-
-
-class BlogLayoutInlineFormSet(BaseGenericInlineFormSet):
-
-
-    def clean(self):
-        # TODO validation for layout types
-        pass
 
 
 class BlogLayoutInline(GenericTabularInline):
