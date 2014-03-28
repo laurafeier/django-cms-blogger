@@ -4,6 +4,7 @@ from django.conf import settings
 from django.template.defaultfilters import slugify
 from django.forms.util import ErrorList
 from django.contrib.contenttypes.generic import BaseGenericInlineFormSet
+from django.utils.translation import ugettext_lazy as _
 from cms.plugin_pool import plugin_pool
 from cms.plugins.text.settings import USE_TINYMCE
 from cms.plugins.text.widgets.wymeditor_widget import WYMEditor
@@ -106,13 +107,17 @@ class BlogLayoutForm(forms.ModelForm):
 
 
 class BlogForm(forms.ModelForm):
-    categories = forms.CharField()
+    categories = forms.CharField(help_text=_('Categories help text'))
 
     class Meta:
         model = Blog
 
     def __init__(self, *args, **kwargs):
         super(BlogForm, self).__init__(*args, **kwargs)
+        if (self.instance and 'categories' in self.fields and
+                not self.fields['categories'].initial):
+            self.fields['categories'].initial = ', '.join(
+                self.instance.categories.values_list('name', flat=True))
         if (not self.is_bound and self.instance and self.instance.pk and
                 self.instance.layouts.count() == 0):
             self.missing_layouts = ErrorList([
@@ -130,10 +135,16 @@ class BlogForm(forms.ModelForm):
             raise ValidationError(
                 "Category names not unique.")
         blog = self.instance
+
+        existing_names = dict([(categ.name, categ)
+                               for categ in blog.categories.all()])
         category_objs = []
         for name in categories_names:
-            category = BlogCategory()
-            category.name = name
+            if name not in existing_names:
+                category = BlogCategory()
+                category.name = name
+            else:
+                category = existing_names[name]
             category_objs.append(category)
         return category_objs
 

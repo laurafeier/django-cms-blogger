@@ -13,10 +13,21 @@
 {% block extrahead %}
 {{block.super}}
 <script type="text/javascript" src="{{ STATIC_URL }}cms_blogger/js/popupHandler.js"></script>
+<script type="text/javascript">
+{% if not add %}
+    var current_site = {{adminform.form.instance.site_id}};
+{% endif %}
+</script>
 {% endblock %}
 
-{% block content_title %}{% if title %}
-<h1><span style="font-size: small; font-weight: normal;">{% current_site %} &#10148; </span>{{ title }}</h1>{% endif %}{% endblock %}
+{% block content_title %}
+{% if add and title %}
+{% comment %}show current site{% endcomment %}
+<h1><span style="font-size: small; font-weight: normal;">
+{% current_site %} &#10148; </span>{{ title }}</h1>
+{% else %}
+{{ block.super }}
+{% endif %}{% endblock %}
 
 {% block form_top %}
 {% if adminform.form.missing_layouts %}

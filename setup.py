@@ -8,7 +8,8 @@ README = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'README.md')
 DEPENDENCIES = [
     'django >=1.4, <1.5',
     'django-cms>=2.3.5,<2.3.6',
-    'django-cms-layouts>=0.1'
+    'django-cms-layouts>=0.1',
+    'django-filer >= 0.9pbs, <0.9.1'
 ]
 
 DEPENDENCY_LINKS = [

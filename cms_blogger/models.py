@@ -10,6 +10,7 @@ from django.db.models import signals
 from django.dispatch import receiver
 from cms.models.fields import PlaceholderField
 from cms.models import Page
+from filer.fields.image import FilerImageField
 from cms_layouts.models import LayoutTitle, Layout
 
 
@@ -86,6 +87,14 @@ class BlogNavigationNode(models.Model):
 
 class Blog(AbstractBlog):
     # definitions of the blog model features go here
+
+    # header metadata
+    tagline = models.CharField(
+        _('tagline'), max_length=60, blank=True, null=True,
+        help_text=_('Blog Tagline'))
+    branding_image = FilerImageField(
+        null=True, blank=True, on_delete=models.SET_NULL,
+        default=None, help_text=_('Blog Branding Image'))
 
     # blog navigation
     in_navigation = models.BooleanField(

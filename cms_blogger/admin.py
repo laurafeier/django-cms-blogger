@@ -122,8 +122,8 @@ class BlogAdmin(CustomAdmin):
     )
     change_form_fieldsets = (
         ('Blog setup', {
-            'fields': ['site', 'title', 'slug', 'entries_slugs_with_date',
-                       'categories'],
+            'fields': ['site', 'title', 'slug', 'tagline', 'branding_image',
+                       'entries_slugs_with_date', 'categories'],
             'classes': ('extrapretty', ),
             'description': _('Blog Setup Description')
         }),
@@ -179,7 +179,12 @@ class BlogAdmin(CustomAdmin):
 
     def save_related(self, request, form, formsets, change):
         super(BlogAdmin, self).save_related(request, form, formsets, change)
-        form.instance.categories = form.cleaned_data.get('categories', [])
+        submitted_categories = form.cleaned_data.get('categories', [])
+
+        for existing in form.instance.categories.all():
+            if existing not in submitted_categories:
+                existing.delete()
+        form.instance.categories = submitted_categories
 
     def get_formsets(self, request, obj=None):
         # don't show layout inline in add view
