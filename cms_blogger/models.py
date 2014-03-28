@@ -6,6 +6,8 @@ from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes.generic import GenericRelation
 from django.utils.translation import get_language
 from django.template.defaultfilters import slugify
+from django.template import Context
+from django.template.loader import get_template
 from django.db.models import signals
 from django.dispatch import receiver
 from cms.models.fields import PlaceholderField
@@ -142,6 +144,7 @@ class BlogNavigationNode(models.Model):
 
     def is_visible(self):
         return self.blog.in_navigation if self.blog else False
+
 
 class Blog(AbstractBlog):
     # definitions of the blog model features go here
@@ -304,17 +307,18 @@ class BlogEntryPage(
     #   least once
     draft_id = models.IntegerField(blank=True, null=True)
 
-    def extra_html_content(self):
-        if not self.blog or not self.blog.enable_disqus:
+    def extra_html_before_content(self):
+        if not self.blog:
             return ''
+        context = Context({'entry': self, 'blog': self.blog,})
+        thread_template = get_template("cms_blogger/entry_header.html")
+        return thread_template.render(context)
 
-        from django.template import Context
-        from django.template.loader import get_template
-        context = Context({
-            'disqus_shortname': self.blog.disqus_shortname,
-            'disable_on_mobile': self.blog.disable_disqus_for_mobile
-            })
-        thread_template = get_template("cms_blogger/disqus_thread.html")
+    def extra_html_after_content(self):
+        if not self.blog:
+            return ''
+        context = Context({'entry': self, 'blog': self.blog,})
+        thread_template = get_template("cms_blogger/entry_footer.html")
         return thread_template.render(context)
 
     def get_title_obj(self):

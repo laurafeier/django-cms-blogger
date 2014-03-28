@@ -40,7 +40,6 @@ CMS.$(document).bind('ready.cms_blogger', function(){
     CMS.$('#site-select').change(function(event){
             var id = this.value;
             var url = window.location.href;
-            //url = insert_into_url(url, "site__exact", id);
             url = CMS.API.Helpers.setUrl(document.location, {
                 'addParam': "{{cl.site_lookup}}=" + id,
                 'removeParam': "{{cl.site_lookup}}"
