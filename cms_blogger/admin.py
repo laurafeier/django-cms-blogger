@@ -278,10 +278,11 @@ class BlogEntryPageAdmin(CustomAdmin, PlaceholderAdmin):
         #   parameter will hold the blog entry id. We need to replace
         #   the parent_id with the text plugin_id in order for the placeholder
         #   admin add_plugin view to work
-        post_data = request.POST.copy()
-        if 'parent_id' in post_data:
-            entry = get_object_or_404(BlogEntryPage, pk=post_data['parent_id'])
-            post_data['parent_id'] = entry.get_attached_plugin().pk
+        if 'parent_id' in request.POST:
+            entry = get_object_or_404(
+                BlogEntryPage, pk=request.POST['parent_id'])
+            post_data = request.POST.copy()
+            post_data['parent_id'] = entry.get_content_plugin().pk
             request.POST = post_data
         return super(BlogEntryPageAdmin, self).add_plugin(request)
 

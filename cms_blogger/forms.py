@@ -207,13 +207,13 @@ class BlogEntryPageChangeForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super(BlogEntryPageChangeForm, self).__init__(*args, **kwargs)
-        self.fields['body'].initial = self.instance.body
+        self.fields['body'].initial = self.instance.content_body
         # prepare for save
         self.instance.draft_id = None
 
     def clean_body(self):
         body = self.cleaned_data.get('body')
-        self.instance.body = body
+        self.instance.content_body = body
         return body
 
     def clean_slug(self):

@@ -9,9 +9,65 @@ from django.template.defaultfilters import slugify
 from django.db.models import signals
 from django.dispatch import receiver
 from cms.models.fields import PlaceholderField
-from cms.models import Page
+from cms.models import Page, Placeholder
 from filer.fields.image import FilerImageField
 from cms_layouts.models import LayoutTitle, Layout
+
+
+def getCMSContentModel(**kwargs):
+    content_attr = kwargs.get('content_attr', 'content')
+    body_attr = '%s_body' % content_attr
+    plugin_getter = 'get_%s_plugin' % content_attr
+
+    class ModelWithCMSContent(models.Model):
+
+        def __init__(self, *args, **kwargs):
+            super(ModelWithCMSContent, self).__init__(*args, **kwargs)
+            # initialize text plugin body
+            setattr(self, body_attr, 'Sample content')
+            plugin = getattr(self, plugin_getter)()
+            if self.pk and plugin:
+                setattr(self, body_attr, getattr(plugin, 'body'))
+
+        def save(self, *args, **kwargs):
+            super(ModelWithCMSContent, self).save(*args, **kwargs)
+            plugin = getattr(self, plugin_getter)()
+            plugin_data = getattr(self, body_attr)
+            if plugin and plugin.body != plugin_data:
+                plugin.body = plugin_data
+                plugin.save()
+
+        class Meta:
+            abstract = True
+
+    def get_attached_plugin(instance):
+        try:
+            placeholder = getattr(instance, content_attr)
+        except Placeholder.DoesNotExist:
+            return None
+        if not placeholder:
+            return None
+        if not placeholder.get_plugins():
+            from cms.api import add_plugin
+            new_plugin = add_plugin(
+                placeholder, 'TextPlugin', get_language(),
+                body=getattr(instance, body_attr))
+            return new_plugin
+        first_plugin = placeholder.get_plugins()[0]
+        plg_instance, plg_cls = first_plugin.get_plugin_instance()
+        return plg_instance
+
+    # set content placeholder field
+    ModelWithCMSContent.add_to_class(
+        content_attr, PlaceholderField(content_attr))
+    # set body property
+    ModelWithCMSContent.add_to_class(
+        body_attr,
+        property(lambda x: getattr(x, "_%s" % body_attr),
+                 lambda x, v: setattr(x, "_%s" % body_attr, v))
+        )
+    ModelWithCMSContent.add_to_class(plugin_getter, get_attached_plugin)
+    return ModelWithCMSContent
 
 
 class AbstractBlog(models.Model):
@@ -164,53 +220,6 @@ class BlogRelatedPage(models.Model):
         raise NotImplementedError
 
 
-class ModelWithCMSContent(models.Model):
-    """
-    Adds a placeholder field for a model.
-    It automatically generates an text plugin for the content the first time
-        the model gets saved.(This is done through the post_save signal)
-    """
-    content = PlaceholderField('content')
-
-    def __init__(self, *args, **kwargs):
-        super(ModelWithCMSContent, self).__init__(*args, **kwargs)
-        self._set_initial_body()
-
-    def _set_initial_body(self):
-        if self.pk:
-            plugin = self.get_attached_plugin()
-            self.body = getattr(plugin, 'body')
-        else:
-            self.body = 'Sample content'
-
-    def save_body(self):
-        plugin = self.get_attached_plugin()
-        if plugin.body != self.body:
-            plugin.body = self.body
-            plugin.save()
-
-    @property
-    def body(self):
-        return self._body
-
-    @body.setter
-    def body(self, value):
-        self._body = value
-
-    def get_attached_plugin(self):
-        if not self.content or not self.content.get_plugins():
-            from cms.api import add_plugin
-            new_plugin = add_plugin(
-                self.content, 'TextPlugin', get_language(), body=self.body)
-            return new_plugin
-        first_plugin = self.content.get_plugins()[0]
-        plg_instance, plg_cls = first_plugin.get_plugin_instance()
-        return plg_instance
-
-    class Meta:
-        abstract = True
-
-
 class BioPage(BlogRelatedPage):
 
     uses_layout_type = Blog.BIO_PAGE
@@ -241,7 +250,8 @@ class BioPage(BlogRelatedPage):
         return self.author_name.title()
 
 
-class BlogEntryPage(BlogRelatedPage, ModelWithCMSContent):
+class BlogEntryPage(
+    BlogRelatedPage, getCMSContentModel(content_attr='content')):
 
     uses_layout_type = Blog.ENTRY_PAGE
 
@@ -352,9 +362,3 @@ def mark_draft(instance, **kwargs):
         #   programmatically will behave in the same way
         if instance.draft_id and instance.slug and instance.blog_id:
             entry_as_queryset.update(draft_id=None)
-
-
-@receiver(signals.post_save, sender=BlogEntryPage)
-def attach_plugin_to_body(instance, **kwargs):
-    instance.save_body()
-
