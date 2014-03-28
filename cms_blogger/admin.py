@@ -166,7 +166,7 @@ class BlogAdmin(CustomAdmin):
                 'onclick="return showNavigationPopup(this);"> ' % (
                     url, name))
             output.append(
-                u'<button>Open Navigation Tool</button></a>')
+                u'<input type="button" value="Open Navigation Tool" /></a>')
             output.append(
                 u'<span id="id_%s_pretty">%s</span>' % (
                     name, obj.navigation_node if obj.navigation_node else ''))

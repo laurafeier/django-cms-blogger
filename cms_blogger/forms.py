@@ -4,6 +4,7 @@ from django.conf import settings
 from django.template.defaultfilters import slugify
 from django.forms.util import ErrorList
 from django.contrib.contenttypes.generic import BaseGenericInlineFormSet
+from django.contrib.sites.models import Site
 from django.utils.translation import ugettext_lazy as _
 from cms.plugin_pool import plugin_pool
 from cms.plugins.text.settings import USE_TINYMCE
@@ -131,7 +132,8 @@ class BlogForm(forms.ModelForm):
         if not categories:
             raise ValidationError("Add at least one category.")
         categories_names = [name.strip() for name in categories.split(',')]
-        if len(categories) != len(set(categories)):
+
+        if len(categories_names) != len(set(categories_names)):
             raise ValidationError(
                 "Category names not unique.")
         blog = self.instance
@@ -179,6 +181,13 @@ class BlogEntryPageAddForm(forms.ModelForm):
     class Meta:
         model = BlogEntryPage
         fields = ('blog', )
+
+    def __init__(self, *args, **kwargs):
+        site = Site.objects.get_current()
+        blog_field = self.base_fields['blog']
+        blog_field.queryset = blog_field.queryset.filter(site=site)
+        blog_field.widget.can_add_related = False
+        super(BlogEntryPageAddForm, self).__init__(*args, **kwargs)
 
 
 def _get_text_editor_widget():
