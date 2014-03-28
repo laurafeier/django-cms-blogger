@@ -268,6 +268,14 @@ class BioPage(BlogRelatedPage):
         return self.author_name.title()
 
 
+def upload_entry_image(instance, filename):
+    import os
+    filename_base, filename_ext = os.path.splitext(filename)
+    return 'blog/%s%s' % (
+        timezone.now().strftime("%Y%m%d%H%M%S"),
+        filename_ext.lower(),
+    )
+
 class BlogEntryPage(
     BlogRelatedPage, getCMSContentModel(content_attr='content')):
 
@@ -281,6 +289,9 @@ class BlogEntryPage(
         _('creation date'),
         db_index=True, default=timezone.now,
         help_text=_("Used to build the entry's URL."))
+
+    thumbnail_image = models.ImageField(
+        _("Thumbnail Image"), upload_to=upload_entry_image, blank=True)
 
     author = models.CharField(_('Blog Author'), max_length=255)
     abstract = models.TextField(_('Abstract'), blank=True, max_length=400)

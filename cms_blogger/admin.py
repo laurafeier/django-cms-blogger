@@ -251,9 +251,9 @@ class BlogEntryPageAdmin(CustomAdmin, PlaceholderAdmin):
     change_form_fieldsets = (
         (None, {
             'fields': [
-                'title', 'blog', ('slug', 'creation_date'), 'author',
-                'abstract', 'body', ('is_published', 'start_publication',
-                'end_publication'), 'meta_description',
+                'title', 'blog', ('slug', 'creation_date'), 'thumbnail_image',
+                'author', 'abstract', 'body', ('is_published',
+                'start_publication', 'end_publication'), 'meta_description',
                 'meta_keywords'],
         }),)
 

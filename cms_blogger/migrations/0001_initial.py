@@ -57,6 +57,7 @@ class Migration(SchemaMigration):
             ('title', self.gf('django.db.models.fields.CharField')(max_length=120)),
             ('slug', self.gf('django.db.models.fields.SlugField')(max_length=255)),
             ('creation_date', self.gf('django.db.models.fields.DateField')(default=datetime.datetime.now, db_index=True)),
+            ('thumbnail_image', self.gf('django.db.models.fields.files.ImageField')(max_length=100, blank=True)),
             ('author', self.gf('django.db.models.fields.CharField')(max_length=255)),
             ('abstract', self.gf('django.db.models.fields.TextField')(max_length=400, blank=True)),
             ('start_publication', self.gf('django.db.models.fields.DateTimeField')(db_index=True, null=True, blank=True)),
@@ -221,6 +222,7 @@ class Migration(SchemaMigration):
             'meta_keywords': ('django.db.models.fields.CharField', [], {'max_length': '120', 'blank': 'True'}),
             'slug': ('django.db.models.fields.SlugField', [], {'max_length': '255'}),
             'start_publication': ('django.db.models.fields.DateTimeField', [], {'db_index': 'True', 'null': 'True', 'blank': 'True'}),
+            'thumbnail_image': ('django.db.models.fields.files.ImageField', [], {'max_length': '100', 'blank': 'True'}),
             'title': ('django.db.models.fields.CharField', [], {'max_length': '120'})
         },
         'cms_blogger.blognavigationnode': {
