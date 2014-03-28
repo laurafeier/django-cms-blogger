@@ -22,7 +22,7 @@ from .models import Blog, BlogEntryPage, BlogNavigationNode
 from .forms import (
     BlogLayoutForm, BlogForm, BlogAddForm, BlogEntryPageAddForm,
     BlogEntryPageChangeForm, BlogLayoutInlineFormSet)
-from .blog_changelist import BlogChangeList
+from .changelists import BlogChangeList, BlogEntryChangeList
 from .widgets import ToggleWidget
 
 
@@ -241,6 +241,7 @@ class BlogAdmin(CustomAdmin):
 
 
 class BlogEntryPageAdmin(CustomAdmin, PlaceholderAdmin):
+    custom_changelist_class = BlogEntryChangeList
     list_display = ('__str__', 'slug', 'blog')
     search_fields = ('title', 'blog__title')
     add_form_template = 'admin/cms_blogger/blogentrypage/add_form.html'
@@ -255,6 +256,11 @@ class BlogEntryPageAdmin(CustomAdmin, PlaceholderAdmin):
                 'end_publication'), 'meta_description',
                 'meta_keywords'],
         }),)
+
+    def lookup_allowed(self, lookup, value):
+        if lookup == BlogEntryChangeList.site_lookup:
+            return True
+        return super(BlogEntryPageAdmin, self).lookup_allowed(lookup, value)
 
     def get_prepopulated_fields(self, request, obj=None):
         if obj and obj.pk:

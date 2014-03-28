@@ -42,8 +42,8 @@ CMS.$(document).bind('ready.cms_blogger', function(){
             var url = window.location.href;
             //url = insert_into_url(url, "site__exact", id);
             url = CMS.API.Helpers.setUrl(document.location, {
-                'addParam': "site__exact=" + id,
-                'removeParam': "site__exact"
+                'addParam': "{{cl.site_lookup}}=" + id,
+                'removeParam': "{{cl.site_lookup}}"
             });
             window.location.href = url;
         });
@@ -53,7 +53,7 @@ CMS.$(document).bind('ready.cms_blogger', function(){
 
 {% block search %}
 {% if cl.has_access_to_multiple_sites %}
-    <div id="site-selector">{% trans "Blogs on:" %}
+    <div id="site-selector">{{cl.opts.verbose_name_plural|capfirst}} on:
         <select id="site-select">{% for site in cl.sites %}
             <option {% ifequal site.pk cl.current_site.pk %}selected {% endifequal %}value="{{ site.pk }}">{{ site.name }}</option>{% endfor %}
         </select>

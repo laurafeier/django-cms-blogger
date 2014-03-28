@@ -10,8 +10,10 @@ from django.db.models import signals
 from django.dispatch import receiver
 from cms.models.fields import PlaceholderField
 from cms.models import Page, Placeholder
-from filer.fields.image import FilerImageField
 from cms_layouts.models import LayoutTitle, Layout
+from cms_layouts.slot_finder import get_mock_placeholder
+from filer.fields.image import FilerImageField
+import filer
 
 
 def getCMSContentModel(**kwargs):
@@ -181,9 +183,22 @@ class Blog(AbstractBlog):
         help_text=_(
             'Select ON to hide comments on phone sized mobile devices.'))
 
+    def has_attached_image(self):
+        try:
+            return self.branding_image
+        except filer.models.Image.DoesNotExist:
+            return None
+
     @property
     def header(self):
-        return Placeholder()
+        html = "<h1 id='blog-title'>%s</h1>" % self.title
+        if self.tagline:
+            html += "<h2 id='blog-tagline'>%s</h2>" % self.tagline
+        image = self.has_attached_image()
+        if image:
+            html += "<img id='blog-banding-image' src='%s'></img>" % (
+                image.file.url, )
+        return get_mock_placeholder(get_language(), html)
 
     @models.permalink
     def get_absolute_url(self):
