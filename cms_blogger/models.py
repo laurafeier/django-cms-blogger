@@ -286,7 +286,7 @@ class BlogEntryPage(
         _('slug'), max_length=255,
         help_text=_("Used to build the entry's URL."))
     publication_date = models.DateField(
-        _('publication_date'),
+        _('publication date'),
         db_index=True, default=timezone.now,
         help_text=_("Used to build the entry's URL."))
 

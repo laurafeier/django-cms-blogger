@@ -6,6 +6,7 @@ from django.forms.util import ErrorList
 from django.contrib.contenttypes.generic import BaseGenericInlineFormSet
 from django.contrib.sites.models import Site
 from django.utils.translation import ugettext_lazy as _
+from django.utils import timezone
 from cms.plugin_pool import plugin_pool
 from cms.plugins.text.settings import USE_TINYMCE
 from cms.plugins.text.widgets.wymeditor_widget import WYMEditor
@@ -242,3 +243,37 @@ class BlogEntryPageChangeForm(forms.ModelForm):
         else:
             raise ValidationError("Entry with the same slug already exists.")
         return slug
+
+    def _reset_publication_date(self):
+        pub_date = self.cleaned_data.get('publication_date')
+        if pub_date and pub_date != self.instance.publication_date:
+            # do not reset if it was specifically set.
+            return
+
+        is_published = self.cleaned_data.get('is_published')
+        start_date = self.cleaned_data.get('start_publication')
+        # check if reset publication date is needed
+        when = now = timezone.now()
+        if is_published:
+            if not self.instance.is_published:
+                # if however a startdate was set
+                if start_date and not self.instance.start_publication:
+                    when = start_date
+                self.cleaned_data['publication_date'] = when
+            elif start_date != self.instance.start_publication:
+                # if was published but start pub date changed
+                self.cleaned_data['publication_date'] = start_date or now
+        else:
+            self.cleaned_data['start_publication'] = None
+            self.cleaned_data['end_publication'] = None
+            self.cleaned_data['publication_date'] = now
+
+    def clean(self):
+        self._reset_publication_date()
+        start_date = self.cleaned_data.get('start_publication')
+        end_date = self.cleaned_data.get('end_publication')
+        if (start_date and end_date and not start_date < end_date):
+            raise ValidationError("Incorrect publication dates interval.")
+
+        return self.cleaned_data
+

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2014-03-31 15:25+0000\n"
+"POT-Creation-Date: 2014-03-31 16:35+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -57,7 +57,7 @@ msgstr ""
 "Comment management, including approving, removing, and moderating comments, "
 "takes place via the Disqus admin."
 
-#: forms.py:115
+#: forms.py:116
 msgid "Categories help text"
 msgstr ""
 "Categories help organize blog content. Categories are unique to a blog, and "
@@ -174,7 +174,7 @@ msgid "Used to build the entry's URL."
 msgstr ""
 
 #: models.py:289
-msgid "publication_date"
+msgid "publication date"
 msgstr ""
 
 #: models.py:294
