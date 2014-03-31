@@ -256,8 +256,8 @@ class BlogAdmin(CustomAdmin):
             }
             nav_node = blog.navigation_node
             if not nav_node:
-                new_node = BlogNavigationNode.objects.create(**data)
-                new_node.blog_set.add(blog)
+                nav_node = BlogNavigationNode.objects.create(**data)
+                nav_node.blog_set.add(blog)
             else:
                 for attname, value in data.items():
                     setattr(nav_node, attname, value)
