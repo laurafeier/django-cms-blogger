@@ -1,1 +1,9 @@
 {% extends "admin/cms_blogger/blog/change_list.html" %}
+{% block extrastyle %}
+{{block.super}}
+<style type="text/css">
+#changelist table tr:hover {
+    background-color: #fffccf;
+}
+</style>
+{% endblock %}

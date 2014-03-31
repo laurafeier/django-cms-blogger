@@ -293,10 +293,10 @@ class BlogEntryPageAdmin(CustomAdmin, PlaceholderAdmin):
     change_form_fieldsets = (
         (None, {
             'fields': [
-                'title', 'blog', ('slug', 'creation_date'), 'thumbnail_image',
-                'author', 'abstract', 'body', ('is_published',
-                'start_publication', 'end_publication'), 'meta_description',
-                'meta_keywords'],
+                'title', 'blog', ('slug', 'publication_date'),
+                'thumbnail_image', 'author', 'abstract', 'body',
+                ('is_published', 'start_publication', 'end_publication'),
+                'meta_description', 'meta_keywords'],
         }),)
 
     def lookup_allowed(self, lookup, value):
@@ -310,15 +310,6 @@ class BlogEntryPageAdmin(CustomAdmin, PlaceholderAdmin):
         else:
             self.prepopulated_fields = {}
         return super(BlogEntryPageAdmin, self).get_prepopulated_fields(request, obj)
-
-    def get_readonly_fields(self, request, obj=None):
-        readonly_fields = set(ro for ro in self.readonly_fields)
-        if obj and obj.blog and not obj.blog.entries_slugs_with_date:
-            readonly_fields.add('creation_date')
-        else:
-            readonly_fields.discard('creation_date')
-        self.readonly_fields = list(readonly_fields)
-        return super(BlogEntryPageAdmin, self).get_readonly_fields(request, obj)
 
     def add_plugin(self, request):
         # sice there is no placeholder displayed in the change form, plugins

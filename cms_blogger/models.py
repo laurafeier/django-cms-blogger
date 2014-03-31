@@ -285,8 +285,8 @@ class BlogEntryPage(
     slug = models.SlugField(
         _('slug'), max_length=255,
         help_text=_("Used to build the entry's URL."))
-    creation_date = models.DateField(
-        _('creation date'),
+    publication_date = models.DateField(
+        _('publication_date'),
         db_index=True, default=timezone.now,
         help_text=_("Used to build the entry's URL."))
 
@@ -345,9 +345,9 @@ class BlogEntryPage(
         if self.blog.entries_slugs_with_date:
             return ('cms_blogger.views.entry_page', (), {
                 'blog_slug': self.blog.slug,
-                'year': self.creation_date.year,
-                'month': self.creation_date.strftime('%m'),
-                'day': self.creation_date.strftime('%d'),
+                'year': self.publication_date.year,
+                'month': self.publication_date.strftime('%m'),
+                'day': self.publication_date.strftime('%d'),
                 'entry_slug': self.slug})
         return ('cms_blogger.views.entry_or_bio_page', (), {
             'blog_slug': self.blog.slug,

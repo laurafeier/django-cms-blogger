@@ -1,7 +1,7 @@
 <div class='left-col'>
     <div class="date">
-        <span class="month">{{entry.creation_date|date:"M"}}</span>
-        <span class="day">{{entry.creation_date.day}}</span>
+        <span class="month">{{entry.publication_date|date:"M"}}</span>
+        <span class="day">{{entry.publication_date.day}}</span>
     </div>
     {% if blog.enable_facebook or blog.enable_twitter or blog.email_account_link %}
     <div class="social">

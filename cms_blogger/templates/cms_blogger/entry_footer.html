@@ -5,9 +5,9 @@
         <div class="arrow-left">previous post</div>
         <p class="summary">{{entry.previous_post.abstract}}</p>
         <p class="date">
-            <span class="month">{{entry.previous_post.creation_date|date:'F'}}</span>
-            <span class="day">{{entry.previous_post.creation_date.day}}</span>,
-            <span class="year">{{entry.previous_post.creation_date.year}}</span>
+            <span class="month">{{entry.previous_post.publication_date|date:'F'}}</span>
+            <span class="day">{{entry.previous_post.publication_date.day}}</span>,
+            <span class="year">{{entry.previous_post.publication_date.year}}</span>
         </p>
     </a>
     {% else %}
@@ -15,9 +15,9 @@
         <div class="arrow-right">next post</div>
         <p class="summary">{{entry.next_post.abstract}}</p>
         <p class="date">
-            <span class="month">{{entry.next_post.creation_date.month}}</span>
-            <span class="day">{{entry.next_post.creation_date.day}}</span>,
-            <span class="year">{{entry.next_post.creation_date.year}}</span>
+            <span class="month">{{entry.next_post.publication_date.month}}</span>
+            <span class="day">{{entry.next_post.publication_date.day}}</span>,
+            <span class="year">{{entry.next_post.publication_date.year}}</span>
         </p>
     </a>
     {% endif %}
