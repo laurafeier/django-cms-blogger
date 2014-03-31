@@ -16,6 +16,8 @@ from django.http import HttpResponse
 
 from cms.admin.placeholderadmin import PlaceholderAdmin
 from cms.models import Title, CMSPlugin
+from menus.menu_pool import menu_pool
+from menus.templatetags.menu_tags import cut_levels
 
 from cms_layouts.models import Layout
 from .models import Blog, BlogEntryPage, BlogNavigationNode
@@ -160,22 +162,54 @@ class BlogAdmin(CustomAdmin):
 
         return formCls
 
+    def _get_nodes(self, request, nodes, node_id, output):
+       for node in nodes:
+            if node.id == node_id:
+                output.append('<li class="current-node">')
+            else:
+                output.append('<li>')
+            output.append(node.get_menu_title())
+            if node.children:
+                output.append('<span class="arrow-down"></span>')
+                output.append('<ul>')
+                self._get_nodes(request, node.children, node_id, output)
+                output.append('</ul>')
+            output.append('</li>')
+
+    def _navigation_preview(self, request, nav_node):
+        if not request or not nav_node:
+            return '(Choose position)'
+        nodes = menu_pool.get_nodes(request, None, None)
+        nodes = cut_levels(nodes, 0, 1, 1, 100)
+        nodes = menu_pool.apply_modifiers(
+            nodes, request, None, None, post_cut=True)
+        output = []
+        node_id = nav_node.id * -1
+        self._get_nodes(request, nodes, node_id, output)
+        html_preview = ''.join(output)
+        if 'current-node' not in html_preview:
+            return "(Choose Position)"
+        return html_preview
+
     def location_in_navigation(self, obj):
         if obj.id:
+            nav_node = obj.navigation_node
+            request = getattr(obj, '_request_for_navigation_preview', None)
             url = reverse('admin:cms_blogger-navigation-tool', args=[obj.id])
-            name = 'navigation_node'
             output = []
             output.append(
-                u'<a href="%s" class="add-another" id="add_id_%s" '
-                'onclick="return showNavigationPopup(this);"> ' % (
-                    url, name))
+                u'<a href="%s" class="add-another" id="add_id_navigation_node"'
+                ' onclick="return showNavigationPopup(this);"> ' % url)
             output.append(
                 u'<input type="button" value="Open Navigation Tool" /></a>')
-            output.append(
-                u'<span id="id_%s_pretty">%s</span>' % (
-                    name, obj.navigation_node if obj.navigation_node else ''))
-
-            return mark_safe(u''.join(output))
+            preview = self._navigation_preview(
+                request, nav_node)
+            output.append('<ul id="id_navigation_node_pretty">')
+            output.append(preview)
+            output.append('</ul')
+            html_out = u''.join(output)
+            html_out = mark_safe(html_out)
+            return html_out
         else:
             return "(save first)"
     location_in_navigation.allow_tags = True
@@ -193,6 +227,8 @@ class BlogAdmin(CustomAdmin):
     def get_formsets(self, request, obj=None):
         # don't show layout inline in add view
         if obj and obj.pk:
+            # set request for navigation_preview
+            obj._request_for_navigation_preview = request
             return super(BlogAdmin, self).get_formsets(request, obj)
         return []
 
@@ -226,11 +262,13 @@ class BlogAdmin(CustomAdmin):
                 for attname, value in data.items():
                     setattr(nav_node, attname, value)
                 nav_node.save()
+
+            preview = self._navigation_preview(request, nav_node)
             return HttpResponse(
                 '<!DOCTYPE html><html><head><title></title></head><body>'
                 '<script type="text/javascript">opener.closeNavigationPopup'
                 '(window, "%s");</script></body></html>' % \
-                    (escapejs(nav_node)), )
+                    (escapejs(preview)), )
         context = RequestContext(request)
         context.update({
             'current_site': Site.objects.get_current(),
