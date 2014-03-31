@@ -49,7 +49,11 @@ class BlogLayoutInline(GenericTabularInline):
         if obj:
             available_choices = Title.objects.filter(
                 page__site=obj.site,
-                language=get_language()).values_list('page', 'title')
+                language=get_language()).values_list(
+                    'page', 'page__level', 'title')
+            available_choices = [
+                (page, mark_safe('%s%s' % ('&nbsp;' * level * 2, title)))
+                for page, level, title in available_choices]
         else:
             available_choices = Title.objects.get_empty_query_set()
         page_field = formSet.form.base_fields['from_page']
