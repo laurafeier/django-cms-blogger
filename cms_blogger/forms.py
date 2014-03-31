@@ -15,6 +15,7 @@ from cms_layouts.models import Layout
 from cms_layouts.slot_finder import (
     get_fixed_section_slots, MissingRequiredPlaceholder)
 from .models import Blog, BlogEntryPage, BlogCategory
+from .widgets import TagItWidget
 
 
 class BlogLayoutInlineFormSet(BaseGenericInlineFormSet):
@@ -108,7 +109,10 @@ class BlogLayoutForm(forms.ModelForm):
 
 
 class BlogForm(forms.ModelForm):
-    categories = forms.CharField(help_text=_('Categories help text'))
+    categories = forms.CharField(
+        widget=TagItWidget(attrs={
+            'tagit': '{allowSpaces: true, tagLimit: 20, caseSensitive: false}'}),
+        help_text=_('Categories help text'))
 
     class Meta:
         model = Blog
@@ -131,7 +135,9 @@ class BlogForm(forms.ModelForm):
         categories = self.cleaned_data.get('categories', '')
         if not categories:
             raise ValidationError("Add at least one category.")
-        categories_names = [name.strip() for name in categories.split(',')]
+
+        categories_names = [name.strip().lower()
+                            for name in categories.split(',')]
 
         if len(categories_names) != len(set(categories_names)):
             raise ValidationError(
