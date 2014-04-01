@@ -7,6 +7,7 @@ from django.contrib.contenttypes.generic import BaseGenericInlineFormSet
 from django.contrib.sites.models import Site
 from django.utils.translation import ugettext_lazy as _
 from django.utils import timezone
+from django.contrib.auth.models import User
 from cms.plugin_pool import plugin_pool
 from cms.plugins.text.settings import USE_TINYMCE
 from cms.plugins.text.widgets.wymeditor_widget import WYMEditor
@@ -15,8 +16,10 @@ from cms.models import Page
 from cms_layouts.models import Layout
 from cms_layouts.slot_finder import (
     get_fixed_section_slots, MissingRequiredPlaceholder)
+from django_select2.fields import AutoModelSelect2Field
 from .models import Blog, BlogEntryPage, BlogCategory
 from .widgets import TagItWidget
+from .utils import user_display_name
 
 
 class BlogLayoutInlineFormSet(BaseGenericInlineFormSet):
@@ -208,13 +211,24 @@ def _get_text_editor_widget():
         return WYMEditor(installed_plugins=plugins)
 
 
+class AuthorField(AutoModelSelect2Field):
+
+    search_fields = ['first_name__icontains', 'last_name__icontains',
+                     'email__icontains', 'username__icontains']
+    queryset = User.objects.all()
+    empty_values = [None, '', 0]
+
+    def label_from_instance(self, obj):
+        return user_display_name(obj)
+
+
 class BlogEntryPageChangeForm(forms.ModelForm):
     body = forms.CharField(
         label='Blog Entry', required=True,
         widget=_get_text_editor_widget())
+    author = AuthorField()
 
     class Media:
-        js = ("cms_blogger/js/jQuery-patch.js",)
         css = {"all": ("cms_blogger/css/entry-change-form.css", )}
 
     class Meta:

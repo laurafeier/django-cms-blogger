@@ -58,7 +58,7 @@ class Migration(SchemaMigration):
             ('slug', self.gf('django.db.models.fields.SlugField')(max_length=255)),
             ('publication_date', self.gf('django.db.models.fields.DateField')(default=datetime.datetime.now, db_index=True)),
             ('thumbnail_image', self.gf('django.db.models.fields.files.ImageField')(max_length=100, blank=True)),
-            ('author', self.gf('django.db.models.fields.CharField')(max_length=255)),
+            ('author', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['auth.User'], null=True, on_delete=models.SET_NULL, blank=True)),
             ('abstract', self.gf('django.db.models.fields.TextField')(max_length=400, blank=True)),
             ('start_publication', self.gf('django.db.models.fields.DateTimeField')(db_index=True, null=True, blank=True)),
             ('end_publication', self.gf('django.db.models.fields.DateTimeField')(db_index=True, null=True, blank=True)),
@@ -210,7 +210,7 @@ class Migration(SchemaMigration):
         'cms_blogger.blogentrypage': {
             'Meta': {'unique_together': "(('slug', 'blog', 'draft_id'),)", 'object_name': 'BlogEntryPage'},
             'abstract': ('django.db.models.fields.TextField', [], {'max_length': '400', 'blank': 'True'}),
-            'author': ('django.db.models.fields.CharField', [], {'max_length': '255'}),
+            'author': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['auth.User']", 'null': 'True', 'on_delete': 'models.SET_NULL', 'blank': 'True'}),
             'blog': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['cms_blogger.Blog']"}),
             'content': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['cms.Placeholder']", 'null': 'True'}),
             'draft_id': ('django.db.models.fields.IntegerField', [], {'null': 'True', 'blank': 'True'}),

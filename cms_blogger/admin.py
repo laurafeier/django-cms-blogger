@@ -1,8 +1,9 @@
 from django.contrib import admin
 from django.contrib.sites.models import Site
 from django.contrib.contenttypes.generic import GenericTabularInline
+from django.contrib.admin.templatetags.admin_static import static
 from django.db import models
-from django.forms import HiddenInput
+from django.forms import HiddenInput, Media
 from django.utils.html import escapejs
 from django.utils.translation import get_language, ugettext_lazy as _
 from django.utils.safestring import mark_safe
@@ -298,6 +299,40 @@ class BlogEntryPageAdmin(CustomAdmin, PlaceholderAdmin):
                 ('is_published', 'start_publication', 'end_publication'),
                 'meta_description', 'meta_keywords'],
         }),)
+
+    @property
+    def media(self):
+        # upgrade jquery and cms jquery UI
+        super_media = super(BlogEntryPageAdmin, self).media
+        new_media = Media()
+        new_media.add_css(super_media._css)
+
+        new_jquery_version = static('cms_blogger/js/jquery-1.9.1.min.js')
+        new_jquery_ui_version = static('cms_blogger/js/jquery-ui.min.js')
+        # make sure all jquery namespaces point to the same jquery
+        jquery_namspace = static('cms_blogger/js/jQuery-patch.js')
+        django_jquery_urls = [static('admin/js/jquery.js'),
+                              static('admin/js/jquery.min.js')]
+
+        for js in super_media._js:
+            if js in django_jquery_urls:
+                new_media.add_js((new_jquery_version, ))
+            elif js == static('admin/js/jquery.init.js'):
+                new_media.add_js((js, jquery_namspace))
+            elif js.startswith(static('cms/js/libs/jquery.ui.')):
+                new_media.add_js((new_jquery_ui_version, ))
+            else:
+                new_media.add_js((js, ))
+
+        return new_media
+
+    def get_form(self, request, obj=None, **kwargs):
+        formCls = super(BlogEntryPageAdmin, self).get_form(
+            request, obj, **kwargs)
+        # set initial
+        if obj and not obj.author:
+            obj.author = request.user
+        return formCls
 
     def lookup_allowed(self, lookup, value):
         if lookup == BlogEntryChangeList.site_lookup:
