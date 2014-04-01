@@ -295,6 +295,7 @@ class BlogEntryPageAdmin(CustomAdmin, PlaceholderAdmin):
         (None, {
             'fields': [
                 'title', 'blog', ('slug', 'publication_date'),
+                'categories',
                 'thumbnail_image', 'author', 'abstract', 'body',
                 ('is_published', 'start_publication', 'end_publication'),
                 'meta_description', 'meta_keywords'],
@@ -333,6 +334,20 @@ class BlogEntryPageAdmin(CustomAdmin, PlaceholderAdmin):
         if obj and not obj.author:
             obj.author = request.user
         return formCls
+
+    def save_related(self, request, form, formsets, change):
+        super(BlogEntryPageAdmin, self).save_related(
+            request, form, formsets, change)
+        submitted_categories = form.cleaned_data.get('categories', [])
+        entry = form.instance
+        if not entry.blog:
+            entry.categories = []
+        else:
+            ids_in_blog = entry.blog.categories.values_list('pk', id=True)
+            entry.categories = [
+                valid_category
+                for valid_category in submitted_categories
+                if valid_category.pk in ids_in_blog]
 
     def lookup_allowed(self, lookup, value):
         if lookup == BlogEntryChangeList.site_lookup:

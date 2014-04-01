@@ -16,7 +16,8 @@ from cms.models import Page
 from cms_layouts.models import Layout
 from cms_layouts.slot_finder import (
     get_fixed_section_slots, MissingRequiredPlaceholder)
-from django_select2.fields import AutoModelSelect2Field
+from django_select2.fields import (
+    AutoModelSelect2Field, ModelSelect2MultipleField)
 from .models import Blog, BlogEntryPage, BlogCategory
 from .widgets import TagItWidget
 from .utils import user_display_name
@@ -227,6 +228,7 @@ class BlogEntryPageChangeForm(forms.ModelForm):
         label='Blog Entry', required=True,
         widget=_get_text_editor_widget())
     author = AuthorField()
+    categories = ModelSelect2MultipleField()
 
     class Media:
         css = {"all": ("cms_blogger/css/entry-change-form.css", )}
@@ -236,6 +238,11 @@ class BlogEntryPageChangeForm(forms.ModelForm):
         exclude = ('content', )
 
     def __init__(self, *args, **kwargs):
+        instance = kwargs.get('instance')
+        categories_field = self.base_fields.get('categories')
+        if categories_field and instance and instance.blog:
+            categories_field.queryset = instance.blog.categories.all()
+            categories_field.initial = instance.categories.all()
         super(BlogEntryPageChangeForm, self).__init__(*args, **kwargs)
         self.fields['body'].initial = self.instance.content_body
         # prepare for save
