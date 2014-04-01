@@ -8,8 +8,9 @@ from .models import BlogEntryPage
 
 def entry_page(request, blog_slug, year, month, day, entry_slug):
     entry = get_object_or_404(
-        BlogEntryPage, creation_date__year=year, creation_date__month=month,
-        creation_date__day=day, slug=entry_slug, blog__slug=blog_slug,
+        BlogEntryPage, publication_date__year=year,
+        publication_date__month=month, publication_date__day=day,
+        slug=entry_slug, blog__slug=blog_slug,
         blog__entries_slugs_with_date=True,
         blog__site=Site.objects.get_current())
     layout = entry.get_layout()

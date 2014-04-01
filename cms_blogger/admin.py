@@ -1,8 +1,9 @@
 from django.contrib import admin
 from django.contrib.sites.models import Site
 from django.contrib.contenttypes.generic import GenericTabularInline
+from django.contrib.admin.templatetags.admin_static import static
 from django.db import models
-from django.forms import HiddenInput
+from django.forms import HiddenInput, Media
 from django.utils.html import escapejs
 from django.utils.translation import get_language, ugettext_lazy as _
 from django.utils.safestring import mark_safe
@@ -16,6 +17,8 @@ from django.http import HttpResponse
 
 from cms.admin.placeholderadmin import PlaceholderAdmin
 from cms.models import Title, CMSPlugin
+from menus.menu_pool import menu_pool
+from menus.templatetags.menu_tags import cut_levels
 
 from cms_layouts.models import Layout
 from .models import Blog, BlogEntryPage, BlogNavigationNode
@@ -131,6 +134,11 @@ class BlogAdmin(CustomAdmin):
             'classes': ('extrapretty', ),
             'description': _('Blog Setup Description')
         }),
+        ('Blog Users', {
+            'fields': ['allowed_users', ],
+            'classes': ('extrapretty', ),
+            'description': _('Blog Allowed Users')
+        }),
         ('Navigation', {
             'fields': [('in_navigation', 'location_in_navigation'), ],
             'classes': ('extrapretty',),
@@ -160,22 +168,54 @@ class BlogAdmin(CustomAdmin):
 
         return formCls
 
+    def _get_nodes(self, request, nodes, node_id, output):
+       for node in nodes:
+            if node.id == node_id:
+                output.append('<li class="current-node">')
+            else:
+                output.append('<li>')
+            output.append(node.get_menu_title())
+            if node.children:
+                output.append('<span class="arrow-down"></span>')
+                output.append('<ul>')
+                self._get_nodes(request, node.children, node_id, output)
+                output.append('</ul>')
+            output.append('</li>')
+
+    def _navigation_preview(self, request, nav_node):
+        if not request or not nav_node:
+            return '(Choose position)'
+        nodes = menu_pool.get_nodes(request, None, None)
+        nodes = cut_levels(nodes, 0, 1, 1, 100)
+        nodes = menu_pool.apply_modifiers(
+            nodes, request, None, None, post_cut=True)
+        output = []
+        node_id = nav_node.id * -1
+        self._get_nodes(request, nodes, node_id, output)
+        html_preview = ''.join(output)
+        if 'current-node' not in html_preview:
+            return "(Choose Position)"
+        return html_preview
+
     def location_in_navigation(self, obj):
         if obj.id:
+            nav_node = obj.navigation_node
+            request = getattr(obj, '_request_for_navigation_preview', None)
             url = reverse('admin:cms_blogger-navigation-tool', args=[obj.id])
-            name = 'navigation_node'
             output = []
             output.append(
-                u'<a href="%s" class="add-another" id="add_id_%s" '
-                'onclick="return showNavigationPopup(this);"> ' % (
-                    url, name))
+                u'<a href="%s" class="add-another" id="add_id_navigation_node"'
+                ' onclick="return showNavigationPopup(this);"> ' % url)
             output.append(
                 u'<input type="button" value="Open Navigation Tool" /></a>')
-            output.append(
-                u'<span id="id_%s_pretty">%s</span>' % (
-                    name, obj.navigation_node if obj.navigation_node else ''))
-
-            return mark_safe(u''.join(output))
+            preview = self._navigation_preview(
+                request, nav_node)
+            output.append('<ul id="id_navigation_node_pretty">')
+            output.append(preview)
+            output.append('</ul')
+            html_out = u''.join(output)
+            html_out = mark_safe(html_out)
+            return html_out
         else:
             return "(save first)"
     location_in_navigation.allow_tags = True
@@ -193,6 +233,8 @@ class BlogAdmin(CustomAdmin):
     def get_formsets(self, request, obj=None):
         # don't show layout inline in add view
         if obj and obj.pk:
+            # set request for navigation_preview
+            obj._request_for_navigation_preview = request
             return super(BlogAdmin, self).get_formsets(request, obj)
         return []
 
@@ -220,17 +262,19 @@ class BlogAdmin(CustomAdmin):
             }
             nav_node = blog.navigation_node
             if not nav_node:
-                new_node = BlogNavigationNode.objects.create(**data)
-                new_node.blog_set.add(blog)
+                nav_node = BlogNavigationNode.objects.create(**data)
+                nav_node.blog_set.add(blog)
             else:
                 for attname, value in data.items():
                     setattr(nav_node, attname, value)
                 nav_node.save()
+
+            preview = self._navigation_preview(request, nav_node)
             return HttpResponse(
                 '<!DOCTYPE html><html><head><title></title></head><body>'
                 '<script type="text/javascript">opener.closeNavigationPopup'
                 '(window, "%s");</script></body></html>' % \
-                    (escapejs(nav_node)), )
+                    (escapejs(preview)), )
         context = RequestContext(request)
         context.update({
             'current_site': Site.objects.get_current(),
@@ -255,11 +299,76 @@ class BlogEntryPageAdmin(CustomAdmin, PlaceholderAdmin):
     change_form_fieldsets = (
         (None, {
             'fields': [
-                'title', 'blog', ('slug', 'creation_date'), 'thumbnail_image',
-                'author', 'abstract', 'body', ('is_published',
-                'start_publication', 'end_publication'), 'meta_description',
-                'meta_keywords'],
+                'title', 'blog', ('slug', 'publication_date'),
+                'categories',
+                'thumbnail_image', 'author', 'abstract', 'body',
+                ('is_published', 'start_publication', 'end_publication'),
+                'meta_description', 'meta_keywords'],
         }),)
+
+    @property
+    def media(self):
+        # upgrade jquery and cms jquery UI
+        super_media = super(BlogEntryPageAdmin, self).media
+        new_media = Media()
+        new_media.add_css(super_media._css)
+
+        new_jquery_version = static('cms_blogger/js/jquery-1.9.1.min.js')
+        new_jquery_ui_version = static('cms_blogger/js/jquery-ui.min.js')
+        # make sure all jquery namespaces point to the same jquery
+        jquery_namspace = static('cms_blogger/js/jQuery-patch.js')
+        django_jquery_urls = [static('admin/js/jquery.js'),
+                              static('admin/js/jquery.min.js')]
+
+        for js in super_media._js:
+            if js in django_jquery_urls:
+                new_media.add_js((new_jquery_version, ))
+            elif js == static('admin/js/jquery.init.js'):
+                new_media.add_js((js, jquery_namspace))
+            elif js.startswith(static('cms/js/libs/jquery.ui.')):
+                new_media.add_js((new_jquery_ui_version, ))
+            else:
+                new_media.add_js((js, ))
+
+        return new_media
+
+    def get_form(self, request, obj=None, **kwargs):
+        formCls = super(BlogEntryPageAdmin, self).get_form(
+            request, obj, **kwargs)
+        # set initial
+        if obj and not obj.author:
+            obj.author = request.user
+        if not obj:
+            # filter available blog choices
+            site = Site.objects.get_current()
+            blog_field = formCls.base_fields['blog']
+            allowed_blogs = blog_field.queryset.filter(site=site)
+            if not request.user.is_superuser:
+                allowed_blogs = allowed_blogs.filter(
+                    allowed_users=request.user)
+            blog_field.queryset = allowed_blogs
+            blog_field.widget.can_add_related = False
+        return formCls
+
+    def queryset(self, request):
+        qs = super(BlogEntryPageAdmin, self).queryset(request)
+        if request.user.is_superuser:
+            return qs
+        return qs.filter(blog__allowed_users=request.user)
+
+    def save_related(self, request, form, formsets, change):
+        super(BlogEntryPageAdmin, self).save_related(
+            request, form, formsets, change)
+        submitted_categories = form.cleaned_data.get('categories', [])
+        entry = form.instance
+        if not entry.blog:
+            entry.categories = []
+        else:
+            ids_in_blog = entry.blog.categories.values_list('pk', flat=True)
+            entry.categories = [
+                valid_category
+                for valid_category in submitted_categories
+                if valid_category.pk in ids_in_blog]
 
     def lookup_allowed(self, lookup, value):
         if lookup == BlogEntryChangeList.site_lookup:
@@ -272,15 +381,6 @@ class BlogEntryPageAdmin(CustomAdmin, PlaceholderAdmin):
         else:
             self.prepopulated_fields = {}
         return super(BlogEntryPageAdmin, self).get_prepopulated_fields(request, obj)
-
-    def get_readonly_fields(self, request, obj=None):
-        readonly_fields = set(ro for ro in self.readonly_fields)
-        if obj and obj.blog and not obj.blog.entries_slugs_with_date:
-            readonly_fields.add('creation_date')
-        else:
-            readonly_fields.discard('creation_date')
-        self.readonly_fields = list(readonly_fields)
-        return super(BlogEntryPageAdmin, self).get_readonly_fields(request, obj)
 
     def add_plugin(self, request):
         # sice there is no placeholder displayed in the change form, plugins

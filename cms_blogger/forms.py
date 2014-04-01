@@ -6,6 +6,8 @@ from django.forms.util import ErrorList
 from django.contrib.contenttypes.generic import BaseGenericInlineFormSet
 from django.contrib.sites.models import Site
 from django.utils.translation import ugettext_lazy as _
+from django.utils import timezone
+from django.contrib.auth.models import User
 from cms.plugin_pool import plugin_pool
 from cms.plugins.text.settings import USE_TINYMCE
 from cms.plugins.text.widgets.wymeditor_widget import WYMEditor
@@ -14,7 +16,12 @@ from cms.models import Page
 from cms_layouts.models import Layout
 from cms_layouts.slot_finder import (
     get_fixed_section_slots, MissingRequiredPlaceholder)
+from django_select2.fields import (
+    AutoModelSelect2Field, ModelSelect2MultipleField,
+    AutoModelSelect2MultipleField)
 from .models import Blog, BlogEntryPage, BlogCategory
+from .widgets import TagItWidget
+from .utils import user_display_name
 
 
 class BlogLayoutInlineFormSet(BaseGenericInlineFormSet):
@@ -107,8 +114,23 @@ class BlogLayoutForm(forms.ModelForm):
                     page, page_exception))
 
 
+class BlogUserField(AutoModelSelect2MultipleField):
+    search_fields = ['first_name__icontains', 'last_name__icontains',
+                     'email__icontains', 'username__icontains']
+    queryset = User.objects.all()
+    empty_values = [None, '', 0]
+
+    def label_from_instance(self, obj):
+        return user_display_name(obj)
+
+
 class BlogForm(forms.ModelForm):
-    categories = forms.CharField(help_text=_('Categories help text'))
+    categories = forms.CharField(
+        widget=TagItWidget(attrs={
+            'tagit': '{allowSpaces: true, tagLimit: 20, caseSensitive: false}'}),
+        help_text=_('Categories help text'))
+
+    allowed_users = BlogUserField()
 
     class Meta:
         model = Blog
@@ -131,7 +153,9 @@ class BlogForm(forms.ModelForm):
         categories = self.cleaned_data.get('categories', '')
         if not categories:
             raise ValidationError("Add at least one category.")
-        categories_names = [name.strip() for name in categories.split(',')]
+
+        categories_names = [name.strip().lower()
+                            for name in categories.split(',')]
 
         if len(categories_names) != len(set(categories_names)):
             raise ValidationError(
@@ -182,13 +206,6 @@ class BlogEntryPageAddForm(forms.ModelForm):
         model = BlogEntryPage
         fields = ('blog', )
 
-    def __init__(self, *args, **kwargs):
-        site = Site.objects.get_current()
-        blog_field = self.base_fields['blog']
-        blog_field.queryset = blog_field.queryset.filter(site=site)
-        blog_field.widget.can_add_related = False
-        super(BlogEntryPageAddForm, self).__init__(*args, **kwargs)
-
 
 def _get_text_editor_widget():
     installed_plugins = plugin_pool.get_all_plugins()
@@ -201,13 +218,25 @@ def _get_text_editor_widget():
         return WYMEditor(installed_plugins=plugins)
 
 
+class AuthorField(AutoModelSelect2Field):
+
+    search_fields = ['first_name__icontains', 'last_name__icontains',
+                     'email__icontains', 'username__icontains']
+    queryset = User.objects.all()
+    empty_values = [None, '', 0]
+
+    def label_from_instance(self, obj):
+        return user_display_name(obj)
+
+
 class BlogEntryPageChangeForm(forms.ModelForm):
     body = forms.CharField(
         label='Blog Entry', required=True,
         widget=_get_text_editor_widget())
+    author = AuthorField()
+    categories = ModelSelect2MultipleField()
 
     class Media:
-        js = ("cms_blogger/js/jQuery-patch.js",)
         css = {"all": ("cms_blogger/css/entry-change-form.css", )}
 
     class Meta:
@@ -215,6 +244,11 @@ class BlogEntryPageChangeForm(forms.ModelForm):
         exclude = ('content', )
 
     def __init__(self, *args, **kwargs):
+        instance = kwargs.get('instance')
+        categories_field = self.base_fields.get('categories')
+        if categories_field and instance and instance.blog:
+            categories_field.queryset = instance.blog.categories.all()
+            categories_field.initial = instance.categories.all()
         super(BlogEntryPageChangeForm, self).__init__(*args, **kwargs)
         self.fields['body'].initial = self.instance.content_body
         # prepare for save
@@ -236,3 +270,37 @@ class BlogEntryPageChangeForm(forms.ModelForm):
         else:
             raise ValidationError("Entry with the same slug already exists.")
         return slug
+
+    def _reset_publication_date(self):
+        pub_date = self.cleaned_data.get('publication_date')
+        if pub_date and pub_date != self.instance.publication_date:
+            # do not reset if it was specifically set.
+            return
+
+        is_published = self.cleaned_data.get('is_published')
+        start_date = self.cleaned_data.get('start_publication')
+        # check if reset publication date is needed
+        when = now = timezone.now()
+        if is_published:
+            if not self.instance.is_published:
+                # if however a startdate was set
+                if start_date and not self.instance.start_publication:
+                    when = start_date
+                self.cleaned_data['publication_date'] = when
+            elif start_date != self.instance.start_publication:
+                # if was published but start pub date changed
+                self.cleaned_data['publication_date'] = start_date or now
+        else:
+            self.cleaned_data['start_publication'] = None
+            self.cleaned_data['end_publication'] = None
+            self.cleaned_data['publication_date'] = now
+
+    def clean(self):
+        self._reset_publication_date()
+        start_date = self.cleaned_data.get('start_publication')
+        end_date = self.cleaned_data.get('end_publication')
+        if (start_date and end_date and not start_date < end_date):
+            raise ValidationError("Incorrect publication dates interval.")
+
+        return self.cleaned_data
+

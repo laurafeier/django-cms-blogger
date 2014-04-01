@@ -7,6 +7,55 @@
 .hide-me {
     display: none;
 }
+
+form ul.tagit {
+    padding: 1px 5px;
+}
+
+#id_navigation_node_pretty .current-node{
+    border: 2px solid #7CA0C7;
+}
+#id_navigation_node_pretty {
+    border: 1px solid #eee;
+    padding: 5px;
+}
+
+#id_navigation_node_pretty .arrow-down{
+    width: 0;
+    height: 0;
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    border-top: 5px solid black;
+    display: inline-block;
+    margin-left: 5px;
+}
+#id_navigation_node_pretty > ul{
+    display: inline-block;
+    vertical-align: top;
+}
+#id_navigation_node_pretty li{
+    padding: 3px;
+}
+#id_navigation_node_pretty > li{
+    display: inline-block;
+    vertical-align: top;
+    margin-right: 10px;
+}
+
+#id_navigation_node_pretty > li ul{
+    margin-left: 10px;
+    padding-left: 0px;
+    height: 0;
+    overflow: hidden;
+
+}
+#id_navigation_node_pretty > li:hover ul {
+    height: auto;
+}
+#id_navigation_node_pretty > li ul li {
+    list-style-type: none !important;
+}
+
 </style>
 {% endblock %}
 

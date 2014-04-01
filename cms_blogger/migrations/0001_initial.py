@@ -41,6 +41,14 @@ class Migration(SchemaMigration):
         # Adding unique constraint on 'Blog', fields ['slug', 'site']
         db.create_unique('cms_blogger_blog', ['slug', 'site_id'])
 
+        # Adding M2M table for field allowed_users on 'Blog'
+        db.create_table('cms_blogger_blog_allowed_users', (
+            ('id', models.AutoField(verbose_name='ID', primary_key=True, auto_created=True)),
+            ('blog', models.ForeignKey(orm['cms_blogger.blog'], null=False)),
+            ('user', models.ForeignKey(orm['auth.user'], null=False))
+        ))
+        db.create_unique('cms_blogger_blog_allowed_users', ['blog_id', 'user_id'])
+
         # Adding model 'BioPage'
         db.create_table('cms_blogger_biopage', (
             ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
@@ -56,9 +64,9 @@ class Migration(SchemaMigration):
             ('content', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['cms.Placeholder'], null=True)),
             ('title', self.gf('django.db.models.fields.CharField')(max_length=120)),
             ('slug', self.gf('django.db.models.fields.SlugField')(max_length=255)),
-            ('creation_date', self.gf('django.db.models.fields.DateField')(default=datetime.datetime.now, db_index=True)),
+            ('publication_date', self.gf('django.db.models.fields.DateField')(default=datetime.datetime.now, db_index=True)),
             ('thumbnail_image', self.gf('django.db.models.fields.files.ImageField')(max_length=100, blank=True)),
-            ('author', self.gf('django.db.models.fields.CharField')(max_length=255)),
+            ('author', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['auth.User'], null=True, on_delete=models.SET_NULL, blank=True)),
             ('abstract', self.gf('django.db.models.fields.TextField')(max_length=400, blank=True)),
             ('start_publication', self.gf('django.db.models.fields.DateTimeField')(db_index=True, null=True, blank=True)),
             ('end_publication', self.gf('django.db.models.fields.DateTimeField')(db_index=True, null=True, blank=True)),
@@ -100,6 +108,9 @@ class Migration(SchemaMigration):
 
         # Deleting model 'Blog'
         db.delete_table('cms_blogger_blog')
+
+        # Removing M2M table for field allowed_users on 'Blog'
+        db.delete_table('cms_blogger_blog_allowed_users')
 
         # Deleting model 'BioPage'
         db.delete_table('cms_blogger_biopage')
@@ -184,6 +195,7 @@ class Migration(SchemaMigration):
         },
         'cms_blogger.blog': {
             'Meta': {'unique_together': "(('slug', 'site'),)", 'object_name': 'Blog'},
+            'allowed_users': ('django.db.models.fields.related.ManyToManyField', [], {'to': "orm['auth.User']", 'symmetrical': 'False'}),
             'branding_image': ('django.db.models.fields.related.ForeignKey', [], {'default': 'None', 'to': "orm['filer.Image']", 'null': 'True', 'on_delete': 'models.SET_NULL', 'blank': 'True'}),
             'disable_disqus_for_mobile': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
             'disqus_shortname': ('django.db.models.fields.CharField', [], {'max_length': '255', 'null': 'True', 'blank': 'True'}),
@@ -210,16 +222,16 @@ class Migration(SchemaMigration):
         'cms_blogger.blogentrypage': {
             'Meta': {'unique_together': "(('slug', 'blog', 'draft_id'),)", 'object_name': 'BlogEntryPage'},
             'abstract': ('django.db.models.fields.TextField', [], {'max_length': '400', 'blank': 'True'}),
-            'author': ('django.db.models.fields.CharField', [], {'max_length': '255'}),
+            'author': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['auth.User']", 'null': 'True', 'on_delete': 'models.SET_NULL', 'blank': 'True'}),
             'blog': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['cms_blogger.Blog']"}),
             'content': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['cms.Placeholder']", 'null': 'True'}),
-            'creation_date': ('django.db.models.fields.DateField', [], {'default': 'datetime.datetime.now', 'db_index': 'True'}),
             'draft_id': ('django.db.models.fields.IntegerField', [], {'null': 'True', 'blank': 'True'}),
             'end_publication': ('django.db.models.fields.DateTimeField', [], {'db_index': 'True', 'null': 'True', 'blank': 'True'}),
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'is_published': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
             'meta_description': ('django.db.models.fields.TextField', [], {'blank': 'True'}),
             'meta_keywords': ('django.db.models.fields.CharField', [], {'max_length': '120', 'blank': 'True'}),
+            'publication_date': ('django.db.models.fields.DateField', [], {'default': 'datetime.datetime.now', 'db_index': 'True'}),
             'slug': ('django.db.models.fields.SlugField', [], {'max_length': '255'}),
             'start_publication': ('django.db.models.fields.DateTimeField', [], {'db_index': 'True', 'null': 'True', 'blank': 'True'}),
             'thumbnail_image': ('django.db.models.fields.files.ImageField', [], {'max_length': '100', 'blank': 'True'}),
