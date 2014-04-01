@@ -1,7 +1,8 @@
 from django.contrib.admin.views.main import ChangeList
 from django.contrib.sites.models import Site
-from cms.utils.permissions import get_user_sites_queryset
+from filer.utils.loader import load_object
 from django.conf import settings
+from .settings import ALLOWED_SITES_FOR_USER
 
 
 class BlogChangeList(ChangeList):
@@ -15,13 +16,19 @@ class BlogChangeList(ChangeList):
         super(BlogChangeList, self).__init__(request, *args, **kwargs)
         if self._current_site:
             request.session['cms_admin_site'] = self._current_site.pk
-
+        self.set_sites(request)
         # set site choices for the site chooser widget
-        if settings.CMS_PERMISSION:
+        self.has_access_to_multiple_sites = len(self.sites) > 1
+
+    def set_sites(self, request):
+        if ALLOWED_SITES_FOR_USER:
+            get_sites_for = load_object(ALLOWED_SITES_FOR_USER)
+            self.sites = get_sites_for(request.user, self.model)
+        elif settings.CMS_PERMISSION:
+            from cms.utils.permissions import get_user_sites_queryset
             self.sites = get_user_sites_queryset(request.user)
         else:
             self.sites = Site.objects.all()
-        self.has_access_to_multiple_sites = len(self.sites) > 1
 
     def get_current_site(self, request):
         # similar with cms.utils.plugins.current_site but it accepts
