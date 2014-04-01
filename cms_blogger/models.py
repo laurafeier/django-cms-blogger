@@ -16,6 +16,7 @@ from cms_layouts.models import LayoutTitle, Layout
 from cms_layouts.slot_finder import get_mock_placeholder
 from filer.fields.image import FilerImageField
 import filer
+from cms_blogger.settings import BLOGGER_THUMBNAIL_STORAGE
 
 
 def getCMSContentModel(**kwargs):
@@ -153,6 +154,7 @@ class Blog(AbstractBlog):
     tagline = models.CharField(
         _('tagline'), max_length=60, blank=True, null=True,
         help_text=_('Blog Tagline'))
+
     branding_image = FilerImageField(
         null=True, blank=True, on_delete=models.SET_NULL,
         default=None, help_text=_('Blog Branding Image'))
@@ -271,10 +273,12 @@ class BioPage(BlogRelatedPage):
 def upload_entry_image(instance, filename):
     import os
     filename_base, filename_ext = os.path.splitext(filename)
-    return 'blog/%s%s' % (
-        timezone.now().strftime("%Y%m%d%H%M%S"),
+    new_filename = '%s_%s%s' % (
+        timezone.now().strftime("%Y_%m_%d_%H_%M_%S_%f"),
+        filename_base, 
         filename_ext.lower(),
     )
+    return new_filename
 
 class BlogEntryPage(
     BlogRelatedPage, getCMSContentModel(content_attr='content')):
@@ -291,7 +295,8 @@ class BlogEntryPage(
         help_text=_("Used to build the entry's URL."))
 
     thumbnail_image = models.ImageField(
-        _("Thumbnail Image"), upload_to=upload_entry_image, blank=True)
+        _("Thumbnail Image"), upload_to=upload_entry_image, blank=True,
+        storage = BLOGGER_THUMBNAIL_STORAGE)
 
     author = models.CharField(_('Blog Author'), max_length=255)
     abstract = models.TextField(_('Abstract'), blank=True, max_length=400)
