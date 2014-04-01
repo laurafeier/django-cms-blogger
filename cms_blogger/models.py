@@ -92,6 +92,8 @@ class AbstractBlog(models.Model):
 
     layouts = GenericRelation(Layout)
 
+    allowed_users = models.ManyToManyField(User, verbose_name=_("Add Users"))
+
     class Meta:
         unique_together = (("slug", "site"),)
         abstract = True

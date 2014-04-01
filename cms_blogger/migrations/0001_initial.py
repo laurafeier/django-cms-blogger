@@ -41,6 +41,14 @@ class Migration(SchemaMigration):
         # Adding unique constraint on 'Blog', fields ['slug', 'site']
         db.create_unique('cms_blogger_blog', ['slug', 'site_id'])
 
+        # Adding M2M table for field allowed_users on 'Blog'
+        db.create_table('cms_blogger_blog_allowed_users', (
+            ('id', models.AutoField(verbose_name='ID', primary_key=True, auto_created=True)),
+            ('blog', models.ForeignKey(orm['cms_blogger.blog'], null=False)),
+            ('user', models.ForeignKey(orm['auth.user'], null=False))
+        ))
+        db.create_unique('cms_blogger_blog_allowed_users', ['blog_id', 'user_id'])
+
         # Adding model 'BioPage'
         db.create_table('cms_blogger_biopage', (
             ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
@@ -100,6 +108,9 @@ class Migration(SchemaMigration):
 
         # Deleting model 'Blog'
         db.delete_table('cms_blogger_blog')
+
+        # Removing M2M table for field allowed_users on 'Blog'
+        db.delete_table('cms_blogger_blog_allowed_users')
 
         # Deleting model 'BioPage'
         db.delete_table('cms_blogger_biopage')
@@ -184,6 +195,7 @@ class Migration(SchemaMigration):
         },
         'cms_blogger.blog': {
             'Meta': {'unique_together': "(('slug', 'site'),)", 'object_name': 'Blog'},
+            'allowed_users': ('django.db.models.fields.related.ManyToManyField', [], {'to': "orm['auth.User']", 'symmetrical': 'False'}),
             'branding_image': ('django.db.models.fields.related.ForeignKey', [], {'default': 'None', 'to': "orm['filer.Image']", 'null': 'True', 'on_delete': 'models.SET_NULL', 'blank': 'True'}),
             'disable_disqus_for_mobile': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
             'disqus_shortname': ('django.db.models.fields.CharField', [], {'max_length': '255', 'null': 'True', 'blank': 'True'}),

@@ -17,7 +17,8 @@ from cms_layouts.models import Layout
 from cms_layouts.slot_finder import (
     get_fixed_section_slots, MissingRequiredPlaceholder)
 from django_select2.fields import (
-    AutoModelSelect2Field, ModelSelect2MultipleField)
+    AutoModelSelect2Field, ModelSelect2MultipleField,
+    AutoModelSelect2MultipleField)
 from .models import Blog, BlogEntryPage, BlogCategory
 from .widgets import TagItWidget
 from .utils import user_display_name
@@ -113,11 +114,23 @@ class BlogLayoutForm(forms.ModelForm):
                     page, page_exception))
 
 
+class BlogUserField(AutoModelSelect2MultipleField):
+    search_fields = ['first_name__icontains', 'last_name__icontains',
+                     'email__icontains', 'username__icontains']
+    queryset = User.objects.all()
+    empty_values = [None, '', 0]
+
+    def label_from_instance(self, obj):
+        return user_display_name(obj)
+
+
 class BlogForm(forms.ModelForm):
     categories = forms.CharField(
         widget=TagItWidget(attrs={
             'tagit': '{allowSpaces: true, tagLimit: 20, caseSensitive: false}'}),
         help_text=_('Categories help text'))
+
+    allowed_users = BlogUserField()
 
     class Meta:
         model = Blog
@@ -192,13 +205,6 @@ class BlogEntryPageAddForm(forms.ModelForm):
     class Meta:
         model = BlogEntryPage
         fields = ('blog', )
-
-    def __init__(self, *args, **kwargs):
-        site = Site.objects.get_current()
-        blog_field = self.base_fields['blog']
-        blog_field.queryset = blog_field.queryset.filter(site=site)
-        blog_field.widget.can_add_related = False
-        super(BlogEntryPageAddForm, self).__init__(*args, **kwargs)
 
 
 def _get_text_editor_widget():

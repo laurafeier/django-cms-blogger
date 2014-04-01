@@ -134,6 +134,11 @@ class BlogAdmin(CustomAdmin):
             'classes': ('extrapretty', ),
             'description': _('Blog Setup Description')
         }),
+        ('Blog Users', {
+            'fields': ['allowed_users', ],
+            'classes': ('extrapretty', ),
+            'description': _('Blog Allowed Users')
+        }),
         ('Navigation', {
             'fields': [('in_navigation', 'location_in_navigation'), ],
             'classes': ('extrapretty',),
@@ -333,7 +338,23 @@ class BlogEntryPageAdmin(CustomAdmin, PlaceholderAdmin):
         # set initial
         if obj and not obj.author:
             obj.author = request.user
+        if not obj:
+            # filter available blog choices
+            site = Site.objects.get_current()
+            blog_field = formCls.base_fields['blog']
+            allowed_blogs = blog_field.queryset.filter(site=site)
+            if not request.user.is_superuser:
+                allowed_blogs = allowed_blogs.filter(
+                    allowed_users=request.user)
+            blog_field.queryset = allowed_blogs
+            blog_field.widget.can_add_related = False
         return formCls
+
+    def queryset(self, request):
+        qs = super(BlogEntryPageAdmin, self).queryset(request)
+        if request.user.is_superuser:
+            return qs
+        return qs.filter(blog__allowed_users=request.user)
 
     def save_related(self, request, form, formsets, change):
         super(BlogEntryPageAdmin, self).save_related(
@@ -343,7 +364,7 @@ class BlogEntryPageAdmin(CustomAdmin, PlaceholderAdmin):
         if not entry.blog:
             entry.categories = []
         else:
-            ids_in_blog = entry.blog.categories.values_list('pk', id=True)
+            ids_in_blog = entry.blog.categories.values_list('pk', flat=True)
             entry.categories = [
                 valid_category
                 for valid_category in submitted_categories
