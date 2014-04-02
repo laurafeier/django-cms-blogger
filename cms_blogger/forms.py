@@ -296,6 +296,7 @@ class BlogEntryPageChangeForm(forms.ModelForm):
             self.cleaned_data['publication_date'] = now
 
     def clean(self):
+        import ipdb; ipdb.set_trace()
         self._reset_publication_date()
         start_date = self.cleaned_data.get('start_publication')
         end_date = self.cleaned_data.get('end_publication')
