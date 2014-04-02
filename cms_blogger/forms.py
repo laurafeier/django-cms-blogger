@@ -130,7 +130,7 @@ class BlogForm(forms.ModelForm):
             'tagit': '{allowSpaces: true, tagLimit: 20, caseSensitive: false}'}),
         help_text=_('Categories help text'))
 
-    allowed_users = BlogUserField()
+    allowed_users = BlogUserField(label="Add Users")
 
     class Meta:
         model = Blog

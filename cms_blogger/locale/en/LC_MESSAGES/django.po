@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2014-04-01 17:23+0000\n"
+"POT-Creation-Date: 2014-04-02 09:09+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -47,9 +47,9 @@ msgstr ""
 #: admin.py:140
 msgid "Blog Allowed Users"
 msgstr ""
-"Begin typing to grant users permission to create or edit blog entries. "
-"Blog authors need to have a username associated with a site to appear in a "
-"blog byline. (Note: You must add yourself to have access.)"
+"Begin typing to grant users permission to create or edit blog entries. Blog "
+"authors need to have a username associated with a site to appear in a blog "
+"byline. (Note: You must add yourself to have access.)"
 
 #: admin.py:155
 msgid "Blog Disqus commentig Description"
@@ -64,7 +64,7 @@ msgstr ""
 "Comment management, including approving, removing, and moderating comments, "
 "takes place via the Disqus admin."
 
-#: forms.py:120
+#: forms.py:131
 msgid "Categories help text"
 msgstr ""
 "Categories help organize blog content. Categories are unique to a blog, and "
@@ -112,6 +112,10 @@ msgstr ""
 "Blogs that are frequently updated, especially news-themed blogs, often "
 "insert dates [/2014/03/15/] into the URLs for blog entries. To insert a date-"
 "stamp into all blog entries for this blog, select ON."
+
+#: models.py:95
+msgid "Add Users"
+msgstr ""
 
 #: models.py:160
 msgid "tagline"

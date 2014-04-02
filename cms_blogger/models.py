@@ -19,6 +19,7 @@ from cms_layouts.slot_finder import get_mock_placeholder
 from filer.fields.image import FilerImageField
 import filer
 from .utils import user_display_name
+from .managers import EntriesManager
 
 
 def getCMSContentModel(**kwargs):
@@ -209,6 +210,18 @@ class Blog(AbstractBlog):
                 image.file.url, )
         return get_mock_placeholder(get_language(), html)
 
+    @property
+    def content(self):
+        entries = BlogEntryPage.objects.published().filter(
+            blog=self).order_by('-publication_date')
+        context = Context({
+            'landing_page': True,
+            'blog': self,
+            'entries': entries})
+        landing_templ = get_template("cms_blogger/landing_page.html")
+        html = landing_templ.render(context)
+        return get_mock_placeholder(get_language(), html)
+
     @models.permalink
     def get_absolute_url(self):
         return ('cms_blogger.views.landing_page', (), {
@@ -327,6 +340,8 @@ class BlogEntryPage(
     #   least once
     draft_id = models.IntegerField(blank=True, null=True)
 
+    objects = EntriesManager()
+
     @property
     def author_display_name(self):
         if not self.author:
@@ -337,15 +352,15 @@ class BlogEntryPage(
         if not self.blog:
             return ''
         context = Context({'entry': self, 'blog': self.blog,})
-        thread_template = get_template("cms_blogger/entry_header.html")
-        return thread_template.render(context)
+        header_templ = get_template("cms_blogger/entry_header.html")
+        return header_templ.render(context)
 
     def extra_html_after_content(self):
         if not self.blog:
             return ''
         context = Context({'entry': self, 'blog': self.blog,})
-        thread_template = get_template("cms_blogger/entry_footer.html")
-        return thread_template.render(context)
+        footer_templ = get_template("cms_blogger/entry_footer.html")
+        return footer_templ.render(context)
 
     def get_title_obj(self):
         title = LayoutTitle()
