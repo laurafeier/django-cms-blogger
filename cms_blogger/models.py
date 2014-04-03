@@ -303,8 +303,8 @@ class BlogEntryPage(
 
     def __init__(self, *args, **kwargs):
         super(BlogEntryPage, self).__init__(*args, **kwargs)
-
-        import ipdb; ipdb.set_trace() 
+        if self.thumbnail_image.name:
+            self._old_thumbnail_image = self.thumbnail_image 
 
     uses_layout_type = Blog.ENTRY_PAGE
 
@@ -407,15 +407,16 @@ class BlogEntryPage(
         storage.delete(path)
 
     def save(self, *args, **kwargs):
-        if hasattr(self,'_old_thumbnail_image') and self['_old_thumbnail_image']:
-               
+        old_thumbnail = None 
+        if hasattr(self, '_old_thumbnail_image') and self._old_thumbnail_image.name:
+            old_thumbnail = self._old_thumbnail_image
 
-        import ipdb; ipdb.set_trace()
-        print "- "*10+self.thumbnail_image.name  
 
         super(BlogEntryPage, self).save(*args, **kwargs)
+        if old_thumbnail:
+            storage, path = old_thumbnail.storage, old_thumbnail.path
+            storage.delete(path)
 
-        print "- "*10+self.thumbnail_image.name  
             
 
 class BlogCategory(models.Model):
