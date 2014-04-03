@@ -241,7 +241,7 @@ class BlogEntryPageChangeForm(forms.ModelForm):
 
     class Meta:
         model = BlogEntryPage
-        exclude = ('content', )
+        exclude = ('content', 'blog', 'slug', 'publication_date')
 
     def __init__(self, *args, **kwargs):
         instance = kwargs.get('instance')
@@ -259,8 +259,9 @@ class BlogEntryPageChangeForm(forms.ModelForm):
         self.instance.content_body = body
         return body
 
-    def clean_slug(self):
-        slug = slugify(self.cleaned_data.get('slug', ''))
+    def clean_title(self):
+        title = self.cleaned_data.get('title', '')
+        slug = slugify(title)
         blog_id = self.instance.blog_id
         try:
             BlogEntryPage.objects.exclude(pk=self.instance.pk).get(
@@ -268,15 +269,13 @@ class BlogEntryPageChangeForm(forms.ModelForm):
         except BlogEntryPage.DoesNotExist:
             pass
         else:
-            raise ValidationError("Entry with the same slug already exists.")
-        return slug
+            raise ValidationError(
+                "Entry with slug %s already exists. Choose a different "
+                "title." % slug)
+        self.instance.slug = slug
+        return title
 
     def _reset_publication_date(self):
-        pub_date = self.cleaned_data.get('publication_date')
-        if pub_date and pub_date != self.instance.publication_date:
-            # do not reset if it was specifically set.
-            return
-
         is_published = self.cleaned_data.get('is_published')
         start_date = self.cleaned_data.get('start_publication')
         # check if reset publication date is needed
@@ -286,14 +285,14 @@ class BlogEntryPageChangeForm(forms.ModelForm):
                 # if however a startdate was set
                 if start_date and not self.instance.start_publication:
                     when = start_date
-                self.cleaned_data['publication_date'] = when
+                self.instance.publication_date = when
             elif start_date != self.instance.start_publication:
                 # if was published but start pub date changed
-                self.cleaned_data['publication_date'] = start_date or now
+                self.instance.publication_date = start_date or now
         else:
             self.cleaned_data['start_publication'] = None
             self.cleaned_data['end_publication'] = None
-            self.cleaned_data['publication_date'] = now
+            self.instance.publication_date = now
 
     def clean(self):
         self._reset_publication_date()
@@ -301,6 +300,5 @@ class BlogEntryPageChangeForm(forms.ModelForm):
         end_date = self.cleaned_data.get('end_publication')
         if (start_date and end_date and not start_date < end_date):
             raise ValidationError("Incorrect publication dates interval.")
-
         return self.cleaned_data
 

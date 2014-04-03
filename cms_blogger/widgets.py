@@ -1,17 +1,17 @@
 from django import forms
 from django.utils.safestring import mark_safe
-
+from django.contrib.admin.templatetags.admin_static import static
 
 class ToggleWidget(forms.widgets.CheckboxInput):
 
     class Media:
         css = {
             'all': (
-                'cms_blogger/css/toggle-to-right.css',
-                'cms_blogger/css/toggles-modern.css',)
+                static('cms_blogger/css/toggle-to-right.css'),
+                static('cms_blogger/css/toggles-modern.css'),)
         }
-        js = ('cms_blogger/js/jquery-1.9.1.min.js',
-              'cms_blogger/js/toggles.min.js',)
+        js = (static('cms_blogger/js/jquery-1.9.1.min.js'),
+              static('cms_blogger/js/toggles.min.js'),)
 
     toggle_script = (
         "<script type='text/javascript'> jQuery("
@@ -38,12 +38,12 @@ class TagItWidget(forms.widgets.TextInput):
     class Media:
         css = {
             'all': (
-                'cms_blogger/css/redmond-jquery-ui.css',
-                'cms_blogger/css/jquery.tagit.css',)
+                static('cms_blogger/css/redmond-jquery-ui.css'),
+                static('cms_blogger/css/jquery.tagit.css'),)
         }
-        js = ('cms_blogger/js/jquery-1.9.1.min.js',
-              'cms_blogger/js/jquery-ui.min.js',
-              'cms_blogger/js/tag-it.js',)
+        js = (static('cms_blogger/js/jquery-1.9.1.min.js'),
+              static('cms_blogger/js/jquery-ui.min.js'),
+              static('cms_blogger/js/tag-it.js'),)
 
     tagit_script = (
         "<script type='text/javascript'>"

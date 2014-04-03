@@ -1,3 +1,15 @@
 div .field-body label{
     margin-bottom: 10px
 }
+fieldset.left-col{
+    width: 75%;
+    float:left;
+}
+fieldset.right-col{
+    width: 24%;
+    float:right;
+}
+
+div.submit-row {
+clear: left;
+}

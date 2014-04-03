@@ -295,23 +295,42 @@ class BlogEntryPageAdmin(CustomAdmin, PlaceholderAdmin):
     add_form_template = 'admin/cms_blogger/blogentrypage/add_form.html'
     add_form = BlogEntryPageAddForm
     change_form = BlogEntryPageChangeForm
-    readonly_in_change_form = ['blog', ]
+    formfield_overrides = {
+        models.BooleanField: {'widget': ToggleWidget}
+    }
     change_form_fieldsets = (
         (None, {
+            'fields': ['title', 'author', 'short_description', ],
+            'classes': ('left-col', )
+        }),
+        (None, {
             'fields': [
-                'title', 'blog', ('slug', 'publication_date'),
-                'categories',
-                'thumbnail_image', 'author', 'short_description', 'body',
-                ('is_published', 'start_publication', 'end_publication'),
-                'meta_keywords'],
-        }),)
+                ('is_published', 'start_publication', 'end_publication'),],
+            'classes': ('right-col', )
+        }),
+        (None, {
+            'fields': ['categories', ],
+            'classes': ('right-col', )
+        }),
+        ('Advanced Options', {
+            'fields': ['seo_title', 'meta_keywords', 'disqus_enabled'],
+            'classes': ('right-col',)
+        }),
+        (None, {
+            'fields': ['thumbnail_image', ],
+            'classes': ('left-col', )
+        }),
+        (None, {
+            'fields': ['body', ],
+            'classes': ('left-col', )
+        }),
 
-    @property
-    def media(self):
+    )
+
+    def _upgrade_jquery(sel, media):
         # upgrade jquery and cms jquery UI
-        super_media = super(BlogEntryPageAdmin, self).media
         new_media = Media()
-        new_media.add_css(super_media._css)
+        new_media.add_css(media._css)
 
         new_jquery_version = static('cms_blogger/js/jquery-1.9.1.min.js')
         new_jquery_ui_version = static('cms_blogger/js/jquery-ui.min.js')
@@ -319,8 +338,7 @@ class BlogEntryPageAdmin(CustomAdmin, PlaceholderAdmin):
         jquery_namspace = static('cms_blogger/js/jQuery-patch.js')
         django_jquery_urls = [static('admin/js/jquery.js'),
                               static('admin/js/jquery.min.js')]
-
-        for js in super_media._js:
+        for js in media._js:
             if js in django_jquery_urls:
                 new_media.add_js((new_jquery_version, ))
             elif js == static('admin/js/jquery.init.js'):
@@ -329,8 +347,14 @@ class BlogEntryPageAdmin(CustomAdmin, PlaceholderAdmin):
                 new_media.add_js((new_jquery_ui_version, ))
             else:
                 new_media.add_js((js, ))
-
         return new_media
+
+    def change_view(self, request, object_id, form_url='', extra_context=None):
+        template_response = super(BlogEntryPageAdmin, self).change_view(
+            request, object_id, form_url, extra_context)
+        context_data = template_response.context_data
+        context_data['media'] = self._upgrade_jquery(context_data['media'])
+        return template_response
 
     def get_form(self, request, obj=None, **kwargs):
         formCls = super(BlogEntryPageAdmin, self).get_form(
@@ -374,13 +398,6 @@ class BlogEntryPageAdmin(CustomAdmin, PlaceholderAdmin):
         if lookup == BlogEntryChangeList.site_lookup:
             return True
         return super(BlogEntryPageAdmin, self).lookup_allowed(lookup, value)
-
-    def get_prepopulated_fields(self, request, obj=None):
-        if obj and obj.pk:
-            self.prepopulated_fields = {"slug": ("title",)}
-        else:
-            self.prepopulated_fields = {}
-        return super(BlogEntryPageAdmin, self).get_prepopulated_fields(request, obj)
 
     def add_plugin(self, request):
         # sice there is no placeholder displayed in the change form, plugins
