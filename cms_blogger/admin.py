@@ -301,9 +301,9 @@ class BlogEntryPageAdmin(CustomAdmin, PlaceholderAdmin):
             'fields': [
                 'title', 'blog', ('slug', 'publication_date'),
                 'categories',
-                'thumbnail_image', 'author', 'abstract', 'body',
+                'thumbnail_image', 'author', 'short_description', 'body',
                 ('is_published', 'start_publication', 'end_publication'),
-                'meta_description', 'meta_keywords'],
+                'meta_keywords'],
         }),)
 
     @property

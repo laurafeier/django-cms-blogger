@@ -234,7 +234,7 @@ class BlogEntryPageChangeForm(forms.ModelForm):
         label='Blog Entry', required=True,
         widget=_get_text_editor_widget())
     author = AuthorField()
-    categories = ModelSelect2MultipleField()
+    categories = ModelSelect2MultipleField(required=False)
 
     class Media:
         css = {"all": ("cms_blogger/css/entry-change-form.css", )}

@@ -3,7 +3,7 @@
     {% if entry.previous_post %}
     <a href="#" class="pull-left">
         <div class="arrow-left">previous post</div>
-        <p class="summary">{{entry.previous_post.abstract}}</p>
+        <p class="summary">{{entry.previous_post.short_description}}</p>
         <p class="date">
             <span class="month">{{entry.previous_post.publication_date|date:'F'}}</span>
             <span class="day">{{entry.previous_post.publication_date.day}}</span>,
@@ -13,7 +13,7 @@
     {% else %}
     <a href="#" class="pull-right">
         <div class="arrow-right">next post</div>
-        <p class="summary">{{entry.next_post.abstract}}</p>
+        <p class="summary">{{entry.next_post.short_description}}</p>
         <p class="date">
             <span class="month">{{entry.next_post.publication_date.month}}</span>
             <span class="day">{{entry.next_post.publication_date.day}}</span>,
