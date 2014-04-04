@@ -23,7 +23,7 @@
     {% endif %}
 </div>
 {% endif %}
-{% if blog.enable_disqus %}
+{% if blog.enable_disqus and entry.disqus_enabled %}
 <div id='disqus_thread'></div>
 <script type='text/javascript'>
 var disable_on_mobile = '{{blog.disable_disqus_for_mobile}}';

@@ -17,8 +17,7 @@ from cms_layouts.models import Layout
 from cms_layouts.slot_finder import (
     get_fixed_section_slots, MissingRequiredPlaceholder)
 from django_select2.fields import (
-    AutoModelSelect2Field, ModelSelect2MultipleField,
-    AutoModelSelect2MultipleField)
+    AutoModelSelect2Field, AutoModelSelect2MultipleField)
 from .models import Blog, BlogEntryPage, BlogCategory
 from .widgets import TagItWidget
 from .utils import user_display_name
@@ -234,7 +233,10 @@ class BlogEntryPageChangeForm(forms.ModelForm):
         label='Blog Entry', required=True,
         widget=_get_text_editor_widget())
     author = AuthorField()
-    categories = ModelSelect2MultipleField(required=False)
+    categories = forms.ModelMultipleChoiceField(
+        widget=forms.CheckboxSelectMultiple(),
+        queryset=BlogCategory.objects.get_empty_query_set())
+
 
     class Media:
         css = {"all": ("cms_blogger/css/entry-change-form.css", )}

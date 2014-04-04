@@ -1,15 +1,82 @@
 div .field-body label{
     margin-bottom: 10px
 }
-fieldset.left-col{
+
+fieldset{
+    width: 100%;
+    border:none;
+}
+
+div.main-col{
     width: 75%;
     float:left;
+    border:none;
 }
-fieldset.right-col{
+
+div.right-col{
     width: 24%;
     float:right;
 }
 
 div.submit-row {
-clear: left;
+    clear: both;
+}
+
+#blog-title{
+    color: #417690;
+    text-transform: uppercase;
+}
+
+#blog-banding-image{
+    width: 960px;
+    height: 150px;
+}
+
+#blog-tagline{
+    background: none;
+    color: #666;
+    margin-top: 0;
+    font-size: 13px;
+    font-weight: normal;
+}
+
+#blog-header{
+    border: 1px solid #ccc;
+    padding: 10px;
+}
+
+.form-row, .no-border {
+    border:none;
+}
+
+label[for='id_body'] {
+    display: none;
+}
+
+#id_body_tbl{
+    border: 1px solid #ccc;
+}
+
+.field-body{
+    padding: 0px;
+    margin: 10px 0;
+}
+
+.mceIframeContainer .mceFirst .mceLast,
+table.mceLayout tr.mceFirst td ,
+table.mceLayout tr.mceLast td {
+    border: 0 !important;
+}
+
+h3 {
+    font-size: 19px;
+    margin: 15px 0;
+}
+
+.field-categories ul {
+    height: 150px;
+    overflow-y: scroll;
+}
+.field-categories ul li{
+    list-style-type: none;
 }

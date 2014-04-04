@@ -18,21 +18,3 @@ def site_url(site):
 def current_site(context):
     from django.contrib.sites.models import Site
     return Site.objects.get_current()
-
-
-@register.inclusion_tag('admin/prepopulated_fields_js.html', takes_context=True)
-def initial_empty_prepopulated_fields_js(context):
-    """
-    Follows the logic of the prepopulated_fields_js template tag but it works
-    only for forms that have the prepopulated fields with no initial value.
-    """
-    if not 'adminform' in context:
-        return context
-
-    prepopulated_fields = []
-    for field_and_deps in context['adminform'].prepopulated_fields:
-        field = field_and_deps.get('field')
-        if field and not field.value():
-            prepopulated_fields.append(field_and_deps)
-    context.update({'prepopulated_fields': prepopulated_fields})
-    return context

@@ -301,12 +301,22 @@ class BlogEntryPageAdmin(CustomAdmin, PlaceholderAdmin):
     change_form_fieldsets = (
         (None, {
             'fields': ['title', 'author', 'short_description', ],
-            'classes': ('left-col', )
         }),
         (None, {
-            'fields': [
-                ('is_published', 'start_publication', 'end_publication'),],
+            'fields': ['thumbnail_image', ],
+            'classes': ('poster-image',)
+        }),
+        (None, {
+            'fields': ['body', ],
+            'classes': ('no-border', )
+        }),
+        (None, {
+            'fields': ['is_published',],
             'classes': ('right-col', )
+        }),
+        ('Schedule Publish', {
+            'fields': ['start_publication', 'end_publication'],
+            'classes': ('right-col', 'collapse')
         }),
         (None, {
             'fields': ['categories', ],
@@ -314,20 +324,12 @@ class BlogEntryPageAdmin(CustomAdmin, PlaceholderAdmin):
         }),
         ('Advanced Options', {
             'fields': ['seo_title', 'meta_keywords', 'disqus_enabled'],
-            'classes': ('right-col',)
-        }),
-        (None, {
-            'fields': ['thumbnail_image', ],
-            'classes': ('left-col', )
-        }),
-        (None, {
-            'fields': ['body', ],
-            'classes': ('left-col', )
+            'classes': ('right-col', 'collapse', 'open')
         }),
 
     )
 
-    def _upgrade_jquery(sel, media):
+    def _upgrade_jquery(self, media):
         # upgrade jquery and cms jquery UI
         new_media = Media()
         new_media.add_css(media._css)
@@ -338,9 +340,13 @@ class BlogEntryPageAdmin(CustomAdmin, PlaceholderAdmin):
         jquery_namspace = static('cms_blogger/js/jQuery-patch.js')
         django_jquery_urls = [static('admin/js/jquery.js'),
                               static('admin/js/jquery.min.js')]
+        django_collapse_js = [static('admin/js/collapse.js'),
+                              static('admin/js/collapse.min.js')]
         for js in media._js:
             if js in django_jquery_urls:
                 new_media.add_js((new_jquery_version, ))
+            elif js in django_collapse_js:
+                new_media.add_js((static('cms_blogger/js/admin-collapse.js'), ))
             elif js == static('admin/js/jquery.init.js'):
                 new_media.add_js((js, jquery_namspace))
             elif js.startswith(static('cms/js/libs/jquery.ui.')):
@@ -350,11 +356,12 @@ class BlogEntryPageAdmin(CustomAdmin, PlaceholderAdmin):
         return new_media
 
     def change_view(self, request, object_id, form_url='', extra_context=None):
-        template_response = super(BlogEntryPageAdmin, self).change_view(
+        response = super(BlogEntryPageAdmin, self).change_view(
             request, object_id, form_url, extra_context)
-        context_data = template_response.context_data
-        context_data['media'] = self._upgrade_jquery(context_data['media'])
-        return template_response
+        if hasattr(response, 'context_data'):
+            context = response.context_data
+            context['media'] = self._upgrade_jquery(context['media'])
+        return response
 
     def get_form(self, request, obj=None, **kwargs):
         formCls = super(BlogEntryPageAdmin, self).get_form(

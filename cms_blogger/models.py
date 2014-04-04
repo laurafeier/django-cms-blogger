@@ -199,8 +199,7 @@ class Blog(AbstractBlog):
         except filer.models.Image.DoesNotExist:
             return None
 
-    @property
-    def header(self):
+    def header_as_html(self):
         html = "<h1 id='blog-title'>%s</h1>" % self.title
         if self.tagline:
             html += "<h2 id='blog-tagline'>%s</h2>" % self.tagline
@@ -208,7 +207,11 @@ class Blog(AbstractBlog):
         if image:
             html += "<img id='blog-banding-image' src='%s'></img>" % (
                 image.file.url, )
-        return get_mock_placeholder(get_language(), html)
+        return html
+
+    @property
+    def header(self):
+        return get_mock_placeholder(get_language(), self.header_as_html())
 
     @property
     def content(self):
@@ -392,7 +395,7 @@ class BlogEntryPage(
             'slug': self.slug})
 
     class Meta:
-        verbose_name = "blog entries"
+        verbose_name = "blog entry"
         verbose_name_plural = 'blog entries'
         unique_together = (("slug", "blog", "draft_id"),)
 
