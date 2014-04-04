@@ -241,11 +241,21 @@ class BlogAdmin(CustomAdmin):
     def get_urls(self):
         urls = super(BlogAdmin, self).get_urls()
         url_patterns = patterns('',
+
             url(r'^(?P<blog_id>\d+)/navigation_tool/$',
                 self.admin_site.admin_view(self.navigation_tool),
-                name='cms_blogger-navigation-tool'), )
+                name='cms_blogger-navigation-tool'), 
+
+            url(r'^(?P<blog_entry_id>\d+)/upload_file/$',
+                self.admin_site.admin_view(self.upload_thumbnail), #what is this
+                name='cms_blogger-upload-thumbnail'),
+        )
         url_patterns.extend(urls)
         return url_patterns
+
+    def upload_thumbnail(self, request, blog_entry_id):
+        print "upload_thumbnail "*4
+        pass
 
     def navigation_tool(self, request, blog_id):
         if (request.method not in ['GET', 'POST'] or
@@ -300,8 +310,9 @@ class BlogEntryPageAdmin(CustomAdmin, PlaceholderAdmin):
         (None, {
             'fields': [
                 'title', 'blog', ('slug', 'publication_date'),
+                'upload_button',
                 'categories',
-                'thumbnail_image', 'author', 'abstract', 'body',
+                'author', 'abstract', 'body',
                 ('is_published', 'start_publication', 'end_publication'),
                 'meta_description', 'meta_keywords'],
         }),)

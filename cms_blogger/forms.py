@@ -22,6 +22,25 @@ from django_select2.fields import (
 from .models import Blog, BlogEntryPage, BlogCategory
 from .widgets import TagItWidget
 from .utils import user_display_name
+from django.utils.safestring import mark_safe
+from django.template.loader import render_to_string
+
+
+class UploadButton(forms.widgets.CheckboxInput):
+    def render(self, name, value, attrs=None):
+        return render_to_string(
+            "admin/cms_blogger/blogentrypage/upload_button_js.html", 
+            {
+                'id_upload_button': 'thumbnail_image_upload_button',
+                'thumbnail_upload_url': 'admin:cms_blogger-upload-thumbnail', 
+                'asabre': 1, #self.attrs['blog_entry_id'],
+            }
+        )
+
+
+class TextWidget(forms.widgets.CheckboxInput):
+    def render(self, name, value, attrs=None):
+        return mark_safe(self.attrs['label'])
 
 
 class BlogLayoutInlineFormSet(BaseGenericInlineFormSet):
@@ -235,10 +254,13 @@ class BlogEntryPageChangeForm(forms.ModelForm):
         widget=_get_text_editor_widget())
     author = AuthorField()
     categories = ModelSelect2MultipleField()
+    upload_button = forms.CharField(label="",widget=UploadButton())
+
 
     class Media:
         css = {"all": ("cms_blogger/css/entry-change-form.css", )}
-
+        js = ("cms_blogger/js/fileuploader.js", )
+    
     class Meta:
         model = BlogEntryPage
         exclude = ('content', )
