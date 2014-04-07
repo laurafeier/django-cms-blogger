@@ -1,5 +1,6 @@
 from django import forms
 from django.core.exceptions import ValidationError
+from django.core.urlresolvers import reverse
 from django.conf import settings
 from django.template.defaultfilters import slugify
 from django.forms.util import ErrorList
@@ -212,7 +213,10 @@ def _get_text_editor_widget():
 
     if USE_TINYMCE and "tinymce" in settings.INSTALLED_APPS:
         from cms.plugins.text.widgets.tinymce_widget import TinyMCEEditor
-        return TinyMCEEditor(installed_plugins=plugins)
+        return TinyMCEEditor(installed_plugins=plugins, mce_attrs={
+            'theme_advanced_toolbar_location': 'top',
+            'theme_advanced_toolbar_align': 'left',
+            })
     else:
         return WYMEditor(installed_plugins=plugins)
 
@@ -246,15 +250,18 @@ class BlogEntryPageChangeForm(forms.ModelForm):
         queryset=BlogCategory.objects.get_empty_query_set(), required=False)
 
     publish = ButtonField(widget=ButtonWidget(submit=True,
-        on_click=(
-            "jQuery(this).closest('form').append("
-            "jQuery('<input>').attr('type', 'hidden').attr("
-                "'name', '_pub_pressed').val(true)"
-            ");")))
+        on_click=("jQuery(this).closest('form').append("
+                  "jQuery('<input>').attr('type', 'hidden').attr("
+                    "'name', '_pub_pressed').val(true)"
+                  ");")))
     save = ButtonField(widget=ButtonWidget(submit=True))
+    preview_on_top = ButtonField(widget=ButtonWidget(text='Preview'))
+    preview_on_bottom = ButtonField(widget=ButtonWidget(text='Preview'))
 
     class Media:
         css = {"all": ("cms_blogger/css/entry-change-form.css", )}
+        js = ('cms_blogger/js/tinymce-extend.js',
+              'cms_blogger/js/entry-preview.js', )
 
     class Meta:
         model = BlogEntryPage
@@ -267,6 +274,15 @@ class BlogEntryPageChangeForm(forms.ModelForm):
             categories_field.queryset = instance.blog.categories.all()
             categories_field.initial = instance.categories.all()
         super(BlogEntryPageChangeForm, self).__init__(*args, **kwargs)
+
+        if self.instance:
+            preview1 = self.fields['preview_on_top'].widget
+            preview2 = self.fields['preview_on_bottom'].widget
+            url = reverse('admin:cms_blogger-entry-preview',
+                args=[self.instance.id])
+            preview1.link_url = preview2.link_url = url
+            popup_js = "return showEntryPreviewPopup(this);"
+            preview1.on_click = preview2.on_click = popup_js
 
         pub_button = self.fields['publish'].widget
         if self.instance and self.instance.is_published:

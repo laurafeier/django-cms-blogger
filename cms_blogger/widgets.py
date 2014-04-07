@@ -79,7 +79,8 @@ class ButtonWidget(forms.widgets.CheckboxInput):
 
     make_js_button = (
         "<script type='text/javascript'>"
-        "jQuery('#id_%s').button().click(function(e) {%s});"
+        "jQuery('#id_%s').button().click(function(event) {"
+            "event.preventDefault();%s});"
         "</script>")
     submit_on_click_js = (
         "jQuery(this).closest('form').append("
@@ -87,10 +88,11 @@ class ButtonWidget(forms.widgets.CheckboxInput):
             "'name', '_continue').val('Save')"
         ").submit();")
 
-    def __init__(self, attrs=None, check_test=None,
+    def __init__(self, attrs=None, check_test=None, link_url='',
                  text=None, submit=False, on_click=''):
         super(ButtonWidget, self).__init__(attrs, check_test)
         self.text = text
+        self.link_url = link_url or "#"
         self.submit = submit
         self.on_click = on_click
 
@@ -101,8 +103,8 @@ class ButtonWidget(forms.widgets.CheckboxInput):
     def render(self, name, value, attrs=None):
         text = self.text or name.capitalize()
         return mark_safe(
-            u"%s<a id='id_%s'>%s</a>%s" % (
-                self.hide_label % name, name, text,
+            u"%s<a href='%s' id='id_%s'>%s</a>%s" % (
+                self.hide_label % name, self.link_url, name, text,
                 self.make_js_button % (name, self._render_js_on_click(), )))
 
     def value_from_datadict(self, data, files, name):

@@ -12,9 +12,12 @@ from django.template import Context
 from django.template.loader import get_template
 from django.db.models import signals
 from django.dispatch import receiver
+from django.http import HttpResponseNotFound
+
 from cms.models.fields import PlaceholderField
 from cms.models import Page, Placeholder
 from cms_layouts.models import LayoutTitle, Layout
+from cms_layouts.layout_response import LayoutResponse
 from cms_layouts.slot_finder import get_mock_placeholder
 from filer.fields.image import FilerImageField
 import filer
@@ -399,6 +402,13 @@ class BlogEntryPage(
         return ('cms_blogger.views.entry_or_bio_page', (), {
             'blog_slug': self.blog.slug,
             'slug': self.slug})
+
+    def render_to_response(self, request):
+        layout = self.get_layout()
+        if not layout:
+            return HttpResponseNotFound(
+                "<h1>This Entry does not have a layout to render.</h1>")
+        return LayoutResponse(self, layout, request).make_response()
 
     class Meta:
         verbose_name = "blog entry"

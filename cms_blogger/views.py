@@ -24,11 +24,7 @@ def entry_page(request, blog_slug, year, month, day, entry_slug):
             blog__entries_slugs_with_date=True)
     except BlogEntryPage.DoesNotExist:
         raise Http404
-    layout = entry.get_layout()
-    if not layout:
-        return HttpResponseNotFound(
-            "<h1>This Entry does not have a layout to render.</h1>")
-    return LayoutResponse(entry, layout, request).make_response()
+    return entry.render_to_response(request)
 
 
 def landing_page(request, blog_slug):
@@ -50,8 +46,4 @@ def entry_or_bio_page(request, blog_slug, slug):
             blog__entries_slugs_with_date=False)
     except BlogEntryPage.DoesNotExist:
         raise Http404
-    layout = entry.get_layout()
-    if not layout:
-        return HttpResponseNotFound(
-            "<h1>This Entry does not have a layout to render.</h1>")
-    return LayoutResponse(entry, layout, request).make_response()
+    return entry.render_to_response(request)

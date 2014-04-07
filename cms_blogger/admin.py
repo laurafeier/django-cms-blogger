@@ -21,6 +21,8 @@ from menus.menu_pool import menu_pool
 from menus.templatetags.menu_tags import cut_levels
 
 from cms_layouts.models import Layout
+from cms_layouts.slot_finder import get_mock_placeholder
+
 from .models import Blog, BlogEntryPage, BlogNavigationNode
 from .forms import (
     BlogLayoutForm, BlogForm, BlogAddForm, BlogEntryPageAddForm,
@@ -307,8 +309,8 @@ class BlogEntryPageAdmin(CustomAdmin, PlaceholderAdmin):
             'classes': ('poster-image',)
         }),
         (None, {
-            'fields': ['body', ],
-            'classes': ('no-border', )
+            'fields': ['preview_on_top', 'body', 'preview_on_bottom'],
+            'classes': ('no-border', 'body-wrapper')
         }),
         (None, {
             'fields': ['publish', 'save'],
@@ -354,6 +356,22 @@ class BlogEntryPageAdmin(CustomAdmin, PlaceholderAdmin):
             else:
                 new_media.add_js((js, ))
         return new_media
+
+    def get_urls(self):
+        urls = super(BlogEntryPageAdmin, self).get_urls()
+        url_patterns = patterns('',
+            url(r'^(?P<entry_id>\d+)/preview/$',
+                self.admin_site.admin_view(self.preview),
+                name='cms_blogger-entry-preview'), )
+        url_patterns.extend(urls)
+        return url_patterns
+
+    def preview(self, request, entry_id):
+        entry = get_object_or_404(self.model, id=entry_id)
+        if 'body' in request.GET:
+            entry.content = get_mock_placeholder(
+                get_language(), request.GET.get('body') or 'Sample Content')
+        return entry.render_to_response(request)
 
     def change_view(self, request, object_id, form_url='', extra_context=None):
         response = super(BlogEntryPageAdmin, self).change_view(
