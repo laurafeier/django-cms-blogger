@@ -27,13 +27,16 @@ from django.template.loader import render_to_string
 
 
 class UploadButton(forms.widgets.CheckboxInput):
+    def __init__(self, *args, **kwargs):
+        super(UploadButton, self).__init__(*args, **kwargs)
+
     def render(self, name, value, attrs=None):
         return render_to_string(
             "admin/cms_blogger/blogentrypage/upload_button_js.html", 
             {
                 'id_upload_button': 'thumbnail_image_upload_button',
                 'thumbnail_upload_url': 'admin:cms_blogger-upload-thumbnail', 
-                'asabre': 1, #self.attrs['blog_entry_id'],
+                'blog_entry_id': self.blog_entry_id,
             }
         )
 
@@ -272,6 +275,7 @@ class BlogEntryPageChangeForm(forms.ModelForm):
             categories_field.queryset = instance.blog.categories.all()
             categories_field.initial = instance.categories.all()
         super(BlogEntryPageChangeForm, self).__init__(*args, **kwargs)
+        self.fields['upload_button'].widget.blog_entry_id = instance.pk
         self.fields['body'].initial = self.instance.content_body
         # prepare for save
         self.instance.draft_id = None

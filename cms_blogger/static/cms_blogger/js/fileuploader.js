@@ -337,7 +337,6 @@ qq.FileUploaderBasic.prototype = {
         }
 
         var handler = new qq[handlerClass]({
-            console.log(_options.action);
             debug: this._options.debug,
             action: this._options.action,         
             maxConnections: this._options.maxConnections,   

@@ -1,13 +1,11 @@
 {% load i18n admin_modify adminmedia filermedia %}
 {% load url from future %}
-<div>id-ul paginii</div>
-{{ object_id }}
 <a id="{{ id_upload_button }}" href="#" class="addlink" title="{% trans 'upload files' %}">{% trans 'Upload' %}</a>
 <script type="text/javascript">
 //<![CDATA[
 $(function() {
     var uploader = new qq.FileUploaderBasic({
-        action: '{% url 'admin:cms_blogger-upload-thumbnail' blog_entry_id=asabre %}',
+        action: '{% url 'admin:cms_blogger-upload-thumbnail' blog_entry_id=blog_entry_id %}',
         button: document.getElementById('{{ id_upload_button }}'),
         onSubmit: function(id, fileName){
             $("#fileInputQueue .noItemsRow").hide();

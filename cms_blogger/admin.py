@@ -253,9 +253,9 @@ class BlogAdmin(CustomAdmin):
         url_patterns.extend(urls)
         return url_patterns
 
-    def upload_thumbnail(self, request, blog_entry_id):
-        print "upload_thumbnail "*4
-        pass
+    def upload_thumbnail(self, request, blog_entry_id=None):
+        from django.http import HttpResponse
+        return HttpResponse("ok")
 
     def navigation_tool(self, request, blog_id):
         if (request.method not in ['GET', 'POST'] or
