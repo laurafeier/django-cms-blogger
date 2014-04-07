@@ -52,6 +52,9 @@ div.submit-row {
 label[for='id_body'] {
     display: none;
 }
+#id_publish, #id_save{
+    font-size: medium;
+}
 
 #id_body_tbl{
     border: 1px solid #ccc;

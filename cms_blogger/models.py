@@ -353,6 +353,12 @@ class BlogEntryPage(
     objects = EntriesManager()
 
     @property
+    def is_draft(self):
+        if all([self.title, self.short_description, self.slug, self.blog_id]):
+            return False
+        return True
+
+    @property
     def author_display_name(self):
         if not self.author:
             return ''
@@ -431,5 +437,5 @@ def mark_draft(instance, **kwargs):
         # draft_id is set to None in the change form also but it's good to
         #   have this here too in order to make sure that entries created
         #   programmatically will behave in the same way
-        if instance.draft_id and instance.slug and instance.blog_id:
+        if instance.draft_id and not instance.is_draft:
             entry_as_queryset.update(draft_id=None)

@@ -311,7 +311,7 @@ class BlogEntryPageAdmin(CustomAdmin, PlaceholderAdmin):
             'classes': ('no-border', )
         }),
         (None, {
-            'fields': ['is_published',],
+            'fields': ['publish', 'save'],
             'classes': ('right-col', )
         }),
         ('Schedule Publish', {

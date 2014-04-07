@@ -19,7 +19,7 @@ from cms_layouts.slot_finder import (
 from django_select2.fields import (
     AutoModelSelect2Field, AutoModelSelect2MultipleField)
 from .models import Blog, BlogEntryPage, BlogCategory
-from .widgets import TagItWidget
+from .widgets import TagItWidget, ButtonWidget
 from .utils import user_display_name
 
 
@@ -228,6 +228,14 @@ class AuthorField(AutoModelSelect2Field):
         return user_display_name(obj)
 
 
+class ButtonField(forms.Field):
+
+    def __init__(self, *args, **kwargs):
+        kwargs["label"] = ""
+        kwargs["required"] = False
+        super(ButtonField, self).__init__(*args, **kwargs)
+
+
 class BlogEntryPageChangeForm(forms.ModelForm):
     body = forms.CharField(
         label='Blog Entry', required=True,
@@ -235,8 +243,15 @@ class BlogEntryPageChangeForm(forms.ModelForm):
     author = AuthorField()
     categories = forms.ModelMultipleChoiceField(
         widget=forms.CheckboxSelectMultiple(),
-        queryset=BlogCategory.objects.get_empty_query_set())
+        queryset=BlogCategory.objects.get_empty_query_set(), required=False)
 
+    publish = ButtonField(widget=ButtonWidget(submit=True,
+        on_click=(
+            "jQuery(this).closest('form').append("
+            "jQuery('<input>').attr('type', 'hidden').attr("
+                "'name', '_pub_pressed').val(true)"
+            ");")))
+    save = ButtonField(widget=ButtonWidget(submit=True))
 
     class Media:
         css = {"all": ("cms_blogger/css/entry-change-form.css", )}
@@ -252,6 +267,13 @@ class BlogEntryPageChangeForm(forms.ModelForm):
             categories_field.queryset = instance.blog.categories.all()
             categories_field.initial = instance.categories.all()
         super(BlogEntryPageChangeForm, self).__init__(*args, **kwargs)
+
+        pub_button = self.fields['publish'].widget
+        if self.instance and self.instance.is_published:
+            pub_button.text = 'Unpublish'
+        else:
+            pub_button.text = 'Publish Now'
+
         self.fields['body'].initial = self.instance.content_body
         # prepare for save
         self.instance.draft_id = None
@@ -277,30 +299,28 @@ class BlogEntryPageChangeForm(forms.ModelForm):
         self.instance.slug = slug
         return title
 
-    def _reset_publication_date(self):
-        is_published = self.cleaned_data.get('is_published')
-        start_date = self.cleaned_data.get('start_publication')
-        # check if reset publication date is needed
-        when = now = timezone.now()
-        if is_published:
-            if not self.instance.is_published:
-                # if however a startdate was set
-                if start_date and not self.instance.start_publication:
-                    when = start_date
-                self.instance.publication_date = when
-            elif start_date != self.instance.start_publication:
-                # if was published but start pub date changed
-                self.instance.publication_date = start_date or now
-        else:
+    def _set_publication_date(self):
+        publish_toggle = bool(self.data.get('_pub_pressed'))
+        if publish_toggle:
+            self.instance.is_published = not self.instance.is_published
+
+        now = timezone.now()
+        if not self.instance.is_published:
+            # entry got unpublished
             self.cleaned_data['start_publication'] = None
             self.cleaned_data['end_publication'] = None
             self.instance.publication_date = now
+            return
+
+        start_date = self.cleaned_data.get('start_publication')
+        if start_date != self.instance.start_publication:
+            self.instance.publication_date = start_date or now
 
     def clean(self):
-        self._reset_publication_date()
         start_date = self.cleaned_data.get('start_publication')
         end_date = self.cleaned_data.get('end_publication')
         if (start_date and end_date and not start_date < end_date):
             raise ValidationError("Incorrect publication dates interval.")
+        self._set_publication_date()
         return self.cleaned_data
 

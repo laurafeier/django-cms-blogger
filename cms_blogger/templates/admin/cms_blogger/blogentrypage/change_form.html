@@ -2,7 +2,7 @@
 {% load i18n blog_admin_tags %}
 
 {% block object-tools-items %}
-    {% if has_absolute_url and original.slug and original.blog %}<li><a href="{% site_url original.site %}{{original.get_absolute_url}}?preview" class="viewsitelink">{% trans "View on site" %}</a></li>{% endif%}
+    {% if has_absolute_url and not original.is_draft %}<li><a href="{% site_url original.site %}{{original.get_absolute_url}}?preview" class="viewsitelink">{% trans "View on site" %}</a></li>{% endif%}
 {% endblock %}
 
 {% block pretitle %}
