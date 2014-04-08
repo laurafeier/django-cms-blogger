@@ -27,6 +27,11 @@ from .forms import (
     BlogEntryPageChangeForm, BlogLayoutInlineFormSet)
 from .changelists import BlogChangeList, BlogEntryChangeList
 from .widgets import ToggleWidget
+from filer.utils.files import handle_upload, UploadException
+import imghdr
+from django.views.decorators.csrf import csrf_exempt
+from os import path as os_path
+from django.utils import simplejson
 
 
 class BlogLayoutInline(GenericTabularInline):
@@ -244,7 +249,7 @@ class BlogAdmin(CustomAdmin):
 
             url(r'^(?P<blog_id>\d+)/navigation_tool/$',
                 self.admin_site.admin_view(self.navigation_tool),
-                name='cms_blogger-navigation-tool'), 
+                name='cms_blogger-navigation-tool'),
 
             url(r'^(?P<blog_entry_id>\d+)/upload_file/$',
                 self.admin_site.admin_view(self.upload_thumbnail), #what is this
@@ -253,9 +258,39 @@ class BlogAdmin(CustomAdmin):
         url_patterns.extend(urls)
         return url_patterns
 
+    @csrf_exempt
     def upload_thumbnail(self, request, blog_entry_id=None):
-        from django.http import HttpResponse
-        return HttpResponse("ok")
+        try:
+            blog_entry = BlogEntryPage.objects.get(id=blog_entry_id)
+        except queryset.model.DoesNotExist:
+            blog_entry = None
+        if blog_entry is not None:
+            mimetype = "application/json" if request.is_ajax() else "text/html"
+            upload = None
+            try:
+                upload, filename, _ = handle_upload(request)
+
+                extension = os_path.splitext(filename)[1]
+                if not extension:
+                    # try to guess if it's an image and append extension
+                    # imghdr will detect file is a '.jpeg', '.png' or '.gif' image
+                    guessed_extension = imghdr.what(upload)
+                    if guessed_extension:
+                        filename = '%s.%s' % (filename, guessed_extension)
+                blog_entry.thumbnail_image.save(filename, upload)
+
+                json_response = {
+                    'label': unicode(filename), 
+                    'url': blog_entry.thumbnail_image.url,
+                }
+                return HttpResponse(simplejson.dumps(json_response),
+                                        mimetype=mimetype)
+            except UploadException, e:
+                return HttpResponse(simplejson.dumps({'error': unicode(e)}),
+                                    mimetype=mimetype)
+            finally:
+                if upload:
+                    upload.close()
 
     def navigation_tool(self, request, blog_id):
         if (request.method not in ['GET', 'POST'] or

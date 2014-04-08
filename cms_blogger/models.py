@@ -38,7 +38,6 @@ def getCMSContentModel(**kwargs):
                 setattr(self, body_attr, getattr(plugin, 'body'))
 
         def save(self, *args, **kwargs):
-            print "aaa"*40
             super(ModelWithCMSContent, self).save(*args, **kwargs)
             plugin = getattr(self, plugin_getter)()
             plugin_data = getattr(self, body_attr)
@@ -304,7 +303,9 @@ class BlogEntryPage(
     def __init__(self, *args, **kwargs):
         super(BlogEntryPage, self).__init__(*args, **kwargs)
         if self.thumbnail_image.name:
-            self._old_thumbnail_image = self.thumbnail_image 
+            self._old_thumbnail = (
+                self.thumbnail_image.storage, 
+                self.thumbnail_image.name)
 
     uses_layout_type = Blog.ENTRY_PAGE
 
@@ -407,15 +408,10 @@ class BlogEntryPage(
         storage.delete(path)
 
     def save(self, *args, **kwargs):
-        old_thumbnail = None 
-        if hasattr(self, '_old_thumbnail_image') and self._old_thumbnail_image.name:
-            old_thumbnail = self._old_thumbnail_image
-
-
         super(BlogEntryPage, self).save(*args, **kwargs)
-        if old_thumbnail:
-            storage, path = old_thumbnail.storage, old_thumbnail.path
-            storage.delete(path)
+        if hasattr(self, '_old_thumbnail'):
+            old_thumbnail_storage, old_thumbnail_path = self._old_thumbnail
+            old_thumbnail_storage.delete(old_thumbnail_path)
 
             
 

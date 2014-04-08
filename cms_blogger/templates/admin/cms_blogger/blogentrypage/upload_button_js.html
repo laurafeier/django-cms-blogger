@@ -1,12 +1,18 @@
 {% load i18n admin_modify adminmedia filermedia %}
 {% load url from future %}
 <a id="{{ id_upload_button }}" href="#" class="addlink" title="{% trans 'upload files' %}">{% trans 'Upload' %}</a>
+<div id="fileInputQueue"> 
+
+
+</div>
+
 <script type="text/javascript">
 //<![CDATA[
 $(function() {
     var uploader = new qq.FileUploaderBasic({
         action: '{% url 'admin:cms_blogger-upload-thumbnail' blog_entry_id=blog_entry_id %}',
         button: document.getElementById('{{ id_upload_button }}'),
+        multiple: false,
         onSubmit: function(id, fileName){
             $("#fileInputQueue .noItemsRow").hide();
             $('#fileInputQueue').append('<tr id="fileUpload-' + id + '" class="clipboardItem fileUploadQueueItem"><td class="thumbnail"><div class="loadingThumb" /></td><td class="label"><div><span class="fileName">' + fileName + ' (<span class="size">?</span>)</span> [<span class="percentage">&nbsp;</span>]</div><div class="fileUploadProgress" style="width: 100%;"><div id="fileUpload-' + id + '-ProgressBar" class="fileUploadProgressBar" style="width: 1px; height: 3px;"></div></div></td></tr>');
@@ -18,6 +24,7 @@ $(function() {
             $('#fileUpload-' + id + '-ProgressBar').css('width', percent + "%");
         },
         onComplete: function(id, fileName, responseJSON){
+            console.log("s-o gatat");
             var file = responseJSON;
             if (file.error) {
                 var html = '\
@@ -26,7 +33,7 @@ $(function() {
                 <td class="buttons"></td>';
             } else {
                 var html = '\
-                    <td class="thumbnail"><img style="width: 32px;height: 32px;" src="' + file.thumbnail + '" alt="' + file.alt_text + '" /></td>\
+                    <td class="thumbnail"><img style="width: 128px;height: 128px;" src="' + file.url + '" /></td>\
                     <td class="label">' + file.label + '</td>\
                     <td class="buttons"></td>';
             }
