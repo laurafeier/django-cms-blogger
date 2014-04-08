@@ -1,0 +1,6 @@
+{% for entry in entries %}
+    {% include 'cms_blogger/entry_summary.html'%}
+{% empty %}
+No posts available
+{% endfor %}
+

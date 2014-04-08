@@ -1,8 +1,10 @@
 from django.http import HttpResponse, Http404, HttpResponseNotFound
 from django.shortcuts import get_object_or_404
 from django.contrib.sites.models import Site
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from cms_layouts.layout_response import LayoutResponse
 from .models import BlogEntryPage, Blog
+from .settings import POSTS_ON_LANDING_PAGE
 
 
 def get_entries_queryset_for_request(request):
@@ -35,6 +37,18 @@ def landing_page(request, blog_slug):
         return HttpResponseNotFound(
             "<h1>This Blog Landing Page does not have a "
             "layout to render.</h1>")
+
+    paginator = Paginator(blog.get_entries(), POSTS_ON_LANDING_PAGE)
+    page = request.GET.get('page')
+    try:
+        entries = paginator.page(page)
+    except PageNotAnInteger:
+        # If page is not an integer, deliver first page.
+        entries = paginator.page(1)
+    except EmptyPage:
+        # If page is out of range (e.g. 9999), deliver last page of results.
+        entries = paginator.page(paginator.num_pages)
+    blog.paginated_entries = entries
     return LayoutResponse(blog, layout, request).make_response()
 
 

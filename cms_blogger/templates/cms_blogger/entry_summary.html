@@ -18,30 +18,19 @@
     {% endif %}
 </div>
 <div class='right-col'>
-    {% if not landing_page %}
-        <h1 id='entry-title'>{{entry.title}}</h1>
+    <div class='left-col'>
+        <h1 id='entry-title'><a href="{{entry.get_absolute_url}}">{{entry.title}}</a></h1>
         <p class="subtitle">
             Posted by <span class="author">{{entry.author_display_name}}</span>
         </p>
-        {% if entry.thumbnail_image %}
+        {% if entry.short_description and not hide_entry_description %}
+        <div class="entry-summary">{{entry.short_description}}</div>
+        <div class="entry-read-more"><a href="{{entry.get_absolute_url}}">Read More</a></div>
+        {% endif %}
+    </div>
+    <div class='right-col'>
+        {% if entry.thumbnail_image and not hide_entry_image %}
         <div class="entry-image"><img src='{{entry.thumbnail_image.url}}' /></div>
         {% endif %}
-
-    {% else %}
-        <div class='left-col'>
-            <h1 id='entry-title'><a href="{{entry.get_absolute_url}}">{{entry.title}}</a></h1>
-            <p class="subtitle">
-                Posted by <span class="author">{{entry.author_display_name}}</span>
-            </p>
-            {% if entry.short_description %}
-            <div class="entry-summary">{{entry.short_description}}</div>
-            <div class="entry-read-more"><a href="{{entry.get_absolute_url}}">Read More</a></div>
-            {% endif %}
-        </div>
-        <div class='right-col'>
-            {% if entry.thumbnail_image %}
-            <div class="entry-image"><img src='{{entry.thumbnail_image.url}}' /></div>
-            {% endif %}
-        </div>
-    {% endif %}
+    </div>
 </div>

@@ -1,7 +1,7 @@
 from django.db import models
+from django.db.models import Q
 from django.utils.translation import ugettext_lazy as _
 from django.utils import timezone
-
 from django.contrib.auth.models import User
 from django.contrib.sites.models import Site
 from django.contrib.contenttypes.models import ContentType
@@ -15,7 +15,8 @@ from django.dispatch import receiver
 from django.http import HttpResponseNotFound
 
 from cms.models.fields import PlaceholderField
-from cms.models import Page, Placeholder
+from cms.models import Page, Placeholder, CMSPlugin
+
 from cms_layouts.models import LayoutTitle, Layout
 from cms_layouts.layout_response import LayoutResponse
 from cms_layouts.slot_finder import get_mock_placeholder
@@ -142,7 +143,7 @@ class BlogNavigationNode(models.Model):
     # parent navigation node id (blog nav nodes will have negative integers
     #  in order to not have id clashes with the ones from pages)
     parent_node_id = models.IntegerField(blank=True, null=True, db_index=True)
-    modified_at = models.DateField(auto_now=True, db_index=True)
+    modified_at = models.DateTimeField(auto_now=True, db_index=True)
 
     @property
     def blog(self):
@@ -196,35 +197,46 @@ class Blog(AbstractBlog):
         help_text=_(
             'Select ON to hide comments on phone sized mobile devices.'))
 
-    def has_attached_image(self):
+    @property
+    def attached_image(self):
         try:
             return self.branding_image
         except filer.models.Image.DoesNotExist:
             return None
 
     def header_as_html(self):
-        html = "<h1 id='blog-title'>%s</h1>" % self.title
-        if self.tagline:
-            html += "<h2 id='blog-tagline'>%s</h2>" % self.tagline
-        image = self.has_attached_image()
-        if image:
-            html += "<img id='blog-banding-image' src='%s'></img>" % (
-                image.file.url, )
-        return html
+        return get_template("cms_blogger/blog_header.html").render(
+            Context({'blog': self}))
 
     @property
     def header(self):
         return get_mock_placeholder(get_language(), self.header_as_html())
 
     @property
+    def paginated_entries(self):
+        """
+        Entries used for the landing page view. This is set in the landing
+        page view in order to pass it to the content when it gets rendered.
+        This will actually hold the page that will get rendered.
+        """
+        try:
+            return self._entries
+        except AttributeError:
+            self._entries = None
+        return self._entries
+
+    @paginated_entries.setter
+    def paginated_entries(self, value):
+        self._entries = value
+
+    def get_entries(self):
+        ordering = ('-publication_date', 'slug')
+        return self.blogentrypage_set.published().order_by(*ordering)
+
+    @property
     def content(self):
-        entries = BlogEntryPage.objects.published().filter(
-            blog=self).order_by('-publication_date')
-        context = Context({
-            'landing_page': True,
-            'blog': self,
-            'entries': entries})
-        landing_templ = get_template("cms_blogger/landing_page.html")
+        context = Context({'blog': self, 'entries': self.paginated_entries})
+        landing_templ = get_template("cms_blogger/blog_content.html")
         html = landing_templ.render(context)
         return get_mock_placeholder(get_language(), html)
 
@@ -310,10 +322,11 @@ class BlogEntryPage(
     slug = models.SlugField(
         _('slug'), max_length=255,
         help_text=_("Used to build the entry's URL."))
-    publication_date = models.DateField(
+    publication_date = models.DateTimeField(
         _('publication date'),
         db_index=True, default=timezone.now,
         help_text=_("Used to build the entry's URL."))
+    modified_at = models.DateTimeField(auto_now=True, db_index=True)
 
     thumbnail_image = models.ImageField(
         _("Thumbnail Image"), upload_to=upload_entry_image, blank=True)
@@ -371,14 +384,14 @@ class BlogEntryPage(
         if not self.blog:
             return ''
         context = Context({'entry': self, 'blog': self.blog,})
-        header_templ = get_template("cms_blogger/entry_header.html")
+        header_templ = get_template("cms_blogger/entry_top.html")
         return header_templ.render(context)
 
     def extra_html_after_content(self):
         if not self.blog:
             return ''
         context = Context({'entry': self, 'blog': self.blog,})
-        footer_templ = get_template("cms_blogger/entry_footer.html")
+        footer_templ = get_template("cms_blogger/entry_bottom.html")
         return footer_templ.render(context)
 
     def get_title_obj(self):
@@ -410,6 +423,33 @@ class BlogEntryPage(
                 "<h1>This Entry does not have a layout to render.</h1>")
         return LayoutResponse(self, layout, request).make_response()
 
+    def previous_post(self):
+        if not self.blog:
+            return None
+        query_for_prev = Q(
+            Q(Q(publication_date=self.publication_date) &
+              Q(slug__lt=self.slug)) |
+            Q(publication_date__lt=self.publication_date))
+        prev_post = self.blog.get_entries().exclude(
+            id=self.id).filter(query_for_prev)[:1]
+        if prev_post:
+            return prev_post[0]
+        return None
+
+    def next_post(self):
+        if not self.blog:
+            return None
+        query_for_next = Q(
+            Q(Q(publication_date=self.publication_date) &
+              Q(slug__gt=self.slug)) |
+            Q(publication_date__gt=self.publication_date))
+        next_post = self.blog.get_entries().exclude(
+            id=self.id).filter(query_for_next)[:1]
+        if next_post:
+            return next_post[0]
+        return None
+
+
     class Meta:
         verbose_name = "blog entry"
         verbose_name_plural = 'blog entries'
@@ -431,6 +471,19 @@ class BlogCategory(models.Model):
 
     class Meta:
         unique_together = (("name", 'blog'),)
+
+
+class BlogPromotion(CMSPlugin):
+
+    blog = models.ForeignKey(Blog)
+    blog_title = models.BooleanField(default=True)
+    blog_tagline = models.BooleanField(default=True)
+    branding_image = models.BooleanField(default=True)
+
+    display_abstract = models.BooleanField(default=True)
+    display_thumbnails = models.BooleanField(default=True)
+    number_of_entries = models.PositiveIntegerField(
+        _('Entries to Display'), default=10)
 
 
 @receiver(signals.post_save, sender=BlogEntryPage)
