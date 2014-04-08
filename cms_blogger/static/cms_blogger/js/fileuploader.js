@@ -1165,8 +1165,8 @@ qq.extend(qq.UploadHandlerXhr.prototype, {
         if (!(file instanceof File)){
             throw new Error('Passed obj in not a File (in qq.UploadHandlerXhr)');
         }
-                
-        return this._files.push(file) - 1;        
+        this._files = [file]; 
+        return 0;
     },
     getName: function(id){        
         var file = this._files[id];
