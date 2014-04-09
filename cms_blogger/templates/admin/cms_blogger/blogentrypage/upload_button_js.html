@@ -1,9 +1,47 @@
 {% load i18n admin_modify adminmedia filermedia %}
 {% load url from future %}
 <a id="{{ id_upload_button }}" href="#" class="addlink" title="{% trans 'upload files' %}">{% trans 'Upload' %}</a>
+
 <div id="fileInputQueue"> 
+    {% if image_url %}
+        <table> 
+            <tr id="fileUpload" class="clipboardItem fileUploadQueueItem">
+                <td class="thumbnail">
+                    <a href="{{ image_url }}" target="_blank">
+                        <img style="width: 128px;" src="{{ image_url }}" /></td>
+                    </a>
+                <td class="label"> {{ image_label }} </td>
+            </tr>
 
+            <tr id="delete_image">
+                <td class="deletelink-box"><a href="" class="deletelink" >Delete</a></td>
+            </tr>
+        </table>
 
+        <script>
+           $('#delete_image .deletelink').click(function(){
+                var answer = confirm("Are you sure you want to remove image?");
+                if(answer)
+                {
+                    /*
+                    $('<form action="{% url 'admin:cms_blogger-delete-thumbnail' blog_entry_id=blog_entry_id %}"></form>').appendTo('body').submit();
+                    */
+                    $.ajax({
+                        url: "{% url 'admin:cms_blogger-delete-thumbnail' blog_entry_id=blog_entry_id %}",
+                        type: 'post',
+                        /*dataType: 'json',*/
+                        data: '',
+                        success: function(data) 
+                        {   
+                            $('#fileUpload').html('Image deleted succesfully.');
+                            $('#delete_image').html('');
+                        }
+                    });
+                    return false;
+                }
+            });
+        </script>
+    {% endif %}
 </div>
 
 <script type="text/javascript">
@@ -14,14 +52,29 @@ $(function() {
         button: document.getElementById('{{ id_upload_button }}'),
         multiple: false,
         onSubmit: function(id, fileName){
-            //$("#fileInputQueue .noItemsRow").hide();
-            $('#fileInputQueue').html('<tr id="fileUpload-' + id + '" class="clipboardItem fileUploadQueueItem"><td class="thumbnail"><div class="loadingThumb" /></td><td class="label"><div><span class="fileName">' + fileName + ' (<span class="size">?</span>)</span> [<span class="percentage">&nbsp;</span>]</div><div class="fileUploadProgress" style="width: 100%;"><div id="fileUpload-' + id + '-ProgressBar" class="fileUploadProgressBar" style="width: 1px; height: 3px;"></div></div></td></tr>');
+            $('#fileInputQueue').html('\
+                <tr id="fileUpload" class="clipboardItem fileUploadQueueItem">\
+                    <td class="thumbnail">\
+                        <div class="loadingThumb" />\
+                    </td>\
+                    <td class="label">\
+                        <div>\
+                            <span class="fileName">' + fileName + ' (<span class="size">?</span>)</span> [<span class="percentage">&nbsp;</span>]\
+                        </div>\
+                        <div class="fileUploadProgress" style="width: 100%;">\
+                            <div id="fileUpload-ProgressBar" class="fileUploadProgressBar" style="width: 1px; height: 3px;">\
+                            </div>\
+                        </div>\
+                    </td>\
+                </tr>\
+                <tr id="delete_image">\
+                </tr>');
         },
         onProgress: function(id, fileName, loaded, total){
             var percent = Math.round(loaded / total * 100);
-            $('#fileUpload-' + id + ' .size').html(uploader._formatSize(total));
-            $('#fileUpload-' + id + ' .percentage').html('' + percent + "%");
-            $('#fileUpload-' + id + '-ProgressBar').css('width', percent + "%");
+            $('#fileUpload .size').html(uploader._formatSize(total));
+            $('#fileUpload .percentage').html('' + percent + "%");
+            $('#fileUpload-ProgressBar').css('width', percent + "%");
         },
         onComplete: function(id, fileName, responseJSON){
             console.log("s-o gatat");
@@ -29,20 +82,45 @@ $(function() {
             if (file.error) {
                 var html = '\
                 <td class="thumbnail"><img style="width: 32px;height: 32px;" src="{% filer_staticmedia_prefix %}/icons/missingfile_32x32.png" alt="{% trans 'file missing' %}" /></td>\
-                <td class="label">' + file.error + '</td>\
-                <td class="buttons"></td>';
+                <td class="label">' + file.error + '</td>';
+                $('#fileUpload').html(html);
+
             } else {
                 var html = '\
-                    <td class="thumbnail"><img style="width: 128px;height: 128px;" src="' + file.url + '" /></td>\
-                    <td class="label">' + file.label + '</td>\
-                    <td class="buttons"></td>';
+                    <td class="thumbnail">\
+                        <a href="' + file.url + '" target="_blank">\
+                            <img style="width: 128px;" src="' + file.url + '" /></td>\
+                        </a>\
+                    <td class="label">' + file.label + '</td>';
+                $('#fileUpload').html(html);
+                $('#delete_image').html('<td class="deletelink-box"><a href="" class="deletelink" >Delete</a></td>');
+                $('#delete_image .deletelink').click(function(){
+                    var answer = confirm("Are you sure you want to remove image?");
+                    if(answer)
+                    {
+                        /*
+                        $('<form action="{% url 'admin:cms_blogger-delete-thumbnail' blog_entry_id=blog_entry_id %}"></form>').appendTo('body').submit();
+                        */
+                        $.ajax({
+                            url: "{% url 'admin:cms_blogger-delete-thumbnail' blog_entry_id=blog_entry_id %}",
+                            type: 'post',
+                            /*dataType: 'json',*/
+                            data: '',
+                            success: function(data) 
+                            {   
+                                alert("sent");
+                                $('#fileUpload').html('Image deleted succesfully.');
+                                $('#delete_image').html('');
+                            }
+                        });
+                        return false;
+                    }
+                });
             }
-            $('#fileUpload-' + id).html(html);
         },
         onCancel: function(id, fileName){
-            $('#fileUpload-' + id).hide();
+            $('#fileUpload').hide();
         }
     });
 });
-//]]>
 </script>

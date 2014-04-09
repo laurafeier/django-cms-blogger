@@ -408,6 +408,7 @@ class BlogEntryPage(
         storage.delete(path)
 
     def save(self, *args, **kwargs):
+        import ipdb; ipdb.set_trace()
         super(BlogEntryPage, self).save(*args, **kwargs)
         if hasattr(self, '_old_thumbnail'):
             old_thumbnail_storage, old_thumbnail_path = self._old_thumbnail

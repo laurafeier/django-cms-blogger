@@ -254,6 +254,10 @@ class BlogAdmin(CustomAdmin):
             url(r'^(?P<blog_entry_id>\d+)/upload_file/$',
                 self.admin_site.admin_view(self.upload_thumbnail), #what is this
                 name='cms_blogger-upload-thumbnail'),
+
+            url(r'^(?P<blog_entry_id>\d+)/delete_file/$',
+                self.admin_site.admin_view(self.delete_thumbnail), #what is this
+                name='cms_blogger-delete-thumbnail'),
         )
         url_patterns.extend(urls)
         return url_patterns
@@ -262,7 +266,7 @@ class BlogAdmin(CustomAdmin):
     def upload_thumbnail(self, request, blog_entry_id=None):
         try:
             blog_entry = BlogEntryPage.objects.get(id=blog_entry_id)
-        except queryset.model.DoesNotExist:
+        except BlogEntryPage.DoesNotExist:
             blog_entry = None
         if blog_entry is not None:
             mimetype = "application/json" if request.is_ajax() else "text/html"
@@ -278,9 +282,8 @@ class BlogAdmin(CustomAdmin):
                     if guessed_extension:
                         filename = '%s.%s' % (filename, guessed_extension)
                 blog_entry.thumbnail_image.save(filename, upload)
-
                 json_response = {
-                    'label': unicode(filename), 
+                    'label': unicode(blog_entry.thumbnail_image.name),
                     'url': blog_entry.thumbnail_image.url,
                 }
                 return HttpResponse(simplejson.dumps(json_response),
@@ -292,6 +295,23 @@ class BlogAdmin(CustomAdmin):
                 if upload:
                     upload.close()
 
+    @csrf_exempt
+    def delete_thumbnail(self, request, blog_entry_id=None):
+        try:
+            blog_entry = BlogEntryPage.objects.get(id=blog_entry_id)
+        except BlogEntryPage.DoesNotExist:
+            blog_entry = None
+        if blog_entry:
+            if blog_entry.thumbnail_image and blog_entry.thumbnail_image.name:
+                blog_entry.thumbnail_image.delete()
+                #thumbnail = blog_entry.thumbnail_image
+                #thumbnail.storage.delete(thumbnail.name)
+                #blog_entry.thumbnail.name = ""
+                #blog_entry.save() 
+                return HttpResponse("OK")
+            return HttpResponse("No file to delete")
+        return HttpResponse("BlogEntry does not exist") 
+     
     def navigation_tool(self, request, blog_id):
         if (request.method not in ['GET', 'POST'] or
                 not "_popup" in request.REQUEST):
