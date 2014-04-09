@@ -301,11 +301,12 @@ class BlogEntryPage(
     BlogRelatedPage, getCMSContentModel(content_attr='content')):
 
     def __init__(self, *args, **kwargs):
+        print "__init"*20
         super(BlogEntryPage, self).__init__(*args, **kwargs)
-        if self.thumbnail_image.name:
-            self._old_thumbnail = (
-                self.thumbnail_image.storage, 
-                self.thumbnail_image.name)
+        #if self.thumbnail_image.name:
+        #    self._old_thumbnail = (
+        #        self.thumbnail_image.storage, 
+        #        self.thumbnail_image.name)
 
     uses_layout_type = Blog.ENTRY_PAGE
 
@@ -408,7 +409,7 @@ class BlogEntryPage(
         storage.delete(path)
 
     def save(self, *args, **kwargs):
-        import ipdb; ipdb.set_trace()
+        print "save "*15
         super(BlogEntryPage, self).save(*args, **kwargs)
         if hasattr(self, '_old_thumbnail'):
             old_thumbnail_storage, old_thumbnail_path = self._old_thumbnail

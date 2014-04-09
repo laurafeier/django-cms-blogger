@@ -265,7 +265,17 @@ class BlogAdmin(CustomAdmin):
     @csrf_exempt
     def upload_thumbnail(self, request, blog_entry_id=None):
         try:
+            print "before "*20
             blog_entry = BlogEntryPage.objects.get(id=blog_entry_id)
+
+            # if this blog is in BlogEntryPage.__init__ it will be called when
+            # saving a blog and the current file gets deleted 
+            if blog_entry.thumbnail_image.name:
+                blog_entry._old_thumbnail = (
+                    blog_entry.thumbnail_image.storage, 
+                    blog_entry.thumbnail_image.name)
+
+            print "after "*20
         except BlogEntryPage.DoesNotExist:
             blog_entry = None
         if blog_entry is not None:
