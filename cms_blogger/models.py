@@ -463,7 +463,7 @@ class BlogCategory(models.Model):
 
     name = models.CharField(_('name'), max_length=30, db_index=True)
     blog = models.ForeignKey(Blog, related_name='categories')
-    blog_entry = models.ForeignKey(BlogEntryPage,
+    blog_entry = models.ForeignKey(BlogEntryPage, on_delete=models.SET_NULL,
         null=True, blank=True, related_name='categories')
 
     def __unicode__(self):
