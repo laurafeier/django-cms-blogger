@@ -1,17 +1,4 @@
+{% load digg_pagination %}
+
 {% include 'cms_blogger/entries_list.html' %}
-
-<div class="pagination">
-    <span class="step-links">
-        {% if entries.has_previous %}
-            <a href="?page={{ entries.previous_page_number }}">newer posts</a>
-        {% endif %}
-
-        <span class="current">
-            Page {{ entries.number }} of {{ entries.paginator.num_pages }}
-        </span>
-
-        {% if entries.has_next %}
-            <a href="?page={{ entries.next_page_number }}">older posts</a>
-        {% endif %}
-    </span>
-</div>
+{% paginator entries 2 %}
