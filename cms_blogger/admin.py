@@ -21,6 +21,8 @@ from menus.menu_pool import menu_pool
 from menus.templatetags.menu_tags import cut_levels
 
 from cms_layouts.models import Layout
+from cms_layouts.slot_finder import get_mock_placeholder
+
 from .models import Blog, BlogEntryPage, BlogNavigationNode
 from .forms import (
     BlogLayoutForm, BlogForm, BlogAddForm, BlogEntryPageAddForm,
@@ -368,24 +370,44 @@ class BlogEntryPageAdmin(CustomAdmin, PlaceholderAdmin):
     add_form_template = 'admin/cms_blogger/blogentrypage/add_form.html'
     add_form = BlogEntryPageAddForm
     change_form = BlogEntryPageChangeForm
-    readonly_in_change_form = ['blog', ]
+    formfield_overrides = {
+        models.BooleanField: {'widget': ToggleWidget}
+    }
     change_form_fieldsets = (
         (None, {
-            'fields': [
-                'title', 'blog', ('slug', 'publication_date'),
-                'upload_button',
-                'categories',
-                'author', 'abstract', 'body',
-                ('is_published', 'start_publication', 'end_publication'),
-                'meta_description', 'meta_keywords'],
-        }),)
+            'fields': ['title', 'author', 'short_description', ],
+        }),
+        (None, {
+            'fields': ['upload_button', ],
+            'classes': ('poster-image',)
+        }),
+        (None, {
+            'fields': ['preview_on_top', 'body', 'preview_on_bottom'],
+            'classes': ('no-border', 'body-wrapper')
+        }),
+        (None, {
+            'fields': ['publish', 'save'],
+            'classes': ('right-col', )
+        }),
+        ('Schedule Publish', {
+            'fields': ['start_publication', 'end_publication'],
+            'classes': ('right-col', 'collapse')
+        }),
+        (None, {
+            'fields': ['categories', ],
+            'classes': ('right-col', )
+        }),
+        ('Advanced Options', {
+            'fields': ['seo_title', 'meta_keywords', 'disqus_enabled'],
+            'classes': ('right-col', 'collapse', 'open')
+        }),
 
-    @property
-    def media(self):
+    )
+
+    def _upgrade_jquery(self, media):
         # upgrade jquery and cms jquery UI
-        super_media = super(BlogEntryPageAdmin, self).media
         new_media = Media()
-        new_media.add_css(super_media._css)
+        new_media.add_css(media._css)
 
         new_jquery_version = static('cms_blogger/js/jquery-1.9.1.min.js')
         new_jquery_ui_version = static('cms_blogger/js/jquery-ui.min.js')
@@ -393,18 +415,44 @@ class BlogEntryPageAdmin(CustomAdmin, PlaceholderAdmin):
         jquery_namspace = static('cms_blogger/js/jQuery-patch.js')
         django_jquery_urls = [static('admin/js/jquery.js'),
                               static('admin/js/jquery.min.js')]
-
-        for js in super_media._js:
+        django_collapse_js = [static('admin/js/collapse.js'),
+                              static('admin/js/collapse.min.js')]
+        for js in media._js:
             if js in django_jquery_urls:
                 new_media.add_js((new_jquery_version, ))
+            elif js in django_collapse_js:
+                new_media.add_js((static('cms_blogger/js/admin-collapse.js'), ))
             elif js == static('admin/js/jquery.init.js'):
                 new_media.add_js((js, jquery_namspace))
             elif js.startswith(static('cms/js/libs/jquery.ui.')):
                 new_media.add_js((new_jquery_ui_version, ))
             else:
                 new_media.add_js((js, ))
-
         return new_media
+
+    def get_urls(self):
+        urls = super(BlogEntryPageAdmin, self).get_urls()
+        url_patterns = patterns('',
+            url(r'^(?P<entry_id>\d+)/preview/$',
+                self.admin_site.admin_view(self.preview),
+                name='cms_blogger-entry-preview'), )
+        url_patterns.extend(urls)
+        return url_patterns
+
+    def preview(self, request, entry_id):
+        entry = get_object_or_404(self.model, id=entry_id)
+        if 'body' in request.GET:
+            entry.content = get_mock_placeholder(
+                get_language(), request.GET.get('body') or 'Sample Content')
+        return entry.render_to_response(request)
+
+    def change_view(self, request, object_id, form_url='', extra_context=None):
+        response = super(BlogEntryPageAdmin, self).change_view(
+            request, object_id, form_url, extra_context)
+        if hasattr(response, 'context_data'):
+            context = response.context_data
+            context['media'] = self._upgrade_jquery(context['media'])
+        return response
 
     def get_form(self, request, obj=None, **kwargs):
         formCls = super(BlogEntryPageAdmin, self).get_form(
@@ -448,13 +496,6 @@ class BlogEntryPageAdmin(CustomAdmin, PlaceholderAdmin):
         if lookup == BlogEntryChangeList.site_lookup:
             return True
         return super(BlogEntryPageAdmin, self).lookup_allowed(lookup, value)
-
-    def get_prepopulated_fields(self, request, obj=None):
-        if obj and obj.pk:
-            self.prepopulated_fields = {"slug": ("title",)}
-        else:
-            self.prepopulated_fields = {}
-        return super(BlogEntryPageAdmin, self).get_prepopulated_fields(request, obj)
 
     def add_plugin(self, request):
         # sice there is no placeholder displayed in the change form, plugins

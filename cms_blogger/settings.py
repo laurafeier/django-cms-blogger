@@ -13,5 +13,7 @@ FILENAME_LENGTH = getattr(settings, 'BLOGGER_FILENAME_LENGTH', 100)
 
 #get_storage_class(BLOGGER_STORAGES['thumbnail']['ENGINE'])(**BLOGGER_STORAGES['thumbnail']['OPTIONS'])
 
+POSTS_ON_LANDING_PAGE = getattr(
+    settings, 'BLOGGER_POSTS_ON_LANDING_PAGE', 25)
 ALLOWED_SITES_FOR_USER = getattr(
     settings, 'BLOGGER_ALLOWED_SITES_FOR_USER', None)

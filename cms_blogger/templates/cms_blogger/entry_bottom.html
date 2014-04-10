@@ -1,29 +1,22 @@
 {% if entry.previous_post or entry.next_post%}
 <div class="entry-footer">
     {% if entry.previous_post %}
-    <a href="#" class="pull-left">
+    <a href="{{entry.previous_post.get_absolute_url}}" class="pull-left">
         <div class="arrow-left">previous post</div>
-        <p class="summary">{{entry.previous_post.abstract}}</p>
-        <p class="date">
-            <span class="month">{{entry.previous_post.publication_date|date:'F'}}</span>
-            <span class="day">{{entry.previous_post.publication_date.day}}</span>,
-            <span class="year">{{entry.previous_post.publication_date.year}}</span>
-        </p>
+        <p class="summary">{{entry.previous_post.short_description}}</p>
+        <p class="date">{{entry.previous_post.publication_date|date:'F j Y'}}</p>
     </a>
-    {% else %}
-    <a href="#" class="pull-right">
+    {% endif %}
+    {% if entry.next_post %}
+    <a href="{{entry.next_post.get_absolute_url}}" class="pull-right">
         <div class="arrow-right">next post</div>
-        <p class="summary">{{entry.next_post.abstract}}</p>
-        <p class="date">
-            <span class="month">{{entry.next_post.publication_date.month}}</span>
-            <span class="day">{{entry.next_post.publication_date.day}}</span>,
-            <span class="year">{{entry.next_post.publication_date.year}}</span>
-        </p>
+        <p class="summary">{{entry.next_post.short_description}}</p>
+        <p class="date">{{entry.next_post.publication_date|date:'F j Y'}}</p>
     </a>
     {% endif %}
 </div>
 {% endif %}
-{% if blog.enable_disqus %}
+{% if blog.enable_disqus and entry.disqus_enabled %}
 <div id='disqus_thread'></div>
 <script type='text/javascript'>
 var disable_on_mobile = '{{blog.disable_disqus_for_mobile}}';

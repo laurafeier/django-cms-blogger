@@ -1,3 +1,177 @@
-div .field-body label{
-    margin-bottom: 10px
+
+fieldset{
+    width: 100%;
+    border:none;
+}
+
+div.main-col{
+    width: 75%;
+    float:left;
+    border:none;
+}
+
+div.right-col{
+    width: 24%;
+    float:right;
+}
+
+div.submit-row {
+    clear: both;
+}
+
+#blog-title{
+    color: #417690;
+    text-transform: uppercase;
+}
+
+#blog-banding-image{
+    width: 960px;
+    height: 150px;
+}
+
+#blog-tagline{
+    background: none;
+    color: #666;
+    margin-top: 0;
+    font-size: 13px;
+    font-weight: normal;
+}
+
+#blog-header{
+    border: 1px solid #ccc;
+    padding: 10px;
+}
+
+.form-row, .no-border {
+    border:none;
+}
+
+#id_publish, #id_save{
+    font-size: medium;
+}
+
+h3 {
+    font-size: 19px;
+    margin: 15px 0;
+}
+
+.field-categories ul {
+    height: 150px;
+    overflow-y: scroll;
+}
+.field-categories ul li{
+    list-style-type: none;
+}
+
+.field-body{
+    padding: 0px;
+    margin: 0;
+}
+
+label[for='id_body'] {
+    display: none;
+}
+
+#id_body_tbl td,
+#id_body_tbl{
+    border: 0 !important;
+}
+
+#id_body_tbl > tbody > tr > td{
+    border-left: 1px solid #ccc !important;
+    border-right: 1px solid #ccc !important;
+}
+
+#id_body_tbl tr.mceLast td{
+    border-bottom: 1px solid #ccc !important;
+}
+
+#id_body_tbl  > tbody > tr.mceFirst > td{
+    border-left:0 !important;
+    border-right:0 !important;
+    border-top:0 !important;
+    border-bottom: 1px solid #ccc !important;
+    text-align: left;
+}
+
+#id_body_tbl  > tbody > tr.mceFirst > td #id_body_toolbargroup{
+    border: 1px solid #ccc;
+    border-bottom: 0;
+    float:left;
+}
+
+#id_body_toolbargroup .arrow{
+    margin-left: 5px;
+    border:1px solid #2694e8;
+    float: right;
+    width: 32px;
+    height: 26px;
+    line-height: 24px;
+    text-align: center;
+    background-color: #d7ebf9;
+}
+#id_body_toolbargroup .arrow span{
+    width: 0;
+    height: 0;
+    display: inline-block;
+    vertical-align: middle;
+    border-top: 10px solid transparent;
+    border-bottom: 10px solid transparent;
+
+    border-right:10px solid #2779aa;
+    padding: 0;
+}
+
+#id_body_toolbargroup .arrow + span[role="application"] table + table{
+    display: none;
+}
+
+#id_body_toolbargroup .arrow:hover span{
+    border-right: 10px solid #036;
+}
+
+#id_body_toolbargroup .arrow:hover{
+    background-color: #e4f1fb;
+}
+
+#id_body_toolbargroup .arrow.open span{
+    border-left: 10px solid transparent;
+    border-right: 10px solid transparent;
+
+    border-top: 10px solid #2779aa;
+    border-bottom: 0;
+}
+
+#id_body_toolbargroup .arrow.open + span[role="application"] table + table{
+    display: table;
+}
+
+#id_body_toolbargroup span[role="application"]{
+    float:left;
+}
+
+#id_body_tbl .mceToolbar{
+    background: none;
+}
+
+fieldset.body-wrapper{
+    position: relative;
+    padding-top: 10px
+}
+
+.field-preview_on_top{
+    position: absolute;
+    right: 0;
+    top:5px;
+    padding: 0;
+    overflow: visible;
+}
+
+.field-preview_on_bottom{
+    padding-right: 0;
+    text-align: right;
+}
+
+#id_body_tbl{
+    height: auto !important;
 }

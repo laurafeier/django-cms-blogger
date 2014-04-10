@@ -1,5 +1,6 @@
 from django import forms
 from django.core.exceptions import ValidationError
+from django.core.urlresolvers import reverse
 from django.conf import settings
 from django.template.defaultfilters import slugify
 from django.forms.util import ErrorList
@@ -17,10 +18,9 @@ from cms_layouts.models import Layout
 from cms_layouts.slot_finder import (
     get_fixed_section_slots, MissingRequiredPlaceholder)
 from django_select2.fields import (
-    AutoModelSelect2Field, ModelSelect2MultipleField,
-    AutoModelSelect2MultipleField)
+    AutoModelSelect2Field, AutoModelSelect2MultipleField)
 from .models import Blog, BlogEntryPage, BlogCategory
-from .widgets import TagItWidget
+from .widgets import TagItWidget, ButtonWidget
 from .utils import user_display_name
 from django.utils.safestring import mark_safe
 from django.template.loader import render_to_string
@@ -155,7 +155,7 @@ class BlogForm(forms.ModelForm):
             'tagit': '{allowSpaces: true, tagLimit: 20, caseSensitive: false}'}),
         help_text=_('Categories help text'))
 
-    allowed_users = BlogUserField()
+    allowed_users = BlogUserField(label="Add Users")
 
     class Meta:
         model = Blog
@@ -185,17 +185,20 @@ class BlogForm(forms.ModelForm):
         if len(categories_names) != len(set(categories_names)):
             raise ValidationError(
                 "Category names not unique.")
-        blog = self.instance
 
-        existing_names = dict([(categ.name, categ)
-                               for categ in blog.categories.all()])
+        blog = self.instance
+        categories_slugs = {slugify(name): name
+                            for name in categories_names}
+        existing_slugs = {categ.slug: categ
+                          for categ in blog.categories.all()}
         category_objs = []
-        for name in categories_names:
-            if name not in existing_names:
+        for slug, name in categories_slugs.items():
+            if slug not in existing_slugs:
                 category = BlogCategory()
+                category.slug = slug
                 category.name = name
             else:
-                category = existing_names[name]
+                category = existing_slugs[slug]
             category_objs.append(category)
         return category_objs
 
@@ -238,7 +241,10 @@ def _get_text_editor_widget():
 
     if USE_TINYMCE and "tinymce" in settings.INSTALLED_APPS:
         from cms.plugins.text.widgets.tinymce_widget import TinyMCEEditor
-        return TinyMCEEditor(installed_plugins=plugins)
+        return TinyMCEEditor(installed_plugins=plugins, mce_attrs={
+            'theme_advanced_toolbar_location': 'top',
+            'theme_advanced_toolbar_align': 'left',
+            })
     else:
         return WYMEditor(installed_plugins=plugins)
 
@@ -254,22 +260,42 @@ class AuthorField(AutoModelSelect2Field):
         return user_display_name(obj)
 
 
+class ButtonField(forms.Field):
+
+    def __init__(self, *args, **kwargs):
+        kwargs["label"] = ""
+        kwargs["required"] = False
+        super(ButtonField, self).__init__(*args, **kwargs)
+
+
 class BlogEntryPageChangeForm(forms.ModelForm):
     body = forms.CharField(
         label='Blog Entry', required=True,
         widget=_get_text_editor_widget())
     author = AuthorField()
-    categories = ModelSelect2MultipleField()
-    upload_button = forms.CharField(label="",widget=UploadButton())
+    upload_button = forms.CharField(label="", widget=UploadButton())
+    categories = forms.ModelMultipleChoiceField(
+        widget=forms.CheckboxSelectMultiple(),
+        queryset=BlogCategory.objects.get_empty_query_set(), required=False)
 
+    publish = ButtonField(widget=ButtonWidget(submit=True,
+        on_click=("jQuery(this).closest('form').append("
+                  "jQuery('<input>').attr('type', 'hidden').attr("
+                    "'name', '_pub_pressed').val(true)"
+                  ");")))
+    save = ButtonField(widget=ButtonWidget(submit=True))
+    preview_on_top = ButtonField(widget=ButtonWidget(text='Preview'))
+    preview_on_bottom = ButtonField(widget=ButtonWidget(text='Preview'))
 
     class Media:
         css = {"all": ("cms_blogger/css/entry-change-form.css", )}
-        js = ("cms_blogger/js/fileuploader.js", )
-    
+        js = ('cms_blogger/js/tinymce-extend.js',
+              'cms_blogger/js/entry-preview.js', 
+              'cms_blogger/js/fileuploader.js',)
+
     class Meta:
         model = BlogEntryPage
-        exclude = ('content', )
+        exclude = ('content', 'blog', 'slug', 'publication_date')
 
     def __init__(self, *args, **kwargs):
         instance = kwargs.get('instance')
@@ -287,7 +313,20 @@ class BlogEntryPageChangeForm(forms.ModelForm):
             self.fields['upload_button'].widget.image_url = None
             self.fields['upload_button'].widget.image_label = None
 
-            self.fields['upload_button'].widget.image_label = None
+        if self.instance:
+            preview1 = self.fields['preview_on_top'].widget
+            preview2 = self.fields['preview_on_bottom'].widget
+            url = reverse('admin:cms_blogger-entry-preview',
+                args=[self.instance.id])
+            preview1.link_url = preview2.link_url = url
+            popup_js = "return showEntryPreviewPopup(this);"
+            preview1.on_click = preview2.on_click = popup_js
+
+        pub_button = self.fields['publish'].widget
+        if self.instance and self.instance.is_published:
+            pub_button.text = 'Unpublish'
+        else:
+            pub_button.text = 'Publish Now'
 
         self.fields['body'].initial = self.instance.content_body
         # prepare for save
@@ -298,8 +337,9 @@ class BlogEntryPageChangeForm(forms.ModelForm):
         self.instance.content_body = body
         return body
 
-    def clean_slug(self):
-        slug = slugify(self.cleaned_data.get('slug', ''))
+    def clean_title(self):
+        title = self.cleaned_data.get('title', '')
+        slug = slugify(title)
         blog_id = self.instance.blog_id
         try:
             BlogEntryPage.objects.exclude(pk=self.instance.pk).get(
@@ -307,39 +347,34 @@ class BlogEntryPageChangeForm(forms.ModelForm):
         except BlogEntryPage.DoesNotExist:
             pass
         else:
-            raise ValidationError("Entry with the same slug already exists.")
-        return slug
+            raise ValidationError(
+                "Entry with slug %s already exists. Choose a different "
+                "title." % slug)
+        self.instance.slug = slug
+        return title
 
-    def _reset_publication_date(self):
-        pub_date = self.cleaned_data.get('publication_date')
-        if pub_date and pub_date != self.instance.publication_date:
-            # do not reset if it was specifically set.
-            return
+    def _set_publication_date(self):
+        publish_toggle = bool(self.data.get('_pub_pressed'))
+        if publish_toggle:
+            self.instance.is_published = not self.instance.is_published
 
-        is_published = self.cleaned_data.get('is_published')
-        start_date = self.cleaned_data.get('start_publication')
-        # check if reset publication date is needed
-        when = now = timezone.now()
-        if is_published:
-            if not self.instance.is_published:
-                # if however a startdate was set
-                if start_date and not self.instance.start_publication:
-                    when = start_date
-                self.cleaned_data['publication_date'] = when
-            elif start_date != self.instance.start_publication:
-                # if was published but start pub date changed
-                self.cleaned_data['publication_date'] = start_date or now
-        else:
+        now = timezone.now()
+        if not self.instance.is_published:
+            # entry got unpublished
             self.cleaned_data['start_publication'] = None
             self.cleaned_data['end_publication'] = None
-            self.cleaned_data['publication_date'] = now
+            self.instance.publication_date = now
+            return
+
+        start_date = self.cleaned_data.get('start_publication')
+        if start_date != self.instance.start_publication:
+            self.instance.publication_date = start_date or now
 
     def clean(self):
-        self._reset_publication_date()
         start_date = self.cleaned_data.get('start_publication')
         end_date = self.cleaned_data.get('end_publication')
         if (start_date and end_date and not start_date < end_date):
             raise ValidationError("Incorrect publication dates interval.")
-
+        self._set_publication_date()
         return self.cleaned_data
 
