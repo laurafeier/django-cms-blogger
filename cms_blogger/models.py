@@ -13,6 +13,7 @@ from django.template.loader import get_template
 from django.db.models import signals
 from django.dispatch import receiver
 from django.http import HttpResponseNotFound
+from django.conf import settings
 
 from cms.models.fields import PlaceholderField
 from cms.models import Page, Placeholder, CMSPlugin
@@ -206,7 +207,7 @@ class Blog(AbstractBlog):
 
     def header_as_html(self):
         return get_template("cms_blogger/blog_header.html").render(
-            Context({'blog': self}))
+            Context({'blog': self, 'STATIC_URL': settings.STATIC_URL}))
 
     @property
     def header(self):
@@ -235,7 +236,9 @@ class Blog(AbstractBlog):
 
     @property
     def content(self):
-        context = Context({'blog': self, 'entries': self.paginated_entries})
+        context = Context({'blog': self,
+                           'entries': self.paginated_entries,
+                           'STATIC_URL': settings.STATIC_URL})
         landing_templ = get_template("cms_blogger/blog_content.html")
         html = landing_templ.render(context)
         return get_mock_placeholder(get_language(), html)
@@ -383,16 +386,22 @@ class BlogEntryPage(
     def extra_html_before_content(self):
         if not self.blog:
             return ''
-        context = Context({'entry': self, 'blog': self.blog,})
+        start_tag = '<div class="blog-post clearfix box">'
+        context = Context({'entry': self,
+                           'blog': self.blog,
+                           'STATIC_URL': settings.STATIC_URL})
         header_templ = get_template("cms_blogger/entry_top.html")
-        return header_templ.render(context)
+        return "%s%s" % (start_tag, header_templ.render(context))
 
     def extra_html_after_content(self):
         if not self.blog:
             return ''
-        context = Context({'entry': self, 'blog': self.blog,})
+        end_tag = '</div>'
+        context = Context({'entry': self,
+                           'blog': self.blog,
+                           'STATIC_URL': settings.STATIC_URL})
         footer_templ = get_template("cms_blogger/entry_bottom.html")
-        return footer_templ.render(context)
+        return "%s%s" % (footer_templ.render(context), end_tag)
 
     def get_title_obj(self):
         title = LayoutTitle()

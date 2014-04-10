@@ -1,36 +1,38 @@
-<div class='left-col'>
-    <div class="date">
-        <span class="month">{{entry.publication_date|date:"M"}}</span>
-        <span class="day">{{entry.publication_date.day}}</span>
-    </div>
-    {% if blog.enable_facebook or blog.enable_twitter or blog.email_account_link %}
-    <div class="social">
-    {% if blog.enable_facebook %}
-        <a href="#" class="facebook"><img src="" alt="Share on Facebook" /></a>
-    {% endif %}
-    {% if blog.enable_twitter%}
-        <a href="#" class="twitter"><img src="" alt="Share on Twitter" /></a>
-    {% endif %}
-    {% if blog.email_account_link%}
-        <a href="#" class="email"><img src="" alt="Share via Email" /></a>
-    {% endif %}
-    </div>
-    {% endif %}
-</div>
-<div class='right-col'>
+<div class="blog-entry">
     <div class='left-col'>
-        <h1 id='entry-title'><a href="{{entry.get_absolute_url}}">{{entry.title}}</a></h1>
-        <p class="subtitle">
-            Posted by <span class="author">{{entry.author_display_name}}</span>
-        </p>
-        {% if entry.short_description and not hide_entry_description %}
-        <div class="entry-summary">{{entry.short_description}}</div>
-        <div class="entry-read-more"><a href="{{entry.get_absolute_url}}">Read More</a></div>
+        <div class="date">
+            <div class="month">{{entry.publication_date|date:"M"}}</div>
+            <div class="day">{{entry.publication_date|date:"d"}}</div>
+        </div>
+        {% if blog.enable_facebook or blog.enable_twitter or blog.email_account_link %}
+        <div class="social">
+        {% if blog.enable_facebook %}
+            <a href="#" class="facebook social"><img src="{{STATIC_URL}}/cms_blogger/img/facebook.png" alt="Share on Facebook" /></a>
+        {% endif %}
+        {% if blog.enable_twitter%}
+            <a href="#" class="twitter social"><img src="{{STATIC_URL}}/cms_blogger/img/twitter.png" alt="Share on Twitter" /></a>
+        {% endif %}
+        {% if blog.email_account_link%}
+            <a href="#" class="email social"><img src="{{STATIC_URL}}/cms_blogger/img/email.png" alt="Share via Email" /></a>
+        {% endif %}
+        </div>
         {% endif %}
     </div>
     <div class='right-col'>
+        <div class='left-col'>
+            <h1 id='entry-title'><a class="main_color_text" href="{{entry.get_absolute_url}}">{{entry.title}}</a></h1>
+            <p class="subtitle">
+                Posted by <a href="#" class="author">{{entry.author_display_name}}</a>
+            </p>
+            {% if entry.short_description and not hide_entry_description %}
+            <p class="entry-summary">{{entry.short_description}}</p>
+            <a class="entry-read-more main_color_text" href="{{entry.get_absolute_url}}">Read More</a>
+            {% endif %}
+        </div>
         {% if entry.thumbnail_image and not hide_entry_image %}
-        <div class="entry-image"><img src='{{entry.thumbnail_image.url}}' /></div>
+            <div class='right-col'>
+                <div class="entry-image"><img src='{{entry.thumbnail_image.url}}' /></div>
+            </div>
         {% endif %}
     </div>
 </div>

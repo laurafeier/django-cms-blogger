@@ -1,0 +1,94 @@
+@import "imports/_globals.scss";
+
+@mixin blog-entry($ns, $container){
+    #{$ns}{
+        .#{$container}{
+            vertical-align: top;
+            font-size: 1em;
+            margin-bottom: 25px;
+            color:$entry-text-color;
+            background: #fff;
+            & > .left-col{
+                display: table-cell;
+                width: 50px;
+                padding-right:20px;
+                padding-bottom:30px;
+                text-align: center;
+                vertical-align: top;
+                .date{
+                    padding: 10px 15px;
+                    background: $entry-date-bg-color;
+                    color: $entry-date-color;
+                    .month{
+                        font-size: 16px;
+                        text-transform: uppercase;
+                    }
+                    .day{
+                        font-size: 22px;
+                    }
+                }
+            }
+            & > .right-col{
+                display: table-cell;
+                width: 100%;
+                text-align: left;
+                white-space: nowrap;
+                padding-bottom:30px;
+                @if $container == "blog-entry"{
+                    @include entry-border();
+                }
+                .left-col{
+                    display: inline-block;
+                    width: 50%;
+                    text-align: left;
+                    padding-right: 2%;
+                    white-space: normal;
+                    vertical-align: top;
+                }
+                .right-col{
+                    text-align: left;
+                    display: inline-block;
+                    width: 48%;
+                    white-space: normal;
+                    vertical-align: top;
+                    img{
+                        max-width: 100%;
+                        max-height: 100%;
+                    }
+                }
+
+            }
+
+            .entry-read-more{
+                background-color: $read-more-bg-color;
+                padding: 5px 20px;
+                text-decoration: none;
+                margin:0;
+                font-size: 14px;
+                @include border-radius(3px);
+            }
+
+            .subtitle{
+                margin:0;
+                color:$entry-subtitle-color;
+                .author{
+                    color:$entry-text-color;
+                }
+            }
+            .entry-summary{
+                margin:20px 0 30px 0;
+            }
+
+            .social{
+                display: block;
+                margin:20px auto 0 auto;
+                width: 25px;
+            }
+
+
+        }
+    }
+}
+
+@include blog-entry($namespace, "blog-entry");
+@include blog-entry($namespace, "blog-post");

@@ -1,0 +1,23 @@
+@import "imports/_globals.scss";
+
+@mixin blogHeader($ns){
+    #{$ns}{
+        .blog-header{
+            position: relative;
+            padding: 15px 0 45px 0;
+            #blog-title,
+            #blog-tagline{
+                z-index: 1;
+                position: relative;
+            }
+            #blog-banding-image{
+                position:absolute;
+                top:0;
+                left:0;
+                z-index: 0;
+            }
+        }
+    }
+}
+
+@include blogHeader($namespace);

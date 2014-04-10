@@ -1,0 +1,13 @@
+$namespace: ".pbs-blogger";
+
+$entry-date-bg-color: #efefef;
+$entry-date-color: #474747;
+$entry-text-color: #747474;
+$entry-border-color: #ddd;
+$entry-subtitle-color: #999;
+
+$read-more-bg-color: #efefef;
+
+@mixin entry-border(){
+    border-bottom:1px dashed $entry-border-color;
+}

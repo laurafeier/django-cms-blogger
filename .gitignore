@@ -31,3 +31,6 @@ pytest-results.xml
 .mr.developer.cfg
 .project
 .pydevproject
+
+# Sass
+.sass-cache

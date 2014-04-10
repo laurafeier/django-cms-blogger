@@ -1,9 +1,11 @@
-{% if blog.title and not hide_blog_title %}
-<a href="{{blog.get_absolute_url}}"><h1 id='blog-title'>{{blog.title}}</h1></a>
-{% endif %}
-{% if blog.tagline and not hide_blog_tagline %}
-<a href="{{blog.get_absolute_url}}"><h2 id='blog-tagline'>{{blog.tagline}}</h2></a>
-{% endif %}
-{% if blog.attached_image and not hide_blog_image %}
-<a href="{{blog.get_absolute_url}}"><img id='blog-banding-image' src='{{blog.attached_image.file.url}}'></img></a>
-{% endif %}
+<div class='blog-header'>
+    {% if blog.title and not hide_blog_title %}
+    <h1 id='blog-title' ><a href="{{blog.get_absolute_url}}" class="main_color_text">{{blog.title}}</a></h1>
+    {% endif %}
+    {% if blog.tagline and not hide_blog_tagline %}
+    <h2 id='blog-tagline'><a href="{{blog.get_absolute_url}}">{{blog.tagline}}</a></h2>
+    {% endif %}
+    {% if blog.attached_image and not hide_blog_image %}
+    <img id='blog-banding-image' src='{{blog.attached_image.file.url}}'></img>
+    {% endif %}
+</div>
