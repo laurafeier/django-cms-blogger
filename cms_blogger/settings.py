@@ -9,6 +9,7 @@ UPLOAD_TO_PREFIX = getattr(settings, 'BLOGGER_UPLOAD_TO_PREFIX', "blog")
 
 USE_FILER_STORAGE = getattr(settings, 'BLOGGER_USE_FILER_STORAGE', False) 
 
+FILENAME_LENGTH = getattr(settings, 'BLOGGER_FILENAME_LENGTH', 100)
 
 #get_storage_class(BLOGGER_STORAGES['thumbnail']['ENGINE'])(**BLOGGER_STORAGES['thumbnail']['OPTIONS'])
 

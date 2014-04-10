@@ -18,8 +18,10 @@ from cms_layouts.models import LayoutTitle, Layout
 from cms_layouts.slot_finder import get_mock_placeholder
 from filer.fields.image import FilerImageField
 import filer
-from .settings import USE_FILER_STORAGE, UPLOAD_TO_PREFIX
+from .settings import USE_FILER_STORAGE, UPLOAD_TO_PREFIX, FILENAME_LENGTH
 from .utils import user_display_name
+from os.path import splitext
+from os import sep as os_sep
 
 
 def getCMSContentModel(**kwargs):
@@ -280,16 +282,18 @@ class BioPage(BlogRelatedPage):
 
 
 def upload_entry_image(instance, filename):
-    import os
-    filename_base, filename_ext = os.path.splitext(filename)
-    new_filename = '%s%s%s_%s%s' % (
+    base, ext = splitext(filename)
+    new_base = '%s%s%s_%s' % (
         UPLOAD_TO_PREFIX,
-        os.sep,
-        timezone.now().strftime("%Y_%m_%d_%H_%M_%S_%f"),
-        slugify(filename_base),
-        filename_ext[0]+slugify(filename_ext[1:].lower()),
-    )
-    return new_filename
+        os_sep,
+        timezone.now().strftime("%Y%m%d_%H%M%S_%f"),
+        slugify(base),)
+
+    new_base_trimmed = new_base[:(FILENAME_LENGTH - len(ext))]
+
+    new_ext = ext[:1] + slugify(ext[1:].lower())
+
+    return new_base_trimmed + new_ext
 
 def get_image_storage():
     if USE_FILER_STORAGE:
@@ -301,7 +305,6 @@ class BlogEntryPage(
     BlogRelatedPage, getCMSContentModel(content_attr='content')):
 
     def __init__(self, *args, **kwargs):
-        print "__init"*20
         super(BlogEntryPage, self).__init__(*args, **kwargs)
         #if self.thumbnail_image.name:
         #    self._old_thumbnail = (
@@ -409,7 +412,6 @@ class BlogEntryPage(
         storage.delete(path)
 
     def save(self, *args, **kwargs):
-        print "save "*15
         super(BlogEntryPage, self).save(*args, **kwargs)
         if hasattr(self, '_old_thumbnail'):
             old_thumbnail_storage, old_thumbnail_path = self._old_thumbnail
