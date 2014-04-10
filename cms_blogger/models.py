@@ -493,7 +493,8 @@ class BlogCategory(models.Model, BlogRelatedPage):
         return title
 
     def get_entries(self):
-        return BlogEntryPage.objects.filter(blog=self.blog, categories=self)
+        return BlogEntryPage.objects.published().filter(
+            blog=self.blog, categories=self)
 
     def get_layout(self):
         return self.blog.get_layout_for(Blog.LANDING_PAGE)
