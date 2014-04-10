@@ -367,13 +367,11 @@ class BlogEntryPage(
     def extra_html_before_content(self, request, context):
         if not self.blog:
             return ''
-        context.update({'entry': self, 'blog': self.blog,})
         return get_template("cms_blogger/entry_top.html").render(context)
 
     def extra_html_after_content(self, request, context):
         if not self.blog:
             return ''
-        context.update({'entry': self, 'blog': self.blog,})
         return get_template("cms_blogger/entry_bottom.html").render(context)
 
     def get_title_obj(self):
@@ -403,7 +401,11 @@ class BlogEntryPage(
         if not layout:
             return HttpResponseNotFound(
                 "<h1>This Entry does not have a layout to render.</h1>")
-        return LayoutResponse(self, layout, request).make_response()
+        from django.template.context import RequestContext
+        context = RequestContext(request)
+        context.update({'entry': self, 'blog': self.blog,})
+        return LayoutResponse(
+            self, layout, request, context=context).make_response()
 
     def previous_post(self):
         if not self.blog:
