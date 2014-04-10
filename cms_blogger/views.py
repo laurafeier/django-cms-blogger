@@ -1,10 +1,11 @@
 from django.http import HttpResponse, Http404, HttpResponseNotFound
+from django.template.context import RequestContext
 from django.shortcuts import get_object_or_404
 from django.contrib.sites.models import Site
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.db.models import Q
 from cms_layouts.layout_response import LayoutResponse
-from .models import BlogEntryPage, Blog
+from .models import BlogEntryPage, Blog, BlogCategory
 from .settings import POSTS_ON_LANDING_PAGE
 import re
 
@@ -51,15 +52,7 @@ def get_query(query_string, search_fields):
     return query
 
 
-def landing_page(request, blog_slug):
-    blog = get_object_or_404(
-        Blog, slug=blog_slug, site=Site.objects.get_current())
-    layout = blog.get_layout()
-    if not layout:
-        return HttpResponseNotFound(
-            "<h1>This Blog Landing Page does not have a "
-            "layout to render.</h1>")
-    entries = blog.get_entries()
+def _paginate_entries_on_blog(request, entries, blog):
     search_q = request.GET.get('q')
     extra_params = ''
     if search_q and search_q.strip():
@@ -77,9 +70,45 @@ def landing_page(request, blog_slug):
     except EmptyPage:
         # If page is out of range (e.g. 9999), deliver last page of results.
         entries = paginator.page(paginator.num_pages)
-    setattr(entries, 'extra_params', extra_params)
-    blog.paginated_entries = entries
-    return LayoutResponse(blog, layout, request).make_response()
+    return extra_params, entries
+
+
+def landing_page(request, blog_slug):
+    blog = get_object_or_404(
+        Blog, slug=blog_slug, site=Site.objects.get_current())
+    layout = blog.get_layout()
+    if not layout:
+        return HttpResponseNotFound(
+            "<h1>This Blog Landing Page does not have a "
+            "layout to render.</h1>")
+    extra_params, entries = _paginate_entries_on_blog(
+        request, blog.get_entries(), blog)
+    context = RequestContext(request)
+    context['blog'] = blog
+    context['entries'] = entries
+    context['extra_params'] = extra_params
+    return LayoutResponse(
+        blog, layout, request, context=context).make_response()
+
+
+def category_page(request, blog_slug, slug):
+    category = get_object_or_404(BlogCategory,
+        blog__slug=blog_slug, slug=slug,
+        blog__site=Site.objects.get_current())
+
+    layout = category.get_layout()
+    if not layout:
+        return HttpResponseNotFound(
+            "<h1>This Blog Category Page does not have a "
+            "layout to render.</h1>")
+    extra_params, entries = _paginate_entries_on_blog(
+        request, category.get_entries(), category.blog)
+    context = RequestContext(request)
+    context['blog'] = category.blog
+    context['entries'] = entries
+    context['extra_params'] = extra_params
+    return LayoutResponse(
+        category, layout, request, context=context).make_response()
 
 
 def entry_or_bio_page(request, blog_slug, slug):
