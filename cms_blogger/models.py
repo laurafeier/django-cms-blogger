@@ -249,16 +249,23 @@ class Blog(AbstractBlog):
         return self.get_layout_for(Blog.LANDING_PAGE)
 
 
-class BlogRelatedPage(models.Model):
+def withBlogField(cls):
+    # adds a blog foreign key(with a related name if specified) to a model
+    # blog foreign key is required by all blog related pages.
+    blog = models.ForeignKey(
+        Blog, related_name=getattr(cls, 'blog_related_name', None))
+    cls.add_to_class('blog', blog)
+    return cls
 
+
+class BlogRelatedPage(object):
+    # any blog related pages needs to have a layout, a content and a header
+    #   that can be rendered by the layout. The content and the header must
+    #   be placeholder instances
     uses_layout_type = None
-    blog = models.ForeignKey(Blog)
 
     def get_layout(self):
         return self.blog.get_layout_for(self.uses_layout_type)
-
-    class Meta:
-        abstract = True
 
     @property
     def header(self):
@@ -275,7 +282,8 @@ class BlogRelatedPage(models.Model):
         raise NotImplementedError
 
 
-class BioPage(BlogRelatedPage):
+@withBlogField
+class BioPage(models.Model, BlogRelatedPage):
 
     uses_layout_type = Blog.BIO_PAGE
     author_name = models.CharField(max_length=255)
@@ -313,8 +321,9 @@ def upload_entry_image(instance, filename):
         filename_ext.lower(),
     )
 
+@withBlogField
 class BlogEntryPage(
-    BlogRelatedPage, getCMSContentModel(content_attr='content')):
+    getCMSContentModel(content_attr='content'), BlogRelatedPage):
 
     uses_layout_type = Blog.ENTRY_PAGE
 
@@ -456,21 +465,44 @@ class BlogEntryPage(
         unique_together = (("slug", "blog", "draft_id"),)
 
     def __unicode__(self):
-        return self.title or "<Draft Empty Blog Entry>"
+        return "<Draft Empty Blog Entry>" if self.is_draft else self.title
 
-
-class BlogCategory(models.Model):
-
+@withBlogField
+class BlogCategory(models.Model, BlogRelatedPage):
+    blog_related_name = 'categories'
     name = models.CharField(_('name'), max_length=30, db_index=True)
-    blog = models.ForeignKey(Blog, related_name='categories')
+    slug = models.SlugField(_('slug'), max_length=60)
     blog_entry = models.ForeignKey(BlogEntryPage, on_delete=models.SET_NULL,
         null=True, blank=True, related_name='categories')
+
+    @models.permalink
+    def get_absolute_url(self):
+        return ('cms_blogger.views.category_page', (), {
+            'blog_slug': self.blog.slug,
+            'slug': self.slug})
+
+    @property
+    def content(self):
+        # render the landing page layout
+        return self.blog.content
+
+    def get_title_obj(self):
+        title = LayoutTitle()
+        title.page_title = self.name
+        title.slug = self.slug
+        return title
+
+    def get_entries(self):
+        return BlogEntryPage.objects.filter(blog=self.blog, categories=self)
+
+    def get_layout(self):
+        return self.blog.get_layout_for(Blog.LANDING_PAGE)
 
     def __unicode__(self):
         return self.name
 
     class Meta:
-        unique_together = (("name", 'blog'),)
+        unique_together = (("slug", 'blog'),)
 
 
 class BlogPromotion(CMSPlugin):

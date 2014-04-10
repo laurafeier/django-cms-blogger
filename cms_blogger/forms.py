@@ -160,17 +160,20 @@ class BlogForm(forms.ModelForm):
         if len(categories_names) != len(set(categories_names)):
             raise ValidationError(
                 "Category names not unique.")
-        blog = self.instance
 
-        existing_names = dict([(categ.name, categ)
-                               for categ in blog.categories.all()])
+        blog = self.instance
+        categories_slugs = {slugify(name): name
+                            for name in categories_names}
+        existing_slugs = {categ.slug: categ
+                          for categ in blog.categories.all()}
         category_objs = []
-        for name in categories_names:
-            if name not in existing_names:
+        for slug, name in categories_slugs.items():
+            if slug not in existing_slugs:
                 category = BlogCategory()
+                category.slug = slug
                 category.name = name
             else:
-                category = existing_names[name]
+                category = existing_slugs[slug]
             category_objs.append(category)
         return category_objs
 
