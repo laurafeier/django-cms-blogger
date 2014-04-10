@@ -34,6 +34,7 @@ import imghdr
 from django.views.decorators.csrf import csrf_exempt
 from os import path as os_path
 from django.utils import simplejson
+from .settings import ALLOWED_THUMBNAIL_IMAGE_TYPES
 
 
 class BlogLayoutInline(GenericTabularInline):
@@ -282,13 +283,31 @@ class BlogAdmin(CustomAdmin):
             mimetype = "application/json" if request.is_ajax() else "text/html"
             upload = None
             try:
-                upload, filename, _ = handle_upload(request)
-
+                filename = get_filename_from_request(request)
                 extension = os_path.splitext(filename)[1]
+                if extension[1:] and extension[1:].lower() not in map(str.lower, ALLOWED_THUMBNAIL_IMAGE_TYPES):
+                    raise UploadException(
+                        extension[1:].upper() + " file type not allowed."
+                        " Please upload one of the following file types: " +
+                        ", ".join(map(str.upper, ALLOWED_THUMBNAIL_IMAGE_TYPES)))
+
+                upload, _, _ = handle_upload(request)
+                guessed_extension = imghdr.what(upload) or ""
+
+                if guessed_extension.lower() not in map(str.lower, ALLOWED_THUMBNAIL_IMAGE_TYPES):
+                    if not guessed_extension:
+                        displayed_extension = "Unknown"
+                    else:
+                        displayed_extension = guessed_extension.upper()
+                    raise UploadException(
+                        displayed_extension + " file type not allowed."
+                        " Please upload one of the following file types: " +
+                        ", ".join(map(str.upper, ALLOWED_THUMBNAIL_IMAGE_TYPES)))
+
                 if not extension:
                     # try to guess if it's an image and append extension
                     # imghdr will detect file is a '.jpeg', '.png' or '.gif' image
-                    guessed_extension = imghdr.what(upload)
+
                     if guessed_extension:
                         filename = '%s.%s' % (filename, guessed_extension)
                 blog_entry.thumbnail_image.save(filename, upload)
@@ -304,6 +323,8 @@ class BlogAdmin(CustomAdmin):
             finally:
                 if upload:
                     upload.close()
+
+    
 
     @csrf_exempt
     def delete_thumbnail(self, request, blog_entry_id=None):
@@ -361,6 +382,19 @@ class BlogAdmin(CustomAdmin):
             context.update({'initial_blog_node': blog.navigation_node,})
         return render_to_response(
             'admin/cms_blogger/blog/navigation.html', context)
+
+
+def get_filename_from_request(request):
+    if not request.method == "POST":
+        raise UploadException("AJAX request not valid: must be POST")
+    if request.is_ajax():
+        filename = request.GET.get('qqfile', False) or request.GET.get('filename', False) or ''
+    else:
+        if len(request.FILES) == 1:
+            filename = upload.name
+        else:
+            raise UploadException("AJAX request not valid: Bad Upload")
+    return filename
 
 
 class BlogEntryPageAdmin(CustomAdmin, PlaceholderAdmin):
