@@ -2,12 +2,14 @@
 {% load i18n blog_admin_tags %}
 
 {% block object-tools-items %}
-    {% if has_absolute_url and not original.is_draft %}<li><a href="{% site_url original.site %}{{original.get_absolute_url}}?preview" class="viewsitelink">{% trans "View on site" %}</a></li>{% endif%}
+    {% if has_absolute_url and not original.is_draft %}<li><a href="{{original.get_absolute_url}}?preview" class="viewsitelink">{% trans "View on site" %}</a></li>{% endif%}
 {% endblock %}
 
 {% block pretitle %}
 <div id='blog-header'>
-{{adminform.form.instance.blog.header_as_html|safe}}
+{% with adminform.form.instance.blog as blog %}
+{% include 'cms_blogger/blog_header.html' %}
+{% endwith %}
 </div>
 {% endblock %}
 {% block content_title %}{% if title %}<h3>{{ title }}</h3>{% endif %}{% endblock %}

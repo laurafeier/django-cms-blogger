@@ -1,10 +1,10 @@
 {% extends "admin/base_site.html" %}
-{% load menu_tags %}
+{% load menu_tags blog_admin_tags %}
 
 {% block breadcrumbs %}
 {% endblock %}
 
-{% block pretitle %}<p class="help">Currently on site: {{current_site}}</p>{% endblock %}
+{% block pretitle %}<p class="help">Currently on site: {% current_site %}</p>{% endblock %}
 
 {% block extrastyle %}
 <link rel="stylesheet" type="text/css" href="{{STATIC_URL}}cms_blogger/css/jqtree.css">

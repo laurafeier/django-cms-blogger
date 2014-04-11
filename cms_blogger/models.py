@@ -203,12 +203,8 @@ class Blog(AbstractBlog):
         except filer.models.Image.DoesNotExist:
             return None
 
-    def header_as_html(self):
-        return get_template("cms_blogger/blog_header.html").render(
-            Context({'blog': self}))
-
     def render_header(self, request, context):
-        return self.header_as_html()
+        return get_template("cms_blogger/blog_header.html").render(context)
 
     def get_entries(self):
         ordering = ('-publication_date', 'slug')

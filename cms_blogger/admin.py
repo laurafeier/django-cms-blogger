@@ -279,7 +279,6 @@ class BlogAdmin(CustomAdmin):
                     (escapejs(preview)), )
         context = RequestContext(request)
         context.update({
-            'current_site': Site.objects.get_current(),
             'title': 'Edit navigation menu',
             'is_popup': "_popup" in request.REQUEST
         })

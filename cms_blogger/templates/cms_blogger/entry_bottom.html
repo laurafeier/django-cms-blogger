@@ -1,14 +1,14 @@
 {% if entry.previous_post or entry.next_post%}
 <div class="entry-footer">
     {% if entry.previous_post %}
-    <a href="{{entry.previous_post.get_absolute_url}}" class="pull-left">
+    <a href="{{PROXY_REWRITE_RULE}}{{entry.previous_post.get_absolute_url}}" class="pull-left">
         <div class="arrow-left">previous post</div>
         <p class="summary">{{entry.previous_post.short_description}}</p>
         <p class="date">{{entry.previous_post.publication_date|date:'F j Y'}}</p>
     </a>
     {% endif %}
     {% if entry.next_post %}
-    <a href="{{entry.next_post.get_absolute_url}}" class="pull-right">
+    <a href="{{PROXY_REWRITE_RULE}}{{entry.next_post.get_absolute_url}}" class="pull-right">
         <div class="arrow-right">next post</div>
         <p class="summary">{{entry.next_post.short_description}}</p>
         <p class="date">{{entry.next_post.publication_date|date:'F j Y'}}</p>
