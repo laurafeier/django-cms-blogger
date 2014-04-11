@@ -209,6 +209,22 @@ class BlogAddForm(forms.ModelForm):
         fields = ('title', 'slug', 'site')
 
 
+
+class EntryChangelistForm(forms.ModelForm):
+
+    is_published = forms.BooleanField(
+        required=False, widget=forms.CheckboxInput(attrs={
+            'onclick': (
+                "jQuery(this).closest('form').append("
+                "jQuery('<input>').attr('type', 'hidden').attr("
+                    "'name', '_save').val('Save')"
+                ").submit();")
+            }))
+
+    class Meta:
+        model = BlogEntryPage
+
+
 class BlogEntryPageAddForm(forms.ModelForm):
     requires_request = True
 

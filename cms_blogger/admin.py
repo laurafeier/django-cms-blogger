@@ -3,8 +3,10 @@ from django.contrib.sites.models import Site
 from django.contrib.contenttypes.generic import GenericTabularInline
 from django.contrib.admin.templatetags.admin_static import static
 from django.db import models
+from django.db.models import Q
 from django.forms import Media
 from django.utils.html import escapejs
+from django.utils import timezone
 from django.utils.translation import get_language, ugettext_lazy as _
 from django.utils.safestring import mark_safe
 from django.core.urlresolvers import reverse
@@ -26,7 +28,8 @@ from cms_layouts.slot_finder import get_mock_placeholder
 from .models import Blog, BlogEntryPage, BlogNavigationNode
 from .forms import (
     BlogLayoutForm, BlogForm, BlogAddForm, BlogEntryPageAddForm,
-    BlogEntryPageChangeForm, BlogLayoutInlineFormSet)
+    BlogEntryPageChangeForm, BlogLayoutInlineFormSet,
+    EntryChangelistForm)
 from .changelists import BlogChangeList, BlogEntryChangeList
 from .widgets import ToggleWidget
 
@@ -289,9 +292,11 @@ class BlogAdmin(CustomAdmin):
 
 
 class BlogEntryPageAdmin(CustomAdmin, PlaceholderAdmin):
+    list_editable = ('is_published', )
     custom_changelist_class = BlogEntryChangeList
-    list_display = ('__str__', 'slug', 'blog')
+    list_display = ('__str__', 'slug', 'blog', 'is_published', 'entry_authors')
     search_fields = ('title', 'blog__title')
+    actions = ['make_published', 'make_unpublished']
     add_form_template = 'admin/cms_blogger/blogentrypage/add_form.html'
     add_form = BlogEntryPageAddForm
     change_form = BlogEntryPageChangeForm
@@ -371,6 +376,9 @@ class BlogEntryPageAdmin(CustomAdmin, PlaceholderAdmin):
                 get_language(), request.GET.get('body') or 'Sample Content')
         return entry.render_to_response(request)
 
+    def get_changelist_form(self, request, **kwargs):
+        return EntryChangelistForm
+
     def change_view(self, request, object_id, form_url='', extra_context=None):
         response = super(BlogEntryPageAdmin, self).change_view(
             request, object_id, form_url, extra_context)
@@ -423,6 +431,25 @@ class BlogEntryPageAdmin(CustomAdmin, PlaceholderAdmin):
         entry = BlogEntryPage.objects.get(content=plugin.placeholder)
         setattr(request, 'current_page', entry.get_layout().from_page)
         return super(BlogEntryPageAdmin, self).edit_plugin(request, plugin_id)
+
+    def make_published(self, request, queryset):
+        # cannot publish draft entries
+        draft_entries = Q(Q(title__isnull=True) | Q(title__exact='') |
+                          Q(short_description__isnull=True) |
+                          Q(short_description__exact='') |
+                          Q(blog__isnull=True))
+        queryset.exclude(draft_entries).filter(is_published=False).update(
+            is_published=True, publication_date=timezone.now())
+    make_published.short_description = "Publish entries"
+
+    def make_unpublished(self, request, queryset):
+        queryset.filter(is_published=True).update(
+            is_published=False, publication_date=timezone.now())
+    make_unpublished.short_description = "Unpublish entries"
+
+    def entry_authors(self, entry):
+        return entry.authors_display_name
+    entry_authors.allow_tags = True
 
 
 admin.site.register(Blog, BlogAdmin)
