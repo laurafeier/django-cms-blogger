@@ -11,12 +11,16 @@
             & > .left-col{
                 display: table-cell;
                 width: 50px;
-                padding-right:20px;
+                padding-right:15px;
                 padding-bottom:30px;
                 text-align: center;
                 vertical-align: top;
                 .date{
-                    padding: 10px 15px;
+                    vertical-align: middle;
+                    text-align: center;
+                    width:55px;
+                    height:50px;
+                    padding-top: 5px;
                     background: $entry-date-bg-color;
                     color: $entry-date-color;
                     .month{
@@ -32,14 +36,12 @@
                 display: table-cell;
                 width: 100%;
                 text-align: left;
-                white-space: nowrap;
                 padding-bottom:30px;
                 @if $container == "blog-entry"{
                     @include entry-border();
                 }
                 .left-col{
-                    display: inline-block;
-                    width: 50%;
+                    display: table-cell;
                     text-align: left;
                     padding-right: 2%;
                     white-space: normal;
@@ -47,7 +49,7 @@
                 }
                 .right-col{
                     text-align: left;
-                    display: inline-block;
+                    display: table-cell;
                     width: 48%;
                     white-space: normal;
                     vertical-align: top;
@@ -57,6 +59,17 @@
                     }
                 }
 
+            }
+
+            @if $container == "blog-post"{
+                & > .text-plugin{
+                    border:none !important;
+                    padding:0;
+                    margin-left:$left-col-width;
+                    .filer_image_container[style*="float: left"]{
+                        margin-left: -$left-col-width !important;
+                    }
+                }
             }
 
             .entry-read-more{
@@ -84,8 +97,6 @@
                 margin:20px auto 0 auto;
                 width: 25px;
             }
-
-
         }
     }
 }
