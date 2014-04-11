@@ -833,7 +833,6 @@ qq.UploadButton.prototype = {
             cursor: 'pointer',
             opacity: 0
         });
-        
         this._element.appendChild(input);
 
         var self = this;
@@ -1205,8 +1204,12 @@ qq.extend(qq.UploadHandlerXhr.prototype, {
         };
 
         xhr.onreadystatechange = function(){            
-            if (xhr.readyState == 4){
+            anaaremere=0;
+            if (xhr.readyState == 4 && xhr.responseText != ''){
                 self._onComplete(id, xhr);                    
+            }
+            else
+            {
             }
         };
 

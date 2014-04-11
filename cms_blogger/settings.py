@@ -12,7 +12,9 @@ USE_FILER_STORAGE = getattr(settings, 'BLOGGER_USE_FILER_STORAGE', False)
 #for thumbnail_image
 FILENAME_LENGTH = getattr(settings, 'BLOGGER_FILENAME_LENGTH', 100)
 
-ALLOWED_THUMBNAIL_IMAGE_TYPES = getattr(settings, 'BLOGGER_ALLOWED_THUMBNAIL_IMAGE_TYPES', ['jpg', 'jpeg', 'png'])
+ALLOWED_THUMBNAIL_IMAGE_TYPES = getattr(settings, 'BLOGGER_ALLOWED_THUMBNAIL_IMAGE_TYPES', ['jpg', 'jpeg', 'png', 'gif'])
+
+MAXIMUM_THUMBNAIL_FILE_SIZE = getattr(settings, 'BLOGGER_MAXIMUM_THUMBNAIL_FILE_SIZE', 200*1024*1024) #bytes
 
 #get_storage_class(BLOGGER_STORAGES['thumbnail']['ENGINE'])(**BLOGGER_STORAGES['thumbnail']['OPTIONS'])
 

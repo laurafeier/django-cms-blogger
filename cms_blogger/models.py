@@ -334,7 +334,7 @@ def upload_entry_image(instance, filename):
 
     return new_base_trimmed + new_ext
 
-def get_image_storage():
+def get_image_storage(): #TODO cache this
     if USE_FILER_STORAGE:
         from filer.settings import FILER_PUBLICMEDIA_STORAGE
         return FILER_PUBLICMEDIA_STORAGE
@@ -495,15 +495,15 @@ class BlogEntryPage(
         return "<Draft Empty Blog Entry>" if self.is_draft else self.title
 
     def delete(self, *args, **kwargs):
-        storage, path = self.thumbnail_image.storage, self.thumbnail_image.path
+        path = self.thumbnail_image.path
         super(BlogEntryPage, self).delete(*args, **kwargs)
-        storage.delete(path)
+        get_image_storage.delete(path)
 
     def save(self, *args, **kwargs):
         super(BlogEntryPage, self).save(*args, **kwargs)
         if hasattr(self, '_old_thumbnail'):
-            old_thumbnail_storage, old_thumbnail_path = self._old_thumbnail
-            old_thumbnail_storage.delete(old_thumbnail_path)
+            old_thumbnail_path = self._old_thumbnail
+            get_image_storage().delete(old_thumbnail_path)
 
 
 @withBlogField

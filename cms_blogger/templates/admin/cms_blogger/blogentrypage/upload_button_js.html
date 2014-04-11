@@ -1,10 +1,11 @@
-{% load i18n admin_modify adminmedia filermedia %}
+{% load i18n admin_modify adminmedia filermedia filters %}
 {% load url from future %}
-<a id="{{ id_upload_button }}" href="#" class="addlink" title="{% trans 'upload files' %}">{% trans 'Upload' %}</a>
 
-<div id="fileInputQueue"> 
+<span id="{{ id_upload_button }}" href="" class="addlink" title="{% trans 'upload files' %}" style="cursor: pointer;">{% trans 'Upload' %}</span>
+
+<div id="fileInputQueue">
     {% if image_url %}
-        <table> 
+        <table>
             <tr id="fileUpload" class="clipboardItem fileUploadQueueItem">
                 <td class="thumbnail">
                     <a href="{{ image_url }}" target="_blank">
@@ -14,7 +15,7 @@
             </tr>
 
             <tr id="delete_image">
-                <td class="deletelink-box"><a href="" class="deletelink" >Delete</a></td>
+                <td class="deletelink-box"><div style="cursor: pointer;" class="deletelink" >Delete</div></td>
             </tr>
         </table>
 
@@ -31,8 +32,8 @@
                         type: 'post',
                         /*dataType: 'json',*/
                         data: '',
-                        success: function(data) 
-                        {   
+                        success: function(data)
+                        {
                             $('#fileUpload').html('Image deleted succesfully.');
                             $('#delete_image').html('');
                         }
@@ -93,7 +94,7 @@ $(function() {
                         </a>\
                     <td class="label">' + file.label + '</td>';
                 $('#fileUpload').html(html);
-                $('#delete_image').html('<td class="deletelink-box"><a href="" class="deletelink" >Delete</a></td>');
+                $('#delete_image').html('<td class="deletelink-box"><div style="cursor: pointer;" class="deletelink" >Delete</div></td>');
                 $('#delete_image .deletelink').click(function(){
                     var answer = confirm("Are you sure you want to remove image?");
                     if(answer)
@@ -106,8 +107,8 @@ $(function() {
                             type: 'post',
                             /*dataType: 'json',*/
                             data: '',
-                            success: function(data) 
-                            {   
+                            success: function(data)
+                            {
                                 $('#fileUpload').html('Image deleted succesfully.');
                                 $('#delete_image').html('');
                             }
@@ -121,6 +122,8 @@ $(function() {
             $('#fileUpload').hide();
         },
         showMessage: function(message) {},
+        sizeLimit: {{ size_limit }},
+        allowedExtensions: {{ image_types|jsonify }},
     });
 });
 </script>

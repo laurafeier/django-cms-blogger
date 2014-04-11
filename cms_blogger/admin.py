@@ -114,6 +114,11 @@ class CustomAdmin(admin.ModelAdmin):
         return super(CustomAdmin, self).get_form(request, obj, **kwargs)
 
 
+def get_size_of_uploaded_file(request):
+    if request.is_ajax() and hasattr(request, 'raw_post_data'):
+        return len(request.raw_post_data)
+    return -1 
+
 class BlogAdmin(CustomAdmin):
     custom_changelist_class = BlogChangeList
     inlines = [BlogLayoutInline, ]
@@ -267,31 +272,27 @@ class BlogAdmin(CustomAdmin):
 
     @csrf_exempt
     def upload_thumbnail(self, request, blog_entry_id=None):
+
         try:
             blog_entry = BlogEntryPage.objects.get(id=blog_entry_id)
 
             # if this blog is in BlogEntryPage.__init__ it will be called when
             # saving a blog and the current file gets deleted 
             if blog_entry.thumbnail_image.name:
-                blog_entry._old_thumbnail = (
-                    blog_entry.thumbnail_image.storage, 
-                    blog_entry.thumbnail_image.name)
+                blog_entry._old_thumbnail = blog_entry.thumbnail_image.name
 
         except BlogEntryPage.DoesNotExist:
             blog_entry = None
+
         if blog_entry is not None:
             mimetype = "application/json" if request.is_ajax() else "text/html"
             upload = None
             try:
-                filename = get_filename_from_request(request)
-                extension = os_path.splitext(filename)[1]
-                if extension[1:] and extension[1:].lower() not in map(str.lower, ALLOWED_THUMBNAIL_IMAGE_TYPES):
-                    raise UploadException(
-                        extension[1:].upper() + " file type not allowed."
-                        " Please upload one of the following file types: " +
-                        ", ".join(map(str.upper, ALLOWED_THUMBNAIL_IMAGE_TYPES)))
 
-                upload, _, _ = handle_upload(request)
+                upload, filename, _ = handle_upload(request)
+                if 'CONTENT_LENGTH' in request.META and len(upload) != int(request.META.get('CONTENT_LENGTH')): 
+                    raise UploadException("File not uploaded completely. Only %d bytes uploaded" % len(upload))
+                 
                 guessed_extension = imghdr.what(upload) or ""
 
                 if guessed_extension.lower() not in map(str.lower, ALLOWED_THUMBNAIL_IMAGE_TYPES):
@@ -303,7 +304,8 @@ class BlogAdmin(CustomAdmin):
                         displayed_extension + " file type not allowed."
                         " Please upload one of the following file types: " +
                         ", ".join(map(str.upper, ALLOWED_THUMBNAIL_IMAGE_TYPES)))
-
+                
+                extension = os_path.splitext(filename)[1]
                 if not extension:
                     # try to guess if it's an image and append extension
                     # imghdr will detect file is a '.jpeg', '.png' or '.gif' image
@@ -320,9 +322,10 @@ class BlogAdmin(CustomAdmin):
             except UploadException, e:
                 return HttpResponse(simplejson.dumps({'error': unicode(e)}),
                                     mimetype=mimetype)
-            finally:
-                if upload:
-                    upload.close()
+            #finally:
+            #    pass
+                #if upload:
+                #    upload.close()
 
     
 
@@ -382,19 +385,6 @@ class BlogAdmin(CustomAdmin):
             context.update({'initial_blog_node': blog.navigation_node,})
         return render_to_response(
             'admin/cms_blogger/blog/navigation.html', context)
-
-
-def get_filename_from_request(request):
-    if not request.method == "POST":
-        raise UploadException("AJAX request not valid: must be POST")
-    if request.is_ajax():
-        filename = request.GET.get('qqfile', False) or request.GET.get('filename', False) or ''
-    else:
-        if len(request.FILES) == 1:
-            filename = upload.name
-        else:
-            raise UploadException("AJAX request not valid: Bad Upload")
-    return filename
 
 
 class BlogEntryPageAdmin(CustomAdmin, PlaceholderAdmin):

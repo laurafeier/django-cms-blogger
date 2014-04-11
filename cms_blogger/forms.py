@@ -25,6 +25,8 @@ from .utils import user_display_name
 from django.utils.safestring import mark_safe
 from django.template.loader import render_to_string
 from os.path import split
+from .settings import MAXIMUM_THUMBNAIL_FILE_SIZE, ALLOWED_THUMBNAIL_IMAGE_TYPES
+
 
 
 class UploadButton(forms.widgets.CheckboxInput):
@@ -40,6 +42,8 @@ class UploadButton(forms.widgets.CheckboxInput):
                 'blog_entry_id': self.blog_entry_id,
                 'image_url': self.image_url,
                 'image_label': self.image_label,
+                'size_limit': MAXIMUM_THUMBNAIL_FILE_SIZE, 
+                'image_types': ALLOWED_THUMBNAIL_IMAGE_TYPES,
             }
         )
 
