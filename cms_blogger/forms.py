@@ -17,8 +17,7 @@ from cms.models import Page
 from cms_layouts.models import Layout
 from cms_layouts.slot_finder import (
     get_fixed_section_slots, MissingRequiredPlaceholder)
-from django_select2.fields import (
-    AutoModelSelect2Field, AutoModelSelect2MultipleField)
+from django_select2.fields import AutoModelSelect2MultipleField
 from .models import Blog, BlogEntryPage, BlogCategory
 from .widgets import TagItWidget, ButtonWidget
 from .utils import user_display_name
@@ -114,7 +113,7 @@ class BlogLayoutForm(forms.ModelForm):
                     page, page_exception))
 
 
-class BlogUserField(AutoModelSelect2MultipleField):
+class MultipleUserField(AutoModelSelect2MultipleField):
     search_fields = ['first_name__icontains', 'last_name__icontains',
                      'email__icontains', 'username__icontains']
     queryset = User.objects.all()
@@ -130,7 +129,7 @@ class BlogForm(forms.ModelForm):
             'tagit': '{allowSpaces: true, tagLimit: 20, caseSensitive: false}'}),
         help_text=_('Categories help text'))
 
-    allowed_users = BlogUserField(label="Add Users")
+    allowed_users = MultipleUserField(label="Add Users")
 
     class Meta:
         model = Blog
@@ -198,12 +197,33 @@ class BlogForm(forms.ModelForm):
 
 class BlogAddForm(forms.ModelForm):
 
+    def __init__(self, *args, **kwargs):
+        site_field = self.base_fields['site']
+        site_field.choices = []
+        site_field.widget = forms.HiddenInput()
+        site_field.initial = Site.objects.get_current().pk
+        super(BlogAddForm, self).__init__(*args, **kwargs)
+
     class Meta:
         model = Blog
         fields = ('title', 'slug', 'site')
 
 
 class BlogEntryPageAddForm(forms.ModelForm):
+    requires_request = True
+
+    def __init__(self, *args, **kwargs):
+        request = kwargs.pop('request', None)
+        # filter available blog choices
+        site = Site.objects.get_current()
+        blog_field = self.base_fields['blog']
+        allowed_blogs = blog_field.queryset.filter(site=site)
+        if request and not request.user.is_superuser:
+            allowed_blogs = allowed_blogs.filter(
+                allowed_users=request.user)
+        blog_field.queryset = allowed_blogs
+        blog_field.widget.can_add_related = False
+        super(BlogEntryPageAddForm, self).__init__(*args, **kwargs)
 
     class Meta:
         model = BlogEntryPage
@@ -224,17 +244,6 @@ def _get_text_editor_widget():
         return WYMEditor(installed_plugins=plugins)
 
 
-class AuthorField(AutoModelSelect2Field):
-
-    search_fields = ['first_name__icontains', 'last_name__icontains',
-                     'email__icontains', 'username__icontains']
-    queryset = User.objects.all()
-    empty_values = [None, '', 0]
-
-    def label_from_instance(self, obj):
-        return user_display_name(obj)
-
-
 class ButtonField(forms.Field):
 
     def __init__(self, *args, **kwargs):
@@ -244,10 +253,12 @@ class ButtonField(forms.Field):
 
 
 class BlogEntryPageChangeForm(forms.ModelForm):
+    requires_request = True
+
     body = forms.CharField(
         label='Blog Entry', required=True,
         widget=_get_text_editor_widget())
-    author = AuthorField()
+    authors = MultipleUserField()
     categories = forms.ModelMultipleChoiceField(
         widget=forms.CheckboxSelectMultiple(),
         queryset=BlogCategory.objects.get_empty_query_set(), required=False)
@@ -271,6 +282,7 @@ class BlogEntryPageChangeForm(forms.ModelForm):
         exclude = ('content', 'blog', 'slug', 'publication_date')
 
     def __init__(self, *args, **kwargs):
+        request = kwargs.pop('request', None)
         instance = kwargs.get('instance')
         categories_field = self.base_fields.get('categories')
         if categories_field and instance and instance.blog:
@@ -286,6 +298,9 @@ class BlogEntryPageChangeForm(forms.ModelForm):
             preview1.link_url = preview2.link_url = url
             popup_js = "return showEntryPreviewPopup(this);"
             preview1.on_click = preview2.on_click = popup_js
+
+            if instance.authors.count() == 0 and request:
+                self.initial['authors'] = [request.user.pk]
 
         pub_button = self.fields['publish'].widget
         if self.instance and self.instance.is_published:

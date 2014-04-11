@@ -3,7 +3,7 @@ from django.contrib.sites.models import Site
 from django.contrib.contenttypes.generic import GenericTabularInline
 from django.contrib.admin.templatetags.admin_static import static
 from django.db import models
-from django.forms import HiddenInput, Media
+from django.forms import Media
 from django.utils.html import escapejs
 from django.utils.translation import get_language, ugettext_lazy as _
 from django.utils.safestring import mark_safe
@@ -105,7 +105,17 @@ class CustomAdmin(admin.ModelAdmin):
             self.form = self.change_form
             # reset declared_fieldsets
             self.fieldsets = getattr(self, 'change_form_fieldsets', ())
-        return super(CustomAdmin, self).get_form(request, obj, **kwargs)
+        formCls = super(CustomAdmin, self).get_form(request, obj, **kwargs)
+        requires_request = getattr(formCls, 'requires_request', False)
+        if requires_request:
+
+            class RequestFormClass(formCls):
+                def __new__(cls, *args, **kwargs):
+                    kwargs.update({"request": request})
+                    return formCls(*args, **kwargs)
+
+            return RequestFormClass
+        return formCls
 
 
 class BlogAdmin(CustomAdmin):
@@ -158,17 +168,6 @@ class BlogAdmin(CustomAdmin):
         }),
     )
     prepopulated_fields = {"slug": ("title",)}
-
-    def get_form(self, request, obj=None, **kwargs):
-        formCls = super(BlogAdmin, self).get_form(request, obj, **kwargs)
-
-        if not obj and 'site' in formCls.base_fields:
-            site_field = formCls.base_fields['site']
-            site_field.choices = []
-            site_field.widget = HiddenInput()
-            site_field.initial = Site.objects.get_current().pk
-
-        return formCls
 
     def _get_nodes(self, request, nodes, node_id, output):
        for node in nodes:
@@ -301,7 +300,7 @@ class BlogEntryPageAdmin(CustomAdmin, PlaceholderAdmin):
     }
     change_form_fieldsets = (
         (None, {
-            'fields': ['title', 'author', 'short_description', ],
+            'fields': ['title', 'authors', 'short_description', ],
         }),
         (None, {
             'fields': ['thumbnail_image', ],
@@ -379,24 +378,6 @@ class BlogEntryPageAdmin(CustomAdmin, PlaceholderAdmin):
             context = response.context_data
             context['media'] = self._upgrade_jquery(context['media'])
         return response
-
-    def get_form(self, request, obj=None, **kwargs):
-        formCls = super(BlogEntryPageAdmin, self).get_form(
-            request, obj, **kwargs)
-        # set initial
-        if obj and not obj.author:
-            obj.author = request.user
-        if not obj:
-            # filter available blog choices
-            site = Site.objects.get_current()
-            blog_field = formCls.base_fields['blog']
-            allowed_blogs = blog_field.queryset.filter(site=site)
-            if not request.user.is_superuser:
-                allowed_blogs = allowed_blogs.filter(
-                    allowed_users=request.user)
-            blog_field.queryset = allowed_blogs
-            blog_field.widget.can_add_related = False
-        return formCls
 
     def queryset(self, request):
         qs = super(BlogEntryPageAdmin, self).queryset(request)

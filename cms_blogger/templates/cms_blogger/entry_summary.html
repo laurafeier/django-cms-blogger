@@ -21,7 +21,7 @@
     <div class='left-col'>
         <h1 id='entry-title'><a href="{{PROXY_REWRITE_RULE}}{{entry.get_absolute_url}}">{{entry.title}}</a></h1>
         <p class="subtitle">
-            Posted by <span class="author">{{entry.author_display_name}}</span>
+            Posted by <span class="author">{{entry.authors_display_name}}</span>
         </p>
         {% if entry.short_description and not hide_entry_description %}
         <div class="entry-summary">{{entry.short_description}}</div>

@@ -311,9 +311,8 @@ class BlogEntryPage(
     thumbnail_image = models.ImageField(
         _("Thumbnail Image"), upload_to=upload_entry_image, blank=True)
 
-    author = models.ForeignKey(
-        User, verbose_name=_('Blog Entry Author'),
-        null=True, blank=True, on_delete=models.SET_NULL)
+    authors = models.ManyToManyField(User,
+        verbose_name=_('Blog Entry Authors'), related_name='blog_entries')
 
     short_description = models.TextField(
         _('Short Description'), help_text=_("400 characters or fewer"),
@@ -355,10 +354,9 @@ class BlogEntryPage(
         return True
 
     @property
-    def author_display_name(self):
-        if not self.author:
-            return ''
-        return user_display_name(self.author)
+    def authors_display_name(self):
+        return ", ".join((user_display_name(author)
+                          for author in self.authors.all()))
 
     def extra_html_before_content(self, request, context):
         if not self.blog:
