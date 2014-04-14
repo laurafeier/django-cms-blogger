@@ -4,21 +4,14 @@
             <div class="month">{{entry.publication_date|date:"M"}}</div>
             <div class="day">{{entry.publication_date|date:"d"}}</div>
         </div>
-        {% if blog.enable_facebook or blog.enable_twitter or blog.email_account_link %}
-        <div class="social">
-        {% if blog.enable_facebook %}
-            <a href="#" class="facebook social"><img src="{{STATIC_URL}}/cms_blogger/img/facebook.png" alt="Share on Facebook" /></a>
-        {% endif %}
-        {% if blog.enable_twitter%}
-            <a href="#" class="twitter social"><img src="{{STATIC_URL}}/cms_blogger/img/twitter.png" alt="Share on Twitter" /></a>
-        {% endif %}
-        {% if blog.email_account_link%}
-            <a href="#" class="email social"><img src="{{STATIC_URL}}/cms_blogger/img/email.png" alt="Share via Email" /></a>
-        {% endif %}
-        </div>
-        {% endif %}
+        {% include "cms_blogger/social_widgets.html" %}
     </div>
     <div class='right-col'>
+        {% if entry.thumbnail_image and not hide_entry_image %}
+            <div class='right-col'>
+                <div class="entry-image"><img src='{{entry.thumbnail_image.url}}' /></div>
+            </div>
+        {% endif %}
         <div class='left-col'>
             <h1 id='entry-title'><a class="main_color_text" href="{{entry.get_absolute_url}}">{{entry.title}}</a></h1>
             <p class="subtitle">
@@ -29,10 +22,5 @@
             <a class="entry-read-more main_color_text" href="{{entry.get_absolute_url}}">Read More</a>
             {% endif %}
         </div>
-        {% if entry.thumbnail_image and not hide_entry_image %}
-            <div class='right-col'>
-                <div class="entry-image"><img src='{{entry.thumbnail_image.url}}' /></div>
-            </div>
-        {% endif %}
     </div>
 </div>

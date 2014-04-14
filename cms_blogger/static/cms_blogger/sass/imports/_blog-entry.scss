@@ -1,7 +1,13 @@
 @import "imports/_globals.scss";
 
-@mixin blog-entry($ns, $container){
+@mixin blogEntry($ns, $container){
     #{$ns}{
+        .last{
+            .#{$container} > .right-col{
+                border:0;
+                padding-bottom: 0;
+            }
+        }
         .#{$container}{
             vertical-align: top;
             font-size: 1em;
@@ -40,17 +46,28 @@
                 @if $container == "blog-entry"{
                     @include entry-border();
                 }
-                .left-col{
-                    display: table-cell;
+
+                & > .left-col{
+                    @media (min-width:600px){
+                        float:left;
+                        padding-right: 2%;
+                        width: 50%;
+                    }
                     text-align: left;
-                    padding-right: 2%;
                     white-space: normal;
                     vertical-align: top;
                 }
-                .right-col{
+                & > .right-col{
                     text-align: left;
-                    display: table-cell;
-                    width: 48%;
+                    @media (min-width:600px){
+                        float:right;
+                        width: 48%;
+                    }
+                    @media (max-width:599px){
+                        .entry-image{
+                            margin-bottom: 10px;
+                        }
+                    }
                     white-space: normal;
                     vertical-align: top;
                     img{
@@ -90,6 +107,7 @@
             }
             .entry-summary{
                 margin:20px 0 30px 0;
+                text-align: justify;
             }
 
             .social{
@@ -101,5 +119,5 @@
     }
 }
 
-@include blog-entry($namespace, "blog-entry");
-@include blog-entry($namespace, "blog-post");
+@include blogEntry($namespace, "blog-entry");
+@include blogEntry($namespace, "blog-post");

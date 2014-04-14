@@ -13,13 +13,20 @@
                 display: table-cell;
                 float: none;
                 text-decoration: none;
+                &:hover{
+                    .arrow-left,
+                    .arrow-right{
+                        text-decoration: underline;
+                    }
+                }
             }
             .pull-left{
                 border-right:1px solid $entry-footer-border-color;
                 padding-right: 15px;
                 img{
-                    margin-right:10px;
+                    padding-right:10px;
                     width: 12px;
+                    text-decoration: none;
                 }
                 .summary,
                 .date{
@@ -30,8 +37,9 @@
                 text-align: right;
                 padding-left: 15px;
                 img{
-                    margin-left:10px;
+                    padding-left:10px;
                     width: 12px;
+                    text-decoration: none;
                 }
                 .summary,
                 .date{
