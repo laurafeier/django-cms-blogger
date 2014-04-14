@@ -53,7 +53,12 @@
             $('<input>').attr({'type': 'hidden', 'name': '_save'}).val('Save')
         ).submit();
     });
-
+    $('fieldset.collapsible-inner').each(function(index, Element) {
+        var prev_fieldset = $(this).prev();
+        if(prev_fieldset.length){
+            $(this).appendTo(prev_fieldset);
+        }
+    });
 })(django.jQuery);
 </script>
 </div>

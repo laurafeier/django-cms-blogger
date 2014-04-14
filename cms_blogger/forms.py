@@ -209,7 +209,6 @@ class BlogAddForm(forms.ModelForm):
         fields = ('title', 'slug', 'site')
 
 
-
 class EntryChangelistForm(forms.ModelForm):
 
     is_published = forms.BooleanField(

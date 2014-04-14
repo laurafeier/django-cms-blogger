@@ -322,7 +322,7 @@ class BlogEntryPageAdmin(CustomAdmin, PlaceholderAdmin):
         }),
         ('Schedule Publish', {
             'fields': ['start_publication', 'end_publication'],
-            'classes': ('right-col', 'collapse')
+            'classes': ('right-col', 'collapsible-inner')
         }),
         (None, {
             'fields': ['categories', ],
@@ -330,7 +330,7 @@ class BlogEntryPageAdmin(CustomAdmin, PlaceholderAdmin):
         }),
         ('Advanced Options', {
             'fields': ['seo_title', 'meta_keywords', 'disqus_enabled'],
-            'classes': ('right-col', 'collapse', 'open')
+            'classes': ('right-col', 'collapsible-outer')
         }),
 
     )
