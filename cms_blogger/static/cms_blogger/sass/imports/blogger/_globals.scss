@@ -1,4 +1,4 @@
-$namespace: ".pbs-blogger";
+$namespace: ".cms-blogger";
 
 $entry-date-bg-color: #efefef;
 $entry-date-color: #474747;
@@ -10,6 +10,7 @@ $entry-footer-border-color: #ddd;
 $read-more-bg-color: #efefef;
 
 $left-col-width: 70px;
+
 
 @mixin entry-border(){
     border-bottom:1px dashed $entry-border-color;
