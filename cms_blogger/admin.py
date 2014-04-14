@@ -3,8 +3,10 @@ from django.contrib.sites.models import Site
 from django.contrib.contenttypes.generic import GenericTabularInline
 from django.contrib.admin.templatetags.admin_static import static
 from django.db import models
-from django.forms import HiddenInput, Media
+from django.db.models import Q
+from django.forms import Media
 from django.utils.html import escapejs
+from django.utils import timezone
 from django.utils.translation import get_language, ugettext_lazy as _
 from django.utils.safestring import mark_safe
 from django.core.urlresolvers import reverse
@@ -26,7 +28,8 @@ from cms_layouts.slot_finder import get_mock_placeholder
 from .models import Blog, BlogEntryPage, BlogNavigationNode
 from .forms import (
     BlogLayoutForm, BlogForm, BlogAddForm, BlogEntryPageAddForm,
-    BlogEntryPageChangeForm, BlogLayoutInlineFormSet)
+    BlogEntryPageChangeForm, BlogLayoutInlineFormSet,
+    EntryChangelistForm)
 from .changelists import BlogChangeList, BlogEntryChangeList
 from .widgets import ToggleWidget
 from filer.utils.files import handle_upload, UploadException
@@ -111,7 +114,17 @@ class CustomAdmin(admin.ModelAdmin):
             self.form = self.change_form
             # reset declared_fieldsets
             self.fieldsets = getattr(self, 'change_form_fieldsets', ())
-        return super(CustomAdmin, self).get_form(request, obj, **kwargs)
+        formCls = super(CustomAdmin, self).get_form(request, obj, **kwargs)
+        requires_request = getattr(formCls, 'requires_request', False)
+        if requires_request:
+
+            class RequestFormClass(formCls):
+                def __new__(cls, *args, **kwargs):
+                    kwargs.update({"request": request})
+                    return formCls(*args, **kwargs)
+
+            return RequestFormClass
+        return formCls
 
 
 def get_size_of_uploaded_file(request):
@@ -169,17 +182,6 @@ class BlogAdmin(CustomAdmin):
         }),
     )
     prepopulated_fields = {"slug": ("title",)}
-
-    def get_form(self, request, obj=None, **kwargs):
-        formCls = super(BlogAdmin, self).get_form(request, obj, **kwargs)
-
-        if not obj and 'site' in formCls.base_fields:
-            site_field = formCls.base_fields['site']
-            site_field.choices = []
-            site_field.widget = HiddenInput()
-            site_field.initial = Site.objects.get_current().pk
-
-        return formCls
 
     def _get_nodes(self, request, nodes, node_id, output):
        for node in nodes:
@@ -376,7 +378,6 @@ class BlogAdmin(CustomAdmin):
                     (escapejs(preview)), )
         context = RequestContext(request)
         context.update({
-            'current_site': Site.objects.get_current(),
             'title': 'Edit navigation menu',
             'is_popup': "_popup" in request.REQUEST
         })
@@ -388,9 +389,11 @@ class BlogAdmin(CustomAdmin):
 
 
 class BlogEntryPageAdmin(CustomAdmin, PlaceholderAdmin):
+    list_editable = ('is_published', )
     custom_changelist_class = BlogEntryChangeList
-    list_display = ('__str__', 'slug', 'blog')
+    list_display = ('__str__', 'slug', 'blog', 'is_published', 'entry_authors')
     search_fields = ('title', 'blog__title')
+    actions = ['make_published', 'make_unpublished']
     add_form_template = 'admin/cms_blogger/blogentrypage/add_form.html'
     add_form = BlogEntryPageAddForm
     change_form = BlogEntryPageChangeForm
@@ -399,7 +402,7 @@ class BlogEntryPageAdmin(CustomAdmin, PlaceholderAdmin):
     }
     change_form_fieldsets = (
         (None, {
-            'fields': ['title', 'author', 'short_description', ],
+            'fields': ['title', 'authors', 'short_description', ],
         }),
         (None, {
             'fields': ['upload_button', ],
@@ -470,6 +473,9 @@ class BlogEntryPageAdmin(CustomAdmin, PlaceholderAdmin):
                 get_language(), request.GET.get('body') or 'Sample Content')
         return entry.render_to_response(request)
 
+    def get_changelist_form(self, request, **kwargs):
+        return EntryChangelistForm
+
     def change_view(self, request, object_id, form_url='', extra_context=None):
         response = super(BlogEntryPageAdmin, self).change_view(
             request, object_id, form_url, extra_context)
@@ -477,24 +483,6 @@ class BlogEntryPageAdmin(CustomAdmin, PlaceholderAdmin):
             context = response.context_data
             context['media'] = self._upgrade_jquery(context['media'])
         return response
-
-    def get_form(self, request, obj=None, **kwargs):
-        formCls = super(BlogEntryPageAdmin, self).get_form(
-            request, obj, **kwargs)
-        # set initial
-        if obj and not obj.author:
-            obj.author = request.user
-        if not obj:
-            # filter available blog choices
-            site = Site.objects.get_current()
-            blog_field = formCls.base_fields['blog']
-            allowed_blogs = blog_field.queryset.filter(site=site)
-            if not request.user.is_superuser:
-                allowed_blogs = allowed_blogs.filter(
-                    allowed_users=request.user)
-            blog_field.queryset = allowed_blogs
-            blog_field.widget.can_add_related = False
-        return formCls
 
     def queryset(self, request):
         qs = super(BlogEntryPageAdmin, self).queryset(request)
@@ -540,6 +528,25 @@ class BlogEntryPageAdmin(CustomAdmin, PlaceholderAdmin):
         entry = BlogEntryPage.objects.get(content=plugin.placeholder)
         setattr(request, 'current_page', entry.get_layout().from_page)
         return super(BlogEntryPageAdmin, self).edit_plugin(request, plugin_id)
+
+    def make_published(self, request, queryset):
+        # cannot publish draft entries
+        draft_entries = Q(Q(title__isnull=True) | Q(title__exact='') |
+                          Q(short_description__isnull=True) |
+                          Q(short_description__exact='') |
+                          Q(blog__isnull=True))
+        queryset.exclude(draft_entries).filter(is_published=False).update(
+            is_published=True, publication_date=timezone.now())
+    make_published.short_description = "Publish entries"
+
+    def make_unpublished(self, request, queryset):
+        queryset.filter(is_published=True).update(
+            is_published=False, publication_date=timezone.now())
+    make_unpublished.short_description = "Unpublish entries"
+
+    def entry_authors(self, entry):
+        return entry.authors_display_name
+    entry_authors.allow_tags = True
 
 
 admin.site.register(Blog, BlogAdmin)

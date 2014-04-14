@@ -66,7 +66,6 @@ class Migration(SchemaMigration):
             ('publication_date', self.gf('django.db.models.fields.DateTimeField')(default=datetime.datetime.now, db_index=True)),
             ('modified_at', self.gf('django.db.models.fields.DateTimeField')(auto_now=True, db_index=True, blank=True)),
             ('thumbnail_image', self.gf('django.db.models.fields.files.ImageField')(max_length=100, blank=True)),
-            ('author', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['auth.User'], null=True, on_delete=models.SET_NULL, blank=True)),
             ('short_description', self.gf('django.db.models.fields.TextField')(max_length=400)),
             ('start_publication', self.gf('django.db.models.fields.DateTimeField')(db_index=True, null=True, blank=True)),
             ('end_publication', self.gf('django.db.models.fields.DateTimeField')(db_index=True, null=True, blank=True)),
@@ -81,6 +80,14 @@ class Migration(SchemaMigration):
 
         # Adding unique constraint on 'BlogEntryPage', fields ['slug', 'blog', 'draft_id']
         db.create_unique('cms_blogger_blogentrypage', ['slug', 'blog_id', 'draft_id'])
+
+        # Adding M2M table for field authors on 'BlogEntryPage'
+        db.create_table('cms_blogger_blogentrypage_authors', (
+            ('id', models.AutoField(verbose_name='ID', primary_key=True, auto_created=True)),
+            ('blogentrypage', models.ForeignKey(orm['cms_blogger.blogentrypage'], null=False)),
+            ('user', models.ForeignKey(orm['auth.user'], null=False))
+        ))
+        db.create_unique('cms_blogger_blogentrypage_authors', ['blogentrypage_id', 'user_id'])
 
         # Adding model 'BlogCategory'
         db.create_table('cms_blogger_blogcategory', (
@@ -134,6 +141,9 @@ class Migration(SchemaMigration):
         # Deleting model 'BlogEntryPage'
         db.delete_table('cms_blogger_blogentrypage')
 
+        # Removing M2M table for field authors on 'BlogEntryPage'
+        db.delete_table('cms_blogger_blogentrypage_authors')
+
         # Deleting model 'BlogCategory'
         db.delete_table('cms_blogger_blogcategory')
 
@@ -174,7 +184,7 @@ class Migration(SchemaMigration):
         'cms.cmsplugin': {
             'Meta': {'object_name': 'CMSPlugin'},
             'changed_date': ('django.db.models.fields.DateTimeField', [], {'auto_now': 'True', 'blank': 'True'}),
-            'creation_date': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime(2014, 4, 10, 0, 0)'}),
+            'creation_date': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime(2014, 4, 11, 0, 0)'}),
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'language': ('django.db.models.fields.CharField', [], {'max_length': '15', 'db_index': 'True'}),
             'level': ('django.db.models.fields.PositiveIntegerField', [], {'db_index': 'True'}),
@@ -256,7 +266,7 @@ class Migration(SchemaMigration):
         },
         'cms_blogger.blogentrypage': {
             'Meta': {'unique_together': "(('slug', 'blog', 'draft_id'),)", 'object_name': 'BlogEntryPage'},
-            'author': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['auth.User']", 'null': 'True', 'on_delete': 'models.SET_NULL', 'blank': 'True'}),
+            'authors': ('django.db.models.fields.related.ManyToManyField', [], {'related_name': "'blog_entries'", 'symmetrical': 'False', 'to': "orm['auth.User']"}),
             'blog': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['cms_blogger.Blog']"}),
             'content': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['cms.Placeholder']", 'null': 'True'}),
             'disqus_enabled': ('django.db.models.fields.BooleanField', [], {'default': 'True'}),

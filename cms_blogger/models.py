@@ -19,7 +19,6 @@ from cms.models import Page, Placeholder, CMSPlugin
 
 from cms_layouts.models import LayoutTitle, Layout
 from cms_layouts.layout_response import LayoutResponse
-from cms_layouts.slot_finder import get_mock_placeholder
 from filer.fields.image import FilerImageField
 import filer
 from .settings import USE_FILER_STORAGE, UPLOAD_TO_PREFIX, FILENAME_LENGTH
@@ -208,41 +207,16 @@ class Blog(AbstractBlog):
         except filer.models.Image.DoesNotExist:
             return None
 
-    def header_as_html(self):
-        return get_template("cms_blogger/blog_header.html").render(
-            Context({'blog': self}))
-
-    @property
-    def header(self):
-        return get_mock_placeholder(get_language(), self.header_as_html())
-
-    @property
-    def paginated_entries(self):
-        """
-        Entries used for the landing page view. This is set in the landing
-        page view in order to pass it to the content when it gets rendered.
-        This will actually hold the page that will get rendered.
-        """
-        try:
-            return self._entries
-        except AttributeError:
-            self._entries = None
-        return self._entries
-
-    @paginated_entries.setter
-    def paginated_entries(self, value):
-        self._entries = value
+    def render_header(self, request, context):
+        return get_template("cms_blogger/blog_header.html").render(context)
 
     def get_entries(self):
         ordering = ('-publication_date', 'slug')
         return self.blogentrypage_set.published().order_by(*ordering)
 
-    @property
-    def content(self):
-        context = Context({'blog': self, 'entries': self.paginated_entries})
-        landing_templ = get_template("cms_blogger/blog_content.html")
-        html = landing_templ.render(context)
-        return get_mock_placeholder(get_language(), html)
+    def render_content(self, request, context):
+        # landing page view passes entries, blog to the context
+        return get_template("cms_blogger/blog_content.html").render(context)
 
     @models.permalink
     def get_absolute_url(self):
@@ -264,16 +238,17 @@ def withBlogField(cls):
 
 class BlogRelatedPage(object):
     # any blog related pages needs to have a layout, a content and a header
-    #   that can be rendered by the layout. The content and the header must
-    #   be placeholder instances
+    #   that can be rendered by the layout
     uses_layout_type = None
 
     def get_layout(self):
         return self.blog.get_layout_for(self.uses_layout_type)
 
-    @property
-    def header(self):
-        return self.blog.header
+    def render_header(self, request, context):
+        return self.blog.render_header(request, context)
+
+    def render_content(self, request, context):
+        return self.blog.render_content(request, context)
 
     @property
     def site(self):
@@ -294,11 +269,6 @@ class BioPage(models.Model, BlogRelatedPage):
 
     uses_layout_type = Blog.BIO_PAGE
     author_name = models.CharField(max_length=255)
-
-    @property
-    def content(self):
-        #TODO
-        return self.blog.content
 
     @property
     def slug(self):
@@ -340,6 +310,7 @@ def get_image_storage(): #TODO cache this
         return FILER_PUBLICMEDIA_STORAGE
     return None
 
+
 @withBlogField
 class BlogEntryPage(
     getCMSContentModel(content_attr='content'), BlogRelatedPage):
@@ -367,9 +338,8 @@ class BlogEntryPage(
         _("Thumbnail Image"), upload_to=upload_entry_image, blank=True,
         storage=get_image_storage())
 
-    author = models.ForeignKey(
-        User, verbose_name=_('Blog Entry Author'),
-        null=True, blank=True, on_delete=models.SET_NULL)
+    authors = models.ManyToManyField(User,
+        verbose_name=_('Blog Entry Authors'), related_name='blog_entries')
 
     short_description = models.TextField(
         _('Short Description'), help_text=_("400 characters or fewer"),
@@ -411,24 +381,19 @@ class BlogEntryPage(
         return True
 
     @property
-    def author_display_name(self):
-        if not self.author:
-            return ''
-        return user_display_name(self.author)
+    def authors_display_name(self):
+        return ", ".join((user_display_name(author)
+                          for author in self.authors.all()))
 
-    def extra_html_before_content(self):
+    def extra_html_before_content(self, request, context):
         if not self.blog:
             return ''
-        context = Context({'entry': self, 'blog': self.blog,})
-        header_templ = get_template("cms_blogger/entry_top.html")
-        return header_templ.render(context)
+        return get_template("cms_blogger/entry_top.html").render(context)
 
-    def extra_html_after_content(self):
+    def extra_html_after_content(self, request, context):
         if not self.blog:
             return ''
-        context = Context({'entry': self, 'blog': self.blog,})
-        footer_templ = get_template("cms_blogger/entry_bottom.html")
-        return footer_templ.render(context)
+        return get_template("cms_blogger/entry_bottom.html").render(context)
 
     def get_title_obj(self):
         title = LayoutTitle()
@@ -457,7 +422,11 @@ class BlogEntryPage(
         if not layout:
             return HttpResponseNotFound(
                 "<h1>This Entry does not have a layout to render.</h1>")
-        return LayoutResponse(self, layout, request).make_response()
+        from django.template.context import RequestContext
+        context = RequestContext(request)
+        context.update({'entry': self, 'blog': self.blog,})
+        return LayoutResponse(
+            self, layout, request, context=context).make_response()
 
     def previous_post(self):
         if not self.blog:
@@ -506,6 +475,7 @@ class BlogEntryPage(
             get_image_storage().delete(old_thumbnail_path)
 
 
+
 @withBlogField
 class BlogCategory(models.Model, BlogRelatedPage):
     blog_related_name = 'categories'
@@ -519,11 +489,6 @@ class BlogCategory(models.Model, BlogRelatedPage):
         return ('cms_blogger.views.category_page', (), {
             'blog_slug': self.blog.slug,
             'slug': self.slug})
-
-    @property
-    def content(self):
-        # render the landing page layout
-        return self.blog.content
 
     def get_title_obj(self):
         title = LayoutTitle()

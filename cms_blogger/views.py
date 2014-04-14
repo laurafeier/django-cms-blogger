@@ -1,4 +1,5 @@
 from django.http import HttpResponse, Http404, HttpResponseNotFound
+from django.template.context import RequestContext
 from django.shortcuts import get_object_or_404
 from django.contrib.sites.models import Site
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
@@ -69,8 +70,7 @@ def _paginate_entries_on_blog(request, entries, blog):
     except EmptyPage:
         # If page is out of range (e.g. 9999), deliver last page of results.
         entries = paginator.page(paginator.num_pages)
-    setattr(entries, 'extra_params', extra_params)
-    blog.paginated_entries = entries
+    return extra_params, entries
 
 
 def landing_page(request, blog_slug):
@@ -81,8 +81,14 @@ def landing_page(request, blog_slug):
         return HttpResponseNotFound(
             "<h1>This Blog Landing Page does not have a "
             "layout to render.</h1>")
-    _paginate_entries_on_blog(request, blog.get_entries(), blog)
-    return LayoutResponse(blog, layout, request).make_response()
+    extra_params, entries = _paginate_entries_on_blog(
+        request, blog.get_entries(), blog)
+    context = RequestContext(request)
+    context['blog'] = blog
+    context['entries'] = entries
+    context['extra_params'] = extra_params
+    return LayoutResponse(
+        blog, layout, request, context=context).make_response()
 
 
 def category_page(request, blog_slug, slug):
@@ -95,8 +101,14 @@ def category_page(request, blog_slug, slug):
         return HttpResponseNotFound(
             "<h1>This Blog Category Page does not have a "
             "layout to render.</h1>")
-    _paginate_entries_on_blog(request, category.get_entries(), category.blog)
-    return LayoutResponse(category, layout, request).make_response()
+    extra_params, entries = _paginate_entries_on_blog(
+        request, category.get_entries(), category.blog)
+    context = RequestContext(request)
+    context['blog'] = category.blog
+    context['entries'] = entries
+    context['extra_params'] = extra_params
+    return LayoutResponse(
+        category, layout, request, context=context).make_response()
 
 
 def entry_or_bio_page(request, blog_slug, slug):

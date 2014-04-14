@@ -22,6 +22,7 @@ def paginator(context, page, adjacent_pages=2):
         'show_first_ellipsis': show_first and not is_after_first,
         'show_last': show_last,
         'show_last_ellipsis': show_last and not is_before_last,
+        'extra_params': context.get('extra_params')
     }
 
 register.inclusion_tag('cms_blogger/paginator.html', takes_context=True)(paginator)
