@@ -1,14 +1,14 @@
 {% if entry.previous_post or entry.next_post%}
 <div class="entry-footer">
     {% if entry.previous_post %}
-    <a href="{{entry.previous_post.get_absolute_url}}" class="pull-left">
+    <a href="{{PROXY_REWRITE_RULE}}{{entry.previous_post.get_absolute_url}}" class="pull-left">
         <div class="arrow-left"><img src="{{STATIC_URL}}cms_blogger/img/arrow-left.png">previous post</div>
         <p class="summary main_color_text">{{entry.previous_post.short_description|truncatewords:10}}</p>
         <p class="date">{{entry.previous_post.publication_date|date:'F j, Y'}}</p>
     </a>
     {% endif %}
     {% if entry.next_post %}
-    <a href="{{entry.next_post.get_absolute_url}}" class="pull-right">
+    <a href="{{PROXY_REWRITE_RULE}}{{entry.next_post.get_absolute_url}}" class="pull-right">
         <div class="arrow-right">next post<img src="{{STATIC_URL}}cms_blogger/img/arrow-right.png"></div>
         <p class="summary main_color_text">{{entry.next_post.short_description|truncatewords:10}}</p>
         <p class="date">{{entry.next_post.publication_date|date:'F j, Y'}}</p>

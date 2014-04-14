@@ -13,13 +13,13 @@
             </div>
         {% endif %}
         <div class='left-col'>
-            <h1 id='entry-title'><a class="main_color_text" href="{{entry.get_absolute_url}}">{{entry.title}}</a></h1>
+            <h1 id='entry-title'><a class="main_color_text" href="{{PROXY_REWRITE_RULE}}{{entry.get_absolute_url}}">{{entry.title}}</a></h1>
             <p class="subtitle">
                 Posted by <a href="#" class="author">{{entry.author_display_name}}</a>
             </p>
             {% if entry.short_description and not hide_entry_description %}
             <p class="entry-summary">{{entry.short_description}}</p>
-            <a class="entry-read-more main_color_text" href="{{entry.get_absolute_url}}">Read More</a>
+            <a class="entry-read-more main_color_text" href="{{PROXY_REWRITE_RULE}}{{entry.get_absolute_url}}">Read More</a>
             {% endif %}
         </div>
     </div>

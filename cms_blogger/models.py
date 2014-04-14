@@ -209,7 +209,7 @@ class Blog(AbstractBlog):
             Context({'blog': self, 'STATIC_URL': settings.STATIC_URL}))
 
     def render_header(self, request, context):
-        return self.header_as_html()
+        return get_template("cms_blogger/blog_header.html").render(context)
 
     def get_entries(self):
         ordering = ('-publication_date', 'slug')
@@ -316,9 +316,8 @@ class BlogEntryPage(
     thumbnail_image = models.ImageField(
         _("Thumbnail Image"), upload_to=upload_entry_image, blank=True)
 
-    author = models.ForeignKey(
-        User, verbose_name=_('Blog Entry Author'),
-        null=True, blank=True, on_delete=models.SET_NULL)
+    authors = models.ManyToManyField(User,
+        verbose_name=_('Blog Entry Authors'), related_name='blog_entries')
 
     short_description = models.TextField(
         _('Short Description'), help_text=_("400 characters or fewer"),
@@ -360,10 +359,9 @@ class BlogEntryPage(
         return True
 
     @property
-    def author_display_name(self):
-        if not self.author:
-            return ''
-        return user_display_name(self.author)
+    def authors_display_name(self):
+        return ", ".join((user_display_name(author)
+                          for author in self.authors.all()))
 
     def extra_html_before_content(self, request, context):
         if not self.blog:
@@ -411,7 +409,11 @@ class BlogEntryPage(
         if not layout:
             return HttpResponseNotFound(
                 "<h1>This Entry does not have a layout to render.</h1>")
-        return LayoutResponse(self, layout, request).make_response()
+        from django.template.context import RequestContext
+        context = RequestContext(request)
+        context.update({'entry': self, 'blog': self.blog,})
+        return LayoutResponse(
+            self, layout, request, context=context).make_response()
 
     def previous_post(self):
         if not self.blog:
