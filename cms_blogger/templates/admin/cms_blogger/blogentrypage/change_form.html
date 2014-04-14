@@ -31,3 +31,30 @@
 {% endfor %}
 </div>
 {% endblock %}
+
+{% block submit_buttons_bottom %}
+<div class="submit-row">
+<a href="delete/" id='delete_form_bottom'>{% trans "Delete" %}</a>
+<a href="#" id='save_form_bottom'>{% trans 'Save' %}</a>
+<a href="#" id='publish_form_bottom'></a>
+<script type="text/javascript">
+(function ($) {
+    var i = 0;
+    $('form').submit(function () {
+        i++; if(i > 1) { return false; }
+    });
+    $('#delete_form_bottom').button();
+    $('#publish_form_bottom').replaceWith(
+        $('#id_publish').clone(true).prop({'id': '#publish_form_bottom'}));
+
+    $('#save_form_bottom').button().click(function(event) {
+        event.preventDefault();
+        $(this).closest('form').append(
+            $('<input>').attr({'type': 'hidden', 'name': '_save'}).val('Save')
+        ).submit();
+    });
+
+})(django.jQuery);
+</script>
+</div>
+{% endblock %}
