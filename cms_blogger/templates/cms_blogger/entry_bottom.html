@@ -1,5 +1,5 @@
 {% if entry.previous_post or entry.next_post%}
-<div class="entry-footer">
+<div class="entry-footer clearfix">
     {% if entry.previous_post %}
     <a href="{{PROXY_REWRITE_RULE}}{{entry.previous_post.get_absolute_url}}" class="pull-left">
         <div class="arrow-left"><img src="{{STATIC_URL}}cms_blogger/img/arrow-left.png">previous post</div>

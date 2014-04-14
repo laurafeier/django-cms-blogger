@@ -1,4 +1,4 @@
-@import "imports/_globals.scss";
+@import "imports/blogger/_globals.scss";
 
 @mixin entryFooter($ns){
     #{$ns}{
@@ -9,8 +9,9 @@
             margin-bottom: 20px;
             .pull-left,
             .pull-right{
-                width: 47%;
                 padding:20px 0px 40px 0px;
+                display: table-cell;
+                float: none;
                 text-decoration: none;
                 &:hover{
                     .arrow-left,
@@ -20,13 +21,8 @@
                 }
             }
             .pull-left{
-                & + .pull-right{
-                    border-left:1px solid $entry-footer-border-color;
-                }
-                padding-right: 3%;
-                float: left;
-                margin-right:-1px;
-
+                border-right:1px solid $entry-footer-border-color;
+                padding-right: 15px;
                 img{
                     padding-right:10px;
                     width: 12px;
@@ -39,8 +35,7 @@
             }
             .pull-right{
                 text-align: right;
-                padding-left: 3%;
-                float: right;
+                padding-left: 15px;
                 img{
                     padding-left:10px;
                     width: 12px;

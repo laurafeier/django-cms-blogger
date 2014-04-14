@@ -1,4 +1,4 @@
-<div class="blog-entry">
+<div class="blog-entry clearfix">
     <div class='left-col'>
         <div class="date">
             <div class="month">{{entry.publication_date|date:"M"}}</div>
@@ -6,7 +6,7 @@
         </div>
         {% include "cms_blogger/social_widgets.html" %}
     </div>
-    <div class='right-col'>
+    <div class='right-col clearfix'>
         {% if entry.thumbnail_image and not hide_entry_image %}
             <div class='right-col'>
                 <div class="entry-image"><img src='{{entry.thumbnail_image.url}}' /></div>

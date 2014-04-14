@@ -1,4 +1,4 @@
-@import "imports/_globals.scss";
+@import "imports/blogger/_globals.scss";
 
 @mixin blogEntry($ns, $container){
     #{$ns}{
@@ -15,7 +15,7 @@
             color:$entry-text-color;
             background: #fff;
             & > .left-col{
-                float:left;
+                display: table-cell;
                 width: 50px;
                 padding-right:15px;
                 padding-bottom:30px;
@@ -39,9 +39,10 @@
                 }
             }
             & > .right-col{
+                display: table-cell;
+                width: 100%;
                 text-align: left;
                 padding-bottom:30px;
-                margin-left:70px;
                 @if $container == "blog-entry"{
                     @include entry-border();
                 }
