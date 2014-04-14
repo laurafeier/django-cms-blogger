@@ -204,10 +204,6 @@ class Blog(AbstractBlog):
         except filer.models.Image.DoesNotExist:
             return None
 
-    def header_as_html(self):
-        return get_template("cms_blogger/blog_header.html").render(
-            Context({'blog': self, 'STATIC_URL': settings.STATIC_URL}))
-
     def render_header(self, request, context):
         return get_template("cms_blogger/blog_header.html").render(context)
 
@@ -366,7 +362,6 @@ class BlogEntryPage(
     def extra_html_before_content(self, request, context):
         if not self.blog:
             return ''
-        context.update({'entry': self, 'blog': self.blog,})
         # wrap the whole blog post html into a box; box closed
         #   in extra_html_after_content
         start_tag = '<div class="blog-post clearfix box">'
@@ -376,7 +371,6 @@ class BlogEntryPage(
     def extra_html_after_content(self, request, context):
         if not self.blog:
             return ''
-        context.update({'entry': self, 'blog': self.blog,})
         # close the box opened in the extra_html_before_content
         end_tag = '</div>'
         template = get_template("cms_blogger/entry_bottom.html")
