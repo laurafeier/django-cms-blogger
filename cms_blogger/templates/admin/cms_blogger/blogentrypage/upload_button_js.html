@@ -1,23 +1,30 @@
 {% load i18n admin_modify adminmedia filermedia filters %}
 {% load url from future %}
 
-<span id="{{ id_upload_button }}" href="" class="addlink" title="{% trans 'upload files' %}" style="cursor: pointer;">{% trans 'Upload' %}</span>
+<div style="text-align: right; float:left; width: 272px; font-family: Lucida Grande, Lucida Sans, Arial, sans-serif; margin-right: 10px">
+    <div style="margin-top:15px; font-size: 16px">Poster Image</div>
+    <div style="margin-top:15px; font-style: italic;"> Image must be 16:9 aspect </div>
+    <div style="font-style: italic;"> ratio and at least 640px wide.</div>
+
+
+    <div id="upload-button" title="{% trans 'upload files' %}" style="cursor: pointer;">{% trans 'Upload' %}</div>
+
+
+</div>
 
 <div id="fileInputQueue">
     {% if image_url %}
-        <table>
             <tr id="fileUpload" class="clipboardItem fileUploadQueueItem">
                 <td class="thumbnail">
                     <a href="{{ image_url }}" target="_blank">
-                        <img style="width: 128px;" src="{{ image_url }}" /></td>
+                        <img style="width: 230px;" src="{{ image_url }}" /></td>
                     </a>
-                <td class="label"> {{ image_label }} </td>
+                <!--td class="label"> {{ image_label }} </td-->
             </tr>
 
-            <tr id="delete_image">
+            <!--tr id="delete_image">
                 <td class="deletelink-box"><div style="cursor: pointer;" class="deletelink" >Delete</div></td>
-            </tr>
-        </table>
+            </tr-->
 
         <script>
            $('#delete_image .deletelink').click(function(){
@@ -43,6 +50,9 @@
             });
         </script>
     {% endif %}
+    <span style="font-style: italic; margin-top: 10px; display: block;">
+        Image thumbnail displayed after upload.
+    </span>
 </div>
 
 <script type="text/javascript">
@@ -50,7 +60,7 @@
 $(function() {
     var uploader = new qq.FileUploaderBasic({
         action: '{% url 'admin:cms_blogger-upload-thumbnail' blog_entry_id=blog_entry_id %}',
-        button: document.getElementById('{{ id_upload_button }}'),
+        button: document.getElementById('upload-button'),
         multiple: false,
         onSubmit: function(id, fileName){
             $('#fileInputQueue').html('\
@@ -90,11 +100,11 @@ $(function() {
                 var html = '\
                     <td class="thumbnail">\
                         <a href="' + file.url + '" target="_blank">\
-                            <img style="width: 128px;" src="' + file.url + '" /></td>\
+                            <img style="width: 230px;" src="' + file.url + '" /></td>\
                         </a>\
-                    <td class="label">' + file.label + '</td>';
+                    <!--td class="label">' + file.label + '</td-->';
                 $('#fileUpload').html(html);
-                $('#delete_image').html('<td class="deletelink-box"><div style="cursor: pointer;" class="deletelink" >Delete</div></td>');
+                //$('#delete_image').html('<td class="deletelink-box"><div style="cursor: pointer;" class="deletelink" >Delete</div></td>');
                 $('#delete_image .deletelink').click(function(){
                     var answer = confirm("Are you sure you want to remove image?");
                     if(answer)
@@ -121,7 +131,6 @@ $(function() {
         onCancel: function(id, fileName){
             $('#fileUpload').hide();
         },
- //       showMessage: function(message) {},
         sizeLimit: {{ size_limit }},
         allowedExtensions: {{ image_types|jsonify }},
     });

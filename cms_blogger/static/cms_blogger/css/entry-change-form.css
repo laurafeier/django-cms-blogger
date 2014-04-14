@@ -15,6 +15,25 @@ div.right-col{
     float:right;
 }
 
+.poster-image
+{
+    background-color: #F6F6F6;
+    width: 686px;
+}
+
+#upload-button
+{
+    cursor: pointer;
+    color: white;
+    display: block;
+    background-color: #575757;
+    padding: 10px 30px;
+    border-radius: 3px;
+    font-size: 14px;
+    float: right;
+    margin-top: 20px;
+}
+
 div.submit-row {
     clear: both;
 }

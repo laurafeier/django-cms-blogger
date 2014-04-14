@@ -825,13 +825,15 @@ qq.UploadButton.prototype = {
             // the right side of the input
             right: 0,
             top: 0,
+            bottom: 0,
+            left: 0,
             fontFamily: 'Arial',
             // 4 persons reported this, the max values that worked for them were 243, 236, 236, 118
-            fontSize: '8px',
             margin: 0,
+            overflow: 'hidden',
             padding: 0,
             cursor: 'pointer',
-            opacity: 0
+            opacity: 0,
         });
         this._element.appendChild(input);
 

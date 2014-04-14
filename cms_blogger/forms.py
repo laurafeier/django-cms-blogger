@@ -36,7 +36,6 @@ class UploadButton(forms.widgets.CheckboxInput):
         return render_to_string(
             "admin/cms_blogger/blogentrypage/upload_button_js.html", 
             {
-                'id_upload_button': 'poster_image_upload_button',
                 'thumbnail_upload_url': 'admin:cms_blogger-upload-thumbnail', 
                 'blog_entry_id': self.blog_entry_id,
                 'image_url': self.image_url,
