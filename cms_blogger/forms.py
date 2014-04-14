@@ -221,6 +221,28 @@ class EntryChangelistForm(forms.ModelForm):
                 ").submit();")
             }))
 
+    def __init__(self, *args, **kwargs):
+        entry = kwargs.get('instance', None)
+        pub_field = self.base_fields['is_published']
+        if entry and entry.is_draft:
+            pub_field.widget.attrs['disabled'] = 'disabled'
+        else:
+            pub_field.widget.attrs.pop('disabled', None)
+        super(EntryChangelistForm, self).__init__(*args, **kwargs)
+
+    def clean_is_published(self):
+        is_published = self.cleaned_data.get('is_published')
+        if not self.instance:
+            return is_published
+
+        if is_published != self.instance.is_published:
+            if not is_published:
+                self.instance.start_publication = None
+                self.instance.end_publication = None
+
+            self.instance.publication_date = timezone.now()
+        return is_published
+
     class Meta:
         model = BlogEntryPage
 

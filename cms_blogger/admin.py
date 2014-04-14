@@ -294,7 +294,8 @@ class BlogAdmin(CustomAdmin):
 class BlogEntryPageAdmin(CustomAdmin, PlaceholderAdmin):
     list_editable = ('is_published', )
     custom_changelist_class = BlogEntryChangeList
-    list_display = ('__str__', 'slug', 'blog', 'is_published', 'entry_authors')
+    list_display = ('__str__', 'slug', 'blog', 'is_published',
+                    'entry_authors')
     search_fields = ('title', 'blog__title')
     actions = ['make_published', 'make_unpublished']
     add_form_template = 'admin/cms_blogger/blogentrypage/add_form.html'
