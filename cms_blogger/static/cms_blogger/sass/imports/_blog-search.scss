@@ -1,0 +1,35 @@
+@import "imports/_globals.scss";
+
+@mixin blogHeader($ns){
+    #{$ns}{
+        .blog-search{
+            border-bottom:1px solid $entry-border-color;
+            margin-bottom:25px;
+            padding:15px 0 25px 0;
+            text-align: right;
+            input[type="text"]{
+                height: 34px;
+                width: 280px;
+                border-width: 1px 0 1px 1px;
+                border-radius: 0;
+                font-size: 12px;
+                display: inline-block;
+                padding: 0 42px 0 7px;
+            }
+            input[type="submit"]{
+                height: 34px;
+                display: inline-block;
+                cursor: pointer;
+                border-radius: 0;
+                background: none;
+                border: 0;
+                outline: none;
+                color:#fff;
+                font-size: 16px;
+                padding:5px;
+            }
+        }
+    }
+}
+
+@include blogHeader($namespace);

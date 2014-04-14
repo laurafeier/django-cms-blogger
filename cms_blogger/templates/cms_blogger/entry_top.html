@@ -1,26 +1,29 @@
+<link rel="stylesheet" type="text/css" href="{{STATIC_URL}}cms_blogger/css/blogger.css">
+<script type="text/javascript" src="{{STATIC_URL}}cms_blogger/js/blog-targetting.js"></script>
+<script type="text/javascript">
+    (function(d, s, id) {
+        d.addEventListener("DOMContentLoaded", function() {
+            var js, fjs = d.getElementsByTagName(s)[0];
+            if (d.getElementById(id)) return;
+            js = d.createElement(s);
+            js.id = id;
+            js.src = "{{STATIC_URL}}cms_blogger/js/blogger-frontend.js";
+            d.body.appendChild(js);
+        });
+    }(document, 'script', 'blogger-scripts'));
+</script>
+
 <div class='left-col'>
     <div class="date">
         <span class="month">{{entry.publication_date|date:"M"}}</span>
         <span class="day">{{entry.publication_date.day}}</span>
     </div>
-    {% if blog.enable_facebook or blog.enable_twitter or blog.email_account_link %}
-    <div class="social">
-    {% if blog.enable_facebook %}
-        <a href="#" class="facebook"><img src="" alt="Share on Facebook" /></a>
-    {% endif %}
-    {% if blog.enable_twitter%}
-        <a href="#" class="twitter"><img src="" alt="Share on Twitter" /></a>
-    {% endif %}
-    {% if blog.email_account_link%}
-        <a href="#" class="email"><img src="" alt="Share via Email" /></a>
-    {% endif %}
-    </div>
-    {% endif %}
+    {% include "cms_blogger/social_widgets.html" %}
 </div>
 <div class='right-col'>
-    <h1 id='entry-title'>{{entry.title}}</h1>
+    <h1 id='entry-title' class="main_color_text">{{entry.title}}</h1>
     <p class="subtitle">
-        Posted by <span class="author">{{entry.authors_display_name}}</span>
+        Posted by <a href="#" class="author">{{entry.author_display_name}}</a>
     </p>
     {% if entry.thumbnail_image %}
     <div class="entry-image"><img src='{{entry.thumbnail_image.url}}' /></div>

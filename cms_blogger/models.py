@@ -13,6 +13,7 @@ from django.template.loader import get_template
 from django.db.models import signals
 from django.dispatch import receiver
 from django.http import HttpResponseNotFound
+from django.conf import settings
 
 from cms.models.fields import PlaceholderField
 from cms.models import Page, Placeholder, CMSPlugin
@@ -380,12 +381,19 @@ class BlogEntryPage(
     def extra_html_before_content(self, request, context):
         if not self.blog:
             return ''
-        return get_template("cms_blogger/entry_top.html").render(context)
+        # wrap the whole blog post html into a box; box closed
+        #   in extra_html_after_content
+        start_tag = '<div class="blog-post clearfix box">'
+        template = get_template("cms_blogger/entry_top.html")
+        return "%s%s" % (start_tag, template.render(context))
 
     def extra_html_after_content(self, request, context):
         if not self.blog:
             return ''
-        return get_template("cms_blogger/entry_bottom.html").render(context)
+        # close the box opened in the extra_html_before_content
+        end_tag = '</div>'
+        template = get_template("cms_blogger/entry_bottom.html")
+        return "%s%s" % (template.render(context), end_tag)
 
     def get_title_obj(self):
         title = LayoutTitle()

@@ -1,5 +1,11 @@
 {% for entry in entries %}
+    {% if forloop.last %}
+    <div class="last">
     {% include 'cms_blogger/entry_summary.html'%}
+    </div>
+    {% else %}
+    {% include 'cms_blogger/entry_summary.html'%}
+    {% endif %}
 {% empty %}
 No posts available
 {% endfor %}

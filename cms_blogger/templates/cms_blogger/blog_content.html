@@ -1,5 +1,18 @@
 {% load digg_pagination %}
-
+<link rel="stylesheet" type="text/css" href="{{STATIC_URL}}cms_blogger/css/blogger.css">
+<script type="text/javascript" src="{{STATIC_URL}}cms_blogger/js/blog-targetting.js"></script>
+<script type="text/javascript">
+    (function(d, s, id) {
+        d.addEventListener("DOMContentLoaded", function() {
+            var js, fjs = d.getElementsByTagName(s)[0];
+            if (d.getElementById(id)) return;
+            js = d.createElement(s);
+            js.id = id;
+            js.src = "{{STATIC_URL}}cms_blogger/js/blogger-frontend.js";
+            d.body.appendChild(js);
+        });
+    }(document, 'script', 'blogger-scripts'));
+</script>
 {% include 'cms_blogger/entries_search.html' %}
 {% include 'cms_blogger/entries_list.html' %}
 {% paginator entries 2 %}
