@@ -317,10 +317,6 @@ class BlogEntryPage(
 
     def __init__(self, *args, **kwargs):
         super(BlogEntryPage, self).__init__(*args, **kwargs)
-        #if self.thumbnail_image.name:
-        #    self._old_thumbnail = (
-        #        self.thumbnail_image.storage, 
-        #        self.thumbnail_image.name)
 
     uses_layout_type = Blog.ENTRY_PAGE
 
@@ -334,7 +330,7 @@ class BlogEntryPage(
         help_text=_("Used to build the entry's URL."))
     modified_at = models.DateTimeField(auto_now=True, db_index=True)
 
-    thumbnail_image = models.ImageField(
+    poster_image = models.ImageField(
         _("Thumbnail Image"), upload_to=upload_entry_image, blank=True,
         storage=get_image_storage())
 
@@ -464,15 +460,15 @@ class BlogEntryPage(
         return "<Draft Empty Blog Entry>" if self.is_draft else self.title
 
     def delete(self, *args, **kwargs):
-        path = self.thumbnail_image.path
+        path = self.poster_image.path
         super(BlogEntryPage, self).delete(*args, **kwargs)
         get_image_storage.delete(path)
 
     def save(self, *args, **kwargs):
         super(BlogEntryPage, self).save(*args, **kwargs)
-        if hasattr(self, '_old_thumbnail'):
-            old_thumbnail_path = self._old_thumbnail
-            get_image_storage().delete(old_thumbnail_path)
+        if hasattr(self, '_old_poster_image'):
+            old_poster_image_path = self._old_poster_image
+            get_image_storage().delete(old_poster_image_path)
 
 
 

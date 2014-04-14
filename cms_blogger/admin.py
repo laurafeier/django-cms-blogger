@@ -280,8 +280,8 @@ class BlogAdmin(CustomAdmin):
 
             # if this blog is in BlogEntryPage.__init__ it will be called when
             # saving a blog and the current file gets deleted 
-            if blog_entry.thumbnail_image.name:
-                blog_entry._old_thumbnail = blog_entry.thumbnail_image.name
+            if blog_entry.poster_image.name:
+                blog_entry._old_poster_image = blog_entry.poster_image.name
 
         except BlogEntryPage.DoesNotExist:
             blog_entry = None
@@ -314,10 +314,10 @@ class BlogAdmin(CustomAdmin):
 
                     if guessed_extension:
                         filename = '%s.%s' % (filename, guessed_extension)
-                blog_entry.thumbnail_image.save(filename, upload)
+                blog_entry.poster_image.save(filename, upload)
                 json_response = {
-                    'label': unicode(blog_entry.thumbnail_image.name),
-                    'url': blog_entry.thumbnail_image.url,
+                    'label': unicode(blog_entry.poster_image.name),
+                    'url': blog_entry.poster_image.url,
                 }
                 return HttpResponse(simplejson.dumps(json_response),
                                         mimetype=mimetype)
@@ -338,9 +338,9 @@ class BlogAdmin(CustomAdmin):
         except BlogEntryPage.DoesNotExist:
             blog_entry = None
         if blog_entry:
-            if blog_entry.thumbnail_image and blog_entry.thumbnail_image.name:
-                blog_entry.thumbnail_image.delete()
-                #thumbnail = blog_entry.thumbnail_image
+            if blog_entry.poster_image and blog_entry.poster_image.name:
+                blog_entry.poster_image.delete()
+                #thumbnail = blog_entry.poster_image
                 #thumbnail.storage.delete(thumbnail.name)
                 #blog_entry.thumbnail.name = ""
                 #blog_entry.save() 

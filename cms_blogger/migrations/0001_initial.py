@@ -65,7 +65,7 @@ class Migration(SchemaMigration):
             ('slug', self.gf('django.db.models.fields.SlugField')(max_length=255)),
             ('publication_date', self.gf('django.db.models.fields.DateTimeField')(default=datetime.datetime.now, db_index=True)),
             ('modified_at', self.gf('django.db.models.fields.DateTimeField')(auto_now=True, db_index=True, blank=True)),
-            ('thumbnail_image', self.gf('django.db.models.fields.files.ImageField')(max_length=100, blank=True)),
+            ('poster_image', self.gf('django.db.models.fields.files.ImageField')(max_length=100, blank=True)),
             ('short_description', self.gf('django.db.models.fields.TextField')(max_length=400)),
             ('start_publication', self.gf('django.db.models.fields.DateTimeField')(db_index=True, null=True, blank=True)),
             ('end_publication', self.gf('django.db.models.fields.DateTimeField')(db_index=True, null=True, blank=True)),
@@ -184,7 +184,7 @@ class Migration(SchemaMigration):
         'cms.cmsplugin': {
             'Meta': {'object_name': 'CMSPlugin'},
             'changed_date': ('django.db.models.fields.DateTimeField', [], {'auto_now': 'True', 'blank': 'True'}),
-            'creation_date': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime(2014, 4, 11, 0, 0)'}),
+            'creation_date': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime(2014, 4, 14, 0, 0)'}),
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'language': ('django.db.models.fields.CharField', [], {'max_length': '15', 'db_index': 'True'}),
             'level': ('django.db.models.fields.PositiveIntegerField', [], {'db_index': 'True'}),
@@ -276,12 +276,12 @@ class Migration(SchemaMigration):
             'is_published': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
             'meta_keywords': ('django.db.models.fields.CharField', [], {'max_length': '120', 'blank': 'True'}),
             'modified_at': ('django.db.models.fields.DateTimeField', [], {'auto_now': 'True', 'db_index': 'True', 'blank': 'True'}),
+            'poster_image': ('django.db.models.fields.files.ImageField', [], {'max_length': '100', 'blank': 'True'}),
             'publication_date': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now', 'db_index': 'True'}),
             'seo_title': ('django.db.models.fields.CharField', [], {'max_length': '120', 'blank': 'True'}),
             'short_description': ('django.db.models.fields.TextField', [], {'max_length': '400'}),
             'slug': ('django.db.models.fields.SlugField', [], {'max_length': '255'}),
             'start_publication': ('django.db.models.fields.DateTimeField', [], {'db_index': 'True', 'null': 'True', 'blank': 'True'}),
-            'thumbnail_image': ('django.db.models.fields.files.ImageField', [], {'max_length': '100', 'blank': 'True'}),
             'title': ('django.db.models.fields.CharField', [], {'max_length': '120'})
         },
         'cms_blogger.blognavigationnode': {

@@ -36,7 +36,7 @@ class UploadButton(forms.widgets.CheckboxInput):
         return render_to_string(
             "admin/cms_blogger/blogentrypage/upload_button_js.html", 
             {
-                'id_upload_button': 'thumbnail_image_upload_button',
+                'id_upload_button': 'poster_image_upload_button',
                 'thumbnail_upload_url': 'admin:cms_blogger-upload-thumbnail', 
                 'blog_entry_id': self.blog_entry_id,
                 'image_url': self.image_url,
@@ -338,9 +338,9 @@ class BlogEntryPageChangeForm(forms.ModelForm):
         super(BlogEntryPageChangeForm, self).__init__(*args, **kwargs)
 
         self.fields['upload_button'].widget.blog_entry_id = instance.pk
-        if instance.thumbnail_image.name:
-            self.fields['upload_button'].widget.image_url = instance.thumbnail_image.url
-            self.fields['upload_button'].widget.image_label = instance.thumbnail_image.name
+        if instance.poster_image.name:
+            self.fields['upload_button'].widget.image_url = instance.poster_image.url
+            self.fields['upload_button'].widget.image_label = instance.poster_image.name
         else:
             self.fields['upload_button'].widget.image_url = None
             self.fields['upload_button'].widget.image_label = None
