@@ -404,10 +404,17 @@ class BlogEntryPageAdmin(CustomAdmin, PlaceholderAdmin):
         (None, {
             'fields': ['title', 'authors', 'short_description', ],
         }),
+
         (None, {
             'fields': ['upload_button', ],
             'classes': ('poster-image',)
         }),
+
+        (None, {
+            'fields': ['caption', 'credit'],
+            'classes': ('poster-image-description',)
+        }),
+
         (None, {
             'fields': ['preview_on_top', 'body', 'preview_on_bottom'],
             'classes': ('no-border', 'body-wrapper')

@@ -1,61 +1,73 @@
 {% load i18n admin_modify adminmedia filermedia filters %}
 {% load url from future %}
 
-<div style="text-align: right; float:left; width: 272px; font-family: Lucida Grande, Lucida Sans, Arial, sans-serif; margin-right: 10px">
-    <div style="margin-top:15px; font-size: 16px">Poster Image</div>
-    <div style="margin-top:15px; font-style: italic;"> Image must be 16:9 aspect </div>
-    <div style="font-style: italic;"> ratio and at least 640px wide.</div>
+<div>
+    <div style="text-align: right; float:left; width: 272px; font-family: Lucida Grande, Lucida Sans, Arial, sans-serif; margin-right: 20px; margin-bottom: 30px;">
+        <div style="margin-top:15px; font-size: 18px">Poster Image</div>
+        <div style="margin-top:15px; font-style: italic;"> Image must be 16:9 aspect </div>
+        <div style="font-style: italic;"> ratio and at least 640px wide.</div>
 
+        <div id="upload-button" class="poster-image-button" title="{% trans 'upload files' %}"> {% trans 'Upload' %}</div>
+        <div id="delete-button" class="poster-image-button"> {% trans 'Remove' %}</div>
 
-    <div id="upload-button" title="{% trans 'upload files' %}" style="cursor: pointer;">{% trans 'Upload' %}</div>
+        <span id="optionalk"> Credit/Caption </span>
+    </div>
 
-
-</div>
-
-<div id="fileInputQueue">
-    {% if image_url %}
-            <tr id="fileUpload" class="clipboardItem fileUploadQueueItem">
-                <td class="thumbnail">
+    <div id="fileInputQueue" style="float:left;">
+        {% if image_url %}
+            <div id="fileUpload" class="clipboardItem fileUploadQueueItem">
+                <div>
                     <a href="{{ image_url }}" target="_blank">
-                        <img style="width: 230px;" src="{{ image_url }}" /></td>
+                        <img style="width: 340px;" src="{{ image_url }}" />
                     </a>
+                </div>
                 <!--td class="label"> {{ image_label }} </td-->
-            </tr>
-
-            <!--tr id="delete_image">
-                <td class="deletelink-box"><div style="cursor: pointer;" class="deletelink" >Delete</div></td>
-            </tr-->
-
-        <script>
-           $('#delete_image .deletelink').click(function(){
-                var answer = confirm("Are you sure you want to remove image?");
-                if(answer)
-                {
-                    /*
-                    $('<form action="{% url 'admin:cms_blogger-delete-thumbnail' blog_entry_id=blog_entry_id %}"></form>').appendTo('body').submit();
-                    */
-                    $.ajax({
-                        url: "{% url 'admin:cms_blogger-delete-thumbnail' blog_entry_id=blog_entry_id %}",
-                        type: 'post',
-                        /*dataType: 'json',*/
-                        data: '',
-                        success: function(data)
-                        {
-                            $('#fileUpload').html('Image deleted succesfully.');
-                            $('#delete_image').html('');
-                        }
-                    });
-                    return false;
-                }
-            });
-        </script>
-    {% endif %}
-    <span style="font-style: italic; margin-top: 10px; display: block;">
-        Image thumbnail displayed after upload.
-    </span>
+            </div>
+        {% endif %}
+        <span style="font-style: italic; margin-top: 10px; display: block;">
+            Image thumbnail displayed after upload.
+        </span>
+    </div>
+</div>
+<div style="clear: both; background-color: #EFEFEF;" id="poster-image-description">
 </div>
 
 <script type="text/javascript">
+    $(document).ready(function(){
+        toggleState= true;
+        $("#optionalk").click(function(){
+            if(toggleState)
+            {
+                $(".field-caption").hide().appendTo('#poster-image-description').fadeIn();
+                $(".field-credit").hide().appendTo('#poster-image-description').fadeIn();
+            }
+            else
+            {
+                $(".field-caption").fadeOut();
+                $(".field-credit").fadeOut();
+            }
+            toggleState = !toggleState;
+        });
+
+        $('#delete-button').click(function(){
+            var answer = confirm("Are you sure you want to remove image?");
+            if(answer)
+            {
+                $.ajax({
+                    url: "{% url 'admin:cms_blogger-delete-thumbnail' blog_entry_id=blog_entry_id %}",
+                    type: 'post',
+                    data: '',
+                    success: function(data)
+                    {
+                        $('#fileUpload').html('Image deleted successfully.');
+                        $('#delete_image').html('');
+                    }
+                });
+                return false;
+            }
+        });    
+    });
+
 //<![CDATA[
 $(function() {
     var uploader = new qq.FileUploaderBasic({
@@ -64,11 +76,11 @@ $(function() {
         multiple: false,
         onSubmit: function(id, fileName){
             $('#fileInputQueue').html('\
-                <tr id="fileUpload" class="clipboardItem fileUploadQueueItem">\
-                    <td class="thumbnail">\
+                <div id="fileUpload" class="clipboardItem fileUploadQueueItem">\
+                    <div class="thumbnail">\
                         <div class="loadingThumb" />\
-                    </td>\
-                    <td class="label">\
+                    </div>\
+                    <div class="label">\
                         <div>\
                             <span class="fileName">' + fileName + ' (<span class="size">?</span>)</span> [<span class="percentage">&nbsp;</span>]\
                         </div>\
@@ -76,10 +88,10 @@ $(function() {
                             <div id="fileUpload-ProgressBar" class="fileUploadProgressBar" style="width: 1px; height: 3px;">\
                             </div>\
                         </div>\
-                    </td>\
-                </tr>\
-                <tr id="delete_image">\
-                </tr>');
+                    </div>\
+                </div>\
+                <div id="delete_image">\
+                </div>');
         },
         onProgress: function(id, fileName, loaded, total){
             var percent = Math.round(loaded / total * 100);
@@ -100,32 +112,10 @@ $(function() {
                 var html = '\
                     <td class="thumbnail">\
                         <a href="' + file.url + '" target="_blank">\
-                            <img style="width: 230px;" src="' + file.url + '" /></td>\
+                            <img style="width: 340px;" src="' + file.url + '" /></td>\
                         </a>\
                     <!--td class="label">' + file.label + '</td-->';
                 $('#fileUpload').html(html);
-                //$('#delete_image').html('<td class="deletelink-box"><div style="cursor: pointer;" class="deletelink" >Delete</div></td>');
-                $('#delete_image .deletelink').click(function(){
-                    var answer = confirm("Are you sure you want to remove image?");
-                    if(answer)
-                    {
-                        /*
-                        $('<form action="{% url 'admin:cms_blogger-delete-thumbnail' blog_entry_id=blog_entry_id %}"></form>').appendTo('body').submit();
-                        */
-                        $.ajax({
-                            url: "{% url 'admin:cms_blogger-delete-thumbnail' blog_entry_id=blog_entry_id %}",
-                            type: 'post',
-                            /*dataType: 'json',*/
-                            data: '',
-                            success: function(data)
-                            {
-                                $('#fileUpload').html('Image deleted succesfully.');
-                                $('#delete_image').html('');
-                            }
-                        });
-                        return false;
-                    }
-                });
             }
         },
         onCancel: function(id, fileName){
@@ -135,4 +125,6 @@ $(function() {
         allowedExtensions: {{ image_types|jsonify }},
     });
 });
+
 </script>
+

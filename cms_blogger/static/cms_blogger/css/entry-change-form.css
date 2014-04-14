@@ -18,20 +18,48 @@ div.right-col{
 .poster-image
 {
     background-color: #F6F6F6;
-    width: 686px;
+}
+
+.poster-image-description
+{
+    display:none;
+}
+
+.deletelink
+{
+    margin-left:auto;
+    margin-top: 10px;
+    margin-right:60px;
 }
 
 #upload-button
 {
+    background-color: #CD3E2D;
+}
+#delete-button
+{
+    background-color: #575757;
+}
+.poster-image-button
+{
     cursor: pointer;
     color: white;
     display: block;
-    background-color: #575757;
     padding: 10px 30px;
     border-radius: 3px;
     font-size: 14px;
-    float: right;
     margin-top: 20px;
+    margin-left:auto; 
+    margin-right:0;
+    width: 50px;
+}
+
+#optionalk
+{    
+    cursor: pointer;
+    margin-top: 10px;
+    font-size: 16px;
+    color: #417690;
 }
 
 div.submit-row {
@@ -193,4 +221,9 @@ fieldset.body-wrapper{
 
 #id_body_tbl{
     height: auto !important;
+}
+
+#poster-image-description
+{
+    margin: 0;     
 }
