@@ -318,6 +318,7 @@ class BlogEntryPageChangeForm(forms.ModelForm):
     class Media:
         css = {"all": ("cms_blogger/css/entry-change-form.css", )}
         js = ('cms_blogger/js/tinymce-extend.js',
+              'cms_blogger/js/admin-collapse.js',
               'cms_blogger/js/entry-preview.js', )
 
     class Meta:

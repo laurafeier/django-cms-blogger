@@ -321,8 +321,16 @@ class BlogEntryPageAdmin(CustomAdmin, PlaceholderAdmin):
             'classes': ('right-col', )
         }),
         ('Schedule Publish', {
-            'fields': ['start_publication', 'end_publication'],
-            'classes': ('right-col', 'collapsible-inner')
+            'fields': ['start_publication',],
+            'description': _('Schedule Start Date description'),
+            'classes': ('right-col', 'collapsible-inner', 'hide-label',
+                        'closed')
+        }),
+        ('Schedule Unpublish', {
+            'fields': ['end_publication',],
+            'description': _('Schedule End Date description'),
+            'classes': ('right-col', 'collapsible-inner', 'hide-label',
+                        'closed')
         }),
         (None, {
             'fields': ['categories', ],
