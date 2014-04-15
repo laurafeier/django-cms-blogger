@@ -1,7 +1,7 @@
 @import "imports/entry_change_form/globals";
 
 @mixin overides(){
-    fieldset{
+        fieldset{
             width: 100%;
         }
 
@@ -151,6 +151,18 @@
 
         #id_body_tbl{
             height: auto !important;
+        }
+
+        .hide-label label{
+            display: none;
+        }
+
+        .collapsible-inner h2{
+            background: none;
+            color: inherit;
+        }
+        .collapsible-inner {
+            border: none;
         }
 }
 

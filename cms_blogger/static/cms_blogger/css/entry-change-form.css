@@ -147,3 +147,16 @@
 .cms_blogger-blogentrypage #id_body_tbl {
   height: auto !important;
 }
+/* line 156, ../sass/imports/entry_change_form/_layout.scss */
+.cms_blogger-blogentrypage .hide-label label {
+  display: none;
+}
+/* line 160, ../sass/imports/entry_change_form/_layout.scss */
+.cms_blogger-blogentrypage .collapsible-inner h2 {
+  background: none;
+  color: inherit;
+}
+/* line 164, ../sass/imports/entry_change_form/_layout.scss */
+.cms_blogger-blogentrypage .collapsible-inner {
+  border: none;
+}
