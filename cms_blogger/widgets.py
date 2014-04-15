@@ -106,8 +106,10 @@ class ButtonWidget(forms.widgets.CheckboxInput):
     def render(self, name, value, attrs=None):
         text = self.text or name.capitalize()
         return mark_safe(
-            u"%s<a href='%s' id='id_%s'>%s</a>%s" % (
-                self.hide_label % name, self.link_url, name, text,
+            u"%s<a %s href='%s' id='id_%s'>%s</a>%s" % (
+                self.hide_label % name,
+                forms.util.flatatt(self.build_attrs(attrs)),
+                self.link_url, name, text,
                 self.make_js_button % (name, self._render_js_on_click(), )))
 
     def value_from_datadict(self, data, files, name):

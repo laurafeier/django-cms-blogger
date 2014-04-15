@@ -306,6 +306,21 @@ class BlogEntryPageChangeForm(forms.ModelForm):
                     "'name', '_pub_pressed').val(true)"
                   ");")))
 
+    schedule_publish = ButtonField(widget=ButtonWidget(
+        attrs={'style': 'float: right'},
+        submit=True, text='Schedule Publish',
+        on_click=("jQuery(this).closest('form').append("
+                  "jQuery('<input>').attr('type', 'hidden').attr("
+                    "'name', '_schedule_pub_pressed').val(true)"
+                  ");")))
+    schedule_unpublish = ButtonField(widget=ButtonWidget(
+        attrs={'style': 'float: right'},
+        submit=True, text='Schedule Unpublish',
+        on_click=("jQuery(this).closest('form').append("
+                  "jQuery('<input>').attr('type', 'hidden').attr("
+                    "'name', '_schedule_unpub_pressed').val(true)"
+                  ");")))
+
     start_publication = forms.Field(
         required=False, widget=DateTimeWidget())
     end_publication = forms.Field(
@@ -328,33 +343,38 @@ class BlogEntryPageChangeForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         request = kwargs.pop('request', None)
         instance = kwargs.get('instance')
-        categories_field = self.base_fields.get('categories')
-        if categories_field and instance and instance.blog:
-            categories_field.queryset = instance.blog.categories.all()
-            categories_field.initial = instance.categories.all()
+        self._init_categ_field(instance) if instance else ''
         super(BlogEntryPageChangeForm, self).__init__(*args, **kwargs)
-
-        if self.instance:
-            preview1 = self.fields['preview_on_top'].widget
-            preview2 = self.fields['preview_on_bottom'].widget
-            url = reverse('admin:cms_blogger-entry-preview',
-                args=[self.instance.id])
-            preview1.link_url = preview2.link_url = url
-            popup_js = "return showEntryPreviewPopup(this);"
-            preview1.on_click = preview2.on_click = popup_js
-
-            if instance.authors.count() == 0 and request:
-                self.initial['authors'] = [request.user.pk]
-
-        pub_button = self.fields['publish'].widget
-        if self.instance and self.instance.is_published:
-            pub_button.text = 'Unpublish'
-        else:
-            pub_button.text = 'Publish Now'
+        self._init_preview_buttons()
+        self._init_publish_button()
+        if request and self.instance.authors.count() == 0:
+            self.initial['authors'] = [request.user.pk]
 
         self.fields['body'].initial = self.instance.content_body
         # prepare for save
         self.instance.draft_id = None
+
+    def _init_categ_field(self, entry):
+        categories_field = self.base_fields.get('categories')
+        if categories_field and entry.blog:
+            categories_field.queryset = entry.blog.categories.all()
+            categories_field.initial = entry.categories.all()
+
+    def _init_publish_button(self):
+        pub_button = self.fields['publish'].widget
+        if self.instance.is_published:
+            pub_button.text = 'Unpublish'
+        else:
+            pub_button.text = 'Publish Now'
+
+    def _init_preview_buttons(self):
+        preview1 = self.fields['preview_on_top'].widget
+        preview2 = self.fields['preview_on_bottom'].widget
+        url = reverse('admin:cms_blogger-entry-preview',
+            args=[self.instance.id])
+        preview1.link_url = preview2.link_url = url
+        popup_js = "return showEntryPreviewPopup(this);"
+        preview1.on_click = preview2.on_click = popup_js
 
     def clean_body(self):
         body = self.cleaned_data.get('body')
@@ -381,6 +401,9 @@ class BlogEntryPageChangeForm(forms.ModelForm):
         publish_toggle = bool(self.data.get('_pub_pressed'))
         if publish_toggle:
             self.instance.is_published = not self.instance.is_published
+        elif (bool(self.data.get('_schedule_pub_pressed')) or
+                bool(self.data.get('_schedule_unpub_pressed'))):
+            self.instance.is_published = True
 
         now = timezone.now()
         if not self.instance.is_published:
