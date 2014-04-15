@@ -6,6 +6,7 @@ from django.template import Library
 
 register = Library()
 
+
 @register.filter(name="jsonify")
 def jsonify(object):
     if isinstance(object, QuerySet):

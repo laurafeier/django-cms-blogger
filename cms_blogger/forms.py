@@ -24,8 +24,8 @@ from .utils import user_display_name
 from django.utils.safestring import mark_safe
 from django.template.loader import render_to_string
 from os.path import split
-from .settings import MAXIMUM_THUMBNAIL_FILE_SIZE, ALLOWED_THUMBNAIL_IMAGE_TYPES
-
+from .settings import (MAXIMUM_THUMBNAIL_FILE_SIZE,
+                       ALLOWED_THUMBNAIL_IMAGE_TYPES)
 
 
 class UploadButton(forms.widgets.CheckboxInput):
@@ -154,7 +154,8 @@ class MultipleUserField(AutoModelSelect2MultipleField):
 class BlogForm(forms.ModelForm):
     categories = forms.CharField(
         widget=TagItWidget(attrs={
-            'tagit': '{allowSpaces: true, tagLimit: 20, caseSensitive: false}'}),
+            'tagit': '{allowSpaces: true, tagLimit: 20, '
+                     'caseSensitive: false}'}),
         help_text=_('Categories help text'))
 
     allowed_users = MultipleUserField(label="Add Users")
@@ -438,4 +439,3 @@ class BlogEntryPageChangeForm(forms.ModelForm):
             raise ValidationError("Incorrect publication dates interval.")
         self._set_publication_date()
         return self.cleaned_data
-

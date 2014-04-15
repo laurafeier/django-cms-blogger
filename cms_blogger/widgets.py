@@ -4,7 +4,6 @@ from django.contrib.admin.templatetags.admin_static import static
 from dateutil import tz, parser
 
 
-
 class ToggleWidget(forms.widgets.CheckboxInput):
 
     class Media:

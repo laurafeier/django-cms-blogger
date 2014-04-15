@@ -137,6 +137,7 @@ def get_size_of_uploaded_file(request):
         return len(request.raw_post_data)
     return -1
 
+
 class BlogAdmin(CustomAdmin):
     custom_changelist_class = BlogChangeList
     inlines = [BlogLayoutInline, ]
@@ -189,7 +190,7 @@ class BlogAdmin(CustomAdmin):
     prepopulated_fields = {"slug": ("title",)}
 
     def _get_nodes(self, request, nodes, node_id, output):
-       for node in nodes:
+        for node in nodes:
             if node.id == node_id:
                 output.append('<li class="current-node">')
             else:
@@ -267,11 +268,11 @@ class BlogAdmin(CustomAdmin):
                 name='cms_blogger-navigation-tool'),
 
             url(r'^(?P<blog_entry_id>\d+)/upload_file/$',
-                self.admin_site.admin_view(self.upload_thumbnail), #what is this
+                self.admin_site.admin_view(self.upload_thumbnail),
                 name='cms_blogger-upload-thumbnail'),
 
             url(r'^(?P<blog_entry_id>\d+)/delete_file/$',
-                self.admin_site.admin_view(self.delete_thumbnail), #what is this
+                self.admin_site.admin_view(self.delete_thumbnail),
                 name='cms_blogger-delete-thumbnail'),
         )
         url_patterns.extend(urls)
@@ -300,46 +301,54 @@ class BlogAdmin(CustomAdmin):
 
                 width, height = get_image_dimensions(upload)
                 if width < MINIMUM_POSTER_IMAGE_WIDTH:
-                    raise UploadException("Image width should be larger than {0}px".format(MINIMUM_POSTER_IMAGE_WIDTH))
+                    raise UploadException(
+                        "Image width should be larger than {0}px".format(
+                            MINIMUM_POSTER_IMAGE_WIDTH))
 
-                delta = width/float(height) - POSTER_IMAGE_ASPECT_RATIO
+                delta = width / float(height) - POSTER_IMAGE_ASPECT_RATIO
                 if fabs(delta) > POSTER_IMAGE_ASPECT_RATIO_ERROR:
-                    horizontal_text, vertical_text= "", ""
-                    if delta<0:
+                    horizontal_text, vertical_text = "", ""
+                    if delta < 0:
                         horizontal_text = "wider"
                         vertical_text = "shorter"
                     else:
                         horizontal_text = "narrower"
                         vertical_text = "taller"
 
-                    horizontal_px = abs(int(round(height * POSTER_IMAGE_ASPECT_RATIO)) - width)
-                    vertical_px   = abs(int(round(width / POSTER_IMAGE_ASPECT_RATIO)) - height)
+                    horizontal_px = abs(int(
+                        round(height * POSTER_IMAGE_ASPECT_RATIO) - width))
+                    vertical_px = abs(int(
+                        round(width / POSTER_IMAGE_ASPECT_RATIO) - height))
 
                     raise UploadException(
                         "Image doesn't have a 16:9 aspect ratio. "
                         "It should be {0}px {1} or {2}px {3}".format(
-                            horizontal_px, horizontal_text, vertical_px, vertical_text))
+                            horizontal_px, horizontal_text,
+                            vertical_px, vertical_text))
 
-                if 'CONTENT_LENGTH' in request.META and len(upload) != int(request.META.get('CONTENT_LENGTH')):
-                    raise UploadException("File not uploaded completely. Only %d bytes uploaded" % len(upload))
+                if ('CONTENT_LENGTH' in request.META and
+                    len(upload) != int(request.META.get('CONTENT_LENGTH'))):
 
-                guessed_extension = imghdr.what(upload) or ""
+                    raise UploadException(
+                        "File not uploaded completely. "
+                        "Only {0} bytes uploaded".format(upload))
 
+                guessed_extension = imghdr.what(upload).lower() or ""
 
-                if guessed_extension.lower() not in map(str.lower, ALLOWED_THUMBNAIL_IMAGE_TYPES):
+                if guessed_extension not in ALLOWED_THUMBNAIL_IMAGE_TYPES:
                     if not guessed_extension:
                         displayed_extension = "Unknown"
                     else:
-                        displayed_extension = guessed_extension.upper()
+                        displayed_extension = guessed_extension
                     raise UploadException(
                         displayed_extension + " file type not allowed."
                         " Please upload one of the following file types: " +
-                        ", ".join(map(str.upper, ALLOWED_THUMBNAIL_IMAGE_TYPES)))
+                        ", ".join(ALLOWED_THUMBNAIL_IMAGE_TYPES))
 
                 extension = os_path.splitext(filename)[1]
                 if not extension:
                     # try to guess if it's an image and append extension
-                    # imghdr will detect file is a '.jpeg', '.png' or '.gif' image
+                    # imghdr will detect file is a '.jpeg', '.png' ...
 
                     if guessed_extension:
                         filename = '%s.%s' % (filename, guessed_extension)
@@ -356,9 +365,7 @@ class BlogAdmin(CustomAdmin):
             #finally:
             #    pass
                 #if upload:
-                #    upload.close()
-
-
+                #    upload.close() #memory leak if not closed?
 
     @csrf_exempt
     def delete_thumbnail(self, request, blog_entry_id=None):
@@ -412,7 +419,7 @@ class BlogAdmin(CustomAdmin):
         })
 
         if blog.navigation_node:
-            context.update({'initial_blog_node': blog.navigation_node,})
+            context.update({'initial_blog_node': blog.navigation_node, })
         return render_to_response(
             'admin/cms_blogger/blog/navigation.html', context)
 
@@ -485,7 +492,7 @@ class BlogEntryPageAdmin(CustomAdmin, PlaceholderAdmin):
             if js in django_jquery_urls:
                 new_media.add_js((new_jquery_version, ))
             elif js in django_collapse_js:
-                new_media.add_js((static('cms_blogger/js/admin-collapse.js'), ))
+                new_media.add_js(static('cms_blogger/js/admin-collapse.js'), )
             elif js == static('admin/js/jquery.init.js'):
                 new_media.add_js((js, jquery_namspace))
             elif js.startswith(static('cms/js/libs/jquery.ui.')):

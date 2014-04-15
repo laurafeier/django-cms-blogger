@@ -324,7 +324,8 @@ def upload_entry_image(instance, filename):
 
     return new_base_trimmed + new_ext
 
-def get_image_storage(): #TODO cache this
+
+def get_image_storage():  # TODO cache this
     if USE_FILER_STORAGE:
         from filer.settings import FILER_PUBLICMEDIA_STORAGE
         return FILER_PUBLICMEDIA_STORAGE
@@ -449,7 +450,7 @@ class BlogEntryPage(
                 "<h1>This Entry does not have a layout to render.</h1>")
         from django.template.context import RequestContext
         context = RequestContext(request)
-        context.update({'entry': self, 'blog': self.blog,})
+        context.update({'entry': self, 'blog': self.blog, })
         return LayoutResponse(
             self, layout, request, context=context).make_response()
 

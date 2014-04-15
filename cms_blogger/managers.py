@@ -57,5 +57,3 @@ class EntriesManager(models.Manager):
 
     def unpublished(self):
         return self.get_query_set().unpublished()
-
-
