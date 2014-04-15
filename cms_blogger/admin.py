@@ -135,7 +135,7 @@ class CustomAdmin(admin.ModelAdmin):
 def get_size_of_uploaded_file(request):
     if request.is_ajax() and hasattr(request, 'raw_post_data'):
         return len(request.raw_post_data)
-    return -1 
+    return -1
 
 class BlogAdmin(CustomAdmin):
     custom_changelist_class = BlogChangeList
@@ -284,7 +284,7 @@ class BlogAdmin(CustomAdmin):
             blog_entry = BlogEntryPage.objects.get(id=blog_entry_id)
 
             # if this blog is in BlogEntryPage.__init__ it will be called when
-            # saving a blog and the current file gets deleted 
+            # saving a blog and the current file gets deleted
             if blog_entry.poster_image.name:
                 blog_entry._old_poster_image = blog_entry.poster_image.name
 
@@ -305,7 +305,7 @@ class BlogAdmin(CustomAdmin):
                 delta = width/float(height) - POSTER_IMAGE_ASPECT_RATIO
                 if fabs(delta) > POSTER_IMAGE_ASPECT_RATIO_ERROR:
                     horizontal_text, vertical_text= "", ""
-                    if delta<0: 
+                    if delta<0:
                         horizontal_text = "wider"
                         vertical_text = "shorter"
                     else:
@@ -317,15 +317,15 @@ class BlogAdmin(CustomAdmin):
 
                     raise UploadException(
                         "Image doesn't have a 16:9 aspect ratio. "
-                        "It should be {0}px {1} or {2}px {3}".format( 
+                        "It should be {0}px {1} or {2}px {3}".format(
                             horizontal_px, horizontal_text, vertical_px, vertical_text))
 
-                if 'CONTENT_LENGTH' in request.META and len(upload) != int(request.META.get('CONTENT_LENGTH')): 
+                if 'CONTENT_LENGTH' in request.META and len(upload) != int(request.META.get('CONTENT_LENGTH')):
                     raise UploadException("File not uploaded completely. Only %d bytes uploaded" % len(upload))
-                
+
                 guessed_extension = imghdr.what(upload) or ""
-    
-                 
+
+
                 if guessed_extension.lower() not in map(str.lower, ALLOWED_THUMBNAIL_IMAGE_TYPES):
                     if not guessed_extension:
                         displayed_extension = "Unknown"
@@ -335,7 +335,7 @@ class BlogAdmin(CustomAdmin):
                         displayed_extension + " file type not allowed."
                         " Please upload one of the following file types: " +
                         ", ".join(map(str.upper, ALLOWED_THUMBNAIL_IMAGE_TYPES)))
-                
+
                 extension = os_path.splitext(filename)[1]
                 if not extension:
                     # try to guess if it's an image and append extension
@@ -358,7 +358,7 @@ class BlogAdmin(CustomAdmin):
                 #if upload:
                 #    upload.close()
 
-    
+
 
     @csrf_exempt
     def delete_thumbnail(self, request, blog_entry_id=None):
@@ -372,11 +372,11 @@ class BlogAdmin(CustomAdmin):
                 #thumbnail = blog_entry.poster_image
                 #thumbnail.storage.delete(thumbnail.name)
                 #blog_entry.thumbnail.name = ""
-                #blog_entry.save() 
+                #blog_entry.save()
                 return HttpResponse("OK")
             return HttpResponse("No file to delete")
-        return HttpResponse("BlogEntry does not exist") 
-     
+        return HttpResponse("BlogEntry does not exist")
+
     def navigation_tool(self, request, blog_id):
         if (request.method not in ['GET', 'POST'] or
                 not "_popup" in request.REQUEST):

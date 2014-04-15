@@ -34,13 +34,13 @@ class UploadButton(forms.widgets.CheckboxInput):
 
     def render(self, name, value, attrs=None):
         return render_to_string(
-            "admin/cms_blogger/blogentrypage/upload_button_js.html", 
+            "admin/cms_blogger/blogentrypage/upload_button_js.html",
             {
-                'thumbnail_upload_url': 'admin:cms_blogger-upload-thumbnail', 
+                'thumbnail_upload_url': 'admin:cms_blogger-upload-thumbnail',
                 'blog_entry_id': self.blog_entry_id,
                 'image_url': self.image_url,
                 'image_label': self.image_label,
-                'size_limit': MAXIMUM_THUMBNAIL_FILE_SIZE, 
+                'size_limit': MAXIMUM_THUMBNAIL_FILE_SIZE,
                 'image_types': ALLOWED_THUMBNAIL_IMAGE_TYPES,
             }
         )
@@ -347,7 +347,7 @@ class BlogEntryPageChangeForm(forms.ModelForm):
     class Media:
         css = {"all": ("cms_blogger/css/entry-change-form.css", )}
         js = ('cms_blogger/js/tinymce-extend.js',
-              'cms_blogger/js/entry-preview.js', 
+              'cms_blogger/js/entry-preview.js',
               'cms_blogger/js/fileuploader.js',)
 
     class Meta:

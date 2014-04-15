@@ -32,13 +32,13 @@
     border-radius: 3px;
     font-size: 14px;
     margin-top: 10px;
-    margin-left:auto; 
+    margin-left:auto;
     margin-right:0;
     width: 50px;
 }
 
 #optionalk
-{    
+{
     margin-top: 30px;
     display: block;
     cursor: pointer;
@@ -48,7 +48,7 @@
 
 #poster-image-description
 {
-    margin: 0;     
+    margin: 0;
 }
 
 /* line 4, ../sass/imports/entry_change_form/_layout.scss */
