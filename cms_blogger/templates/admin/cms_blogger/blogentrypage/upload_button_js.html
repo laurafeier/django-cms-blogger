@@ -2,7 +2,7 @@
 {% load url from future %}
 
 <div>
-    <div style="text-align: right; float:left; width: 272px; font-family: Lucida Grande, Lucida Sans, Arial, sans-serif; margin-right: 20px; margin-bottom: 30px;">
+    <div style="text-align: right; float:left; width: 272px; font-family: Lucida Grande, Lucida Sans, Arial, sans-serif; margin-right: 20px; ">
         <div style="margin-top:15px; font-size: 18px">Poster Image</div>
         <div style="margin-top:15px; font-style: italic;"> Image must be 16:9 aspect </div>
         <div style="font-style: italic;"> ratio and at least 640px wide.</div>
@@ -35,16 +35,21 @@
 <script type="text/javascript">
     $(document).ready(function(){
         toggleState= true;
+        addFields = true;
         $("#optionalk").click(function(){
             if(toggleState)
             {
-                $(".field-caption").hide().appendTo('#poster-image-description').fadeIn();
-                $(".field-credit").hide().appendTo('#poster-image-description').fadeIn();
+                $("#poster-image-description").animate({height: "80"}, 300);
+                if(addFields) 
+                {
+                    $(".field-caption").appendTo('#poster-image-description');
+                    $(".field-credit").appendTo('#poster-image-description');
+                    addFields = false;
+                }
             }
             else
             {
-                $(".field-caption").fadeOut();
-                $(".field-credit").fadeOut();
+                $("#poster-image-description").animate({height: "0"}, 300);
             }
             toggleState = !toggleState;
         });

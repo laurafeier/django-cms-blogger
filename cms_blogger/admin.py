@@ -38,6 +38,11 @@ from django.views.decorators.csrf import csrf_exempt
 from os import path as os_path
 from django.utils import simplejson
 from .settings import ALLOWED_THUMBNAIL_IMAGE_TYPES
+from django.core.files.images import get_image_dimensions
+from math import fabs
+from .settings import (MINIMUM_POSTER_IMAGE_WIDTH,
+                       POSTER_IMAGE_ASPECT_RATIO,
+                       POSTER_IMAGE_ASPECT_RATIO_ERROR)
 
 
 class BlogLayoutInline(GenericTabularInline):
@@ -292,11 +297,35 @@ class BlogAdmin(CustomAdmin):
             try:
 
                 upload, filename, _ = handle_upload(request)
+
+                width, height = get_image_dimensions(upload)
+                if width < MINIMUM_POSTER_IMAGE_WIDTH:
+                    raise UploadException("Image width should be larger than {0}px".format(MINIMUM_POSTER_IMAGE_WIDTH))
+
+                delta = width/float(height) - POSTER_IMAGE_ASPECT_RATIO
+                if fabs(delta) > POSTER_IMAGE_ASPECT_RATIO_ERROR:
+                    horizontal_text, vertical_text= "", ""
+                    if delta<0: 
+                        horizontal_text = "wider"
+                        vertical_text = "shorter"
+                    else:
+                        horizontal_text = "narrower"
+                        vertical_text = "taller"
+
+                    horizontal_px = abs(int(round(height * POSTER_IMAGE_ASPECT_RATIO)) - width)
+                    vertical_px   = abs(int(round(width / POSTER_IMAGE_ASPECT_RATIO)) - height)
+
+                    raise UploadException(
+                        "Image doesn't have a 16:9 aspect ratio. "
+                        "It should be {0}px {1} or {2}px {3}".format( 
+                            horizontal_px, horizontal_text, vertical_px, vertical_text))
+
                 if 'CONTENT_LENGTH' in request.META and len(upload) != int(request.META.get('CONTENT_LENGTH')): 
                     raise UploadException("File not uploaded completely. Only %d bytes uploaded" % len(upload))
-                 
+                
                 guessed_extension = imghdr.what(upload) or ""
-
+    
+                 
                 if guessed_extension.lower() not in map(str.lower, ALLOWED_THUMBNAIL_IMAGE_TYPES):
                     if not guessed_extension:
                         displayed_extension = "Unknown"
