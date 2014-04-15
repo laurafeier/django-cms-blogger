@@ -13,6 +13,7 @@ from django.template.loader import get_template
 from django.db.models import signals
 from django.dispatch import receiver
 from django.http import HttpResponseNotFound
+from django.conf import settings
 
 from cms.models.fields import PlaceholderField
 from cms.models import Page, Placeholder, CMSPlugin
@@ -84,6 +85,34 @@ def getCMSContentModel(**kwargs):
     return ModelWithCMSContent
 
 
+def contribute_with_title(cls):
+    # required in order to make sure page_attribute templatetag will fetch
+    #   these attributes from the title object
+    # this decorator requires the definition of get_title_obj method
+    #   that will return an instance on LayoutTitle
+    valid_title_attributes = [
+        "title", "slug", "meta_description", "meta_keywords", "page_title",
+        "menu_title"]
+
+    for attr in valid_title_attributes:
+        def get_title_obj_attribute(obj, *args, **kwargs):
+            return getattr(obj.get_title_obj(), attr, '')
+
+        cls.add_to_class('get_%s' % attr, get_title_obj_attribute)
+    return cls
+
+
+def blog_page(cls):
+    # adds a blog foreign key(with a related name if specified) to a model
+    # blog foreign key is required by all blog related pages.
+    blog = models.ForeignKey(
+        Blog, related_name=getattr(cls, 'blog_related_name', None))
+    cls.add_to_class('blog', blog)
+    cls = contribute_with_title(cls)
+    return cls
+
+
+@contribute_with_title
 class AbstractBlog(models.Model):
 
     title = models.CharField(
@@ -129,7 +158,7 @@ class AbstractBlog(models.Model):
 
     def get_title_obj(self):
         title = LayoutTitle()
-        title.page_title = self.title
+        title.page_title = title.title = self.title
         title.slug = self.slug
         return title
 
@@ -227,15 +256,6 @@ class Blog(AbstractBlog):
         return self.get_layout_for(Blog.LANDING_PAGE)
 
 
-def withBlogField(cls):
-    # adds a blog foreign key(with a related name if specified) to a model
-    # blog foreign key is required by all blog related pages.
-    blog = models.ForeignKey(
-        Blog, related_name=getattr(cls, 'blog_related_name', None))
-    cls.add_to_class('blog', blog)
-    return cls
-
-
 class BlogRelatedPage(object):
     # any blog related pages needs to have a layout, a content and a header
     #   that can be rendered by the layout
@@ -264,7 +284,7 @@ class BlogRelatedPage(object):
     #    super(BlogRelatedPage, self).__init__(*args, **kwargs)
 
 
-@withBlogField
+@blog_page
 class BioPage(models.Model, BlogRelatedPage):
 
     uses_layout_type = Blog.BIO_PAGE
@@ -311,7 +331,7 @@ def get_image_storage(): #TODO cache this
     return None
 
 
-@withBlogField
+@blog_page
 class BlogEntryPage(
     getCMSContentModel(content_attr='content'), BlogRelatedPage):
 
@@ -386,19 +406,26 @@ class BlogEntryPage(
     def extra_html_before_content(self, request, context):
         if not self.blog:
             return ''
-        return get_template("cms_blogger/entry_top.html").render(context)
+        # wrap the whole blog post html into a box; box closed
+        #   in extra_html_after_content
+        start_tag = '<div class="blog-post clearfix box">'
+        template = get_template("cms_blogger/entry_top.html")
+        return "%s%s" % (start_tag, template.render(context))
 
     def extra_html_after_content(self, request, context):
         if not self.blog:
             return ''
-        return get_template("cms_blogger/entry_bottom.html").render(context)
+        # close the box opened in the extra_html_before_content
+        end_tag = '</div>'
+        template = get_template("cms_blogger/entry_bottom.html")
+        return "%s%s" % (template.render(context), end_tag)
 
     def get_title_obj(self):
         title = LayoutTitle()
         title.title = self.title
         title.page_title = self.seo_title
         title.slug = self.slug
-        title.short_description = self.short_description
+        title.meta_description = self.short_description
         title.meta_keywords = self.meta_keywords
         return title
 
@@ -474,7 +501,7 @@ class BlogEntryPage(
 
 
 
-@withBlogField
+@blog_page
 class BlogCategory(models.Model, BlogRelatedPage):
     blog_related_name = 'categories'
     name = models.CharField(_('name'), max_length=30, db_index=True)

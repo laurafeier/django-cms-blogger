@@ -19,7 +19,7 @@ from cms_layouts.slot_finder import (
     get_fixed_section_slots, MissingRequiredPlaceholder)
 from django_select2.fields import AutoModelSelect2MultipleField
 from .models import Blog, BlogEntryPage, BlogCategory
-from .widgets import TagItWidget, ButtonWidget
+from .widgets import TagItWidget, ButtonWidget, DateTimeWidget
 from .utils import user_display_name
 from django.utils.safestring import mark_safe
 from django.template.loader import render_to_string
@@ -237,7 +237,6 @@ class BlogAddForm(forms.ModelForm):
         fields = ('title', 'slug', 'site')
 
 
-
 class EntryChangelistForm(forms.ModelForm):
 
     is_published = forms.BooleanField(
@@ -248,6 +247,28 @@ class EntryChangelistForm(forms.ModelForm):
                     "'name', '_save').val('Save')"
                 ").submit();")
             }))
+
+    def __init__(self, *args, **kwargs):
+        entry = kwargs.get('instance', None)
+        pub_field = self.base_fields['is_published']
+        if entry and entry.is_draft:
+            pub_field.widget.attrs['disabled'] = 'disabled'
+        else:
+            pub_field.widget.attrs.pop('disabled', None)
+        super(EntryChangelistForm, self).__init__(*args, **kwargs)
+
+    def clean_is_published(self):
+        is_published = self.cleaned_data.get('is_published')
+        if not self.instance:
+            return is_published
+
+        if is_published != self.instance.is_published:
+            if not is_published:
+                self.instance.start_publication = None
+                self.instance.end_publication = None
+
+            self.instance.publication_date = timezone.now()
+        return is_published
 
     class Meta:
         model = BlogEntryPage
@@ -313,6 +334,12 @@ class BlogEntryPageChangeForm(forms.ModelForm):
                   "jQuery('<input>').attr('type', 'hidden').attr("
                     "'name', '_pub_pressed').val(true)"
                   ");")))
+
+    start_publication = forms.Field(
+        required=False, widget=DateTimeWidget())
+    end_publication = forms.Field(
+        required=False, widget=DateTimeWidget())
+
     save = ButtonField(widget=ButtonWidget(submit=True))
     preview_on_top = ButtonField(widget=ButtonWidget(text='Preview'))
     preview_on_bottom = ButtonField(widget=ButtonWidget(text='Preview'))

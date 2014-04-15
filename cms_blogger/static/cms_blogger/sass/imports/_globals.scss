@@ -1,0 +1,16 @@
+$namespace: ".cms-blogger";
+
+$entry-date-bg-color: #efefef;
+$entry-date-color: #474747;
+$entry-text-color: #747474;
+$entry-border-color: #ddd;
+$entry-subtitle-color: #999;
+$entry-footer-border-color: #ddd;
+
+$read-more-bg-color: #efefef;
+
+$left-col-width: 70px;
+
+@mixin entry-border(){
+    border-bottom:1px dashed $entry-border-color;
+}

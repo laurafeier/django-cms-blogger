@@ -420,7 +420,8 @@ class BlogAdmin(CustomAdmin):
 class BlogEntryPageAdmin(CustomAdmin, PlaceholderAdmin):
     list_editable = ('is_published', )
     custom_changelist_class = BlogEntryChangeList
-    list_display = ('__str__', 'slug', 'blog', 'is_published', 'entry_authors')
+    list_display = ('__str__', 'slug', 'blog', 'is_published',
+                    'entry_authors')
     search_fields = ('title', 'blog__title')
     actions = ['make_published', 'make_unpublished']
     add_form_template = 'admin/cms_blogger/blogentrypage/add_form.html'
@@ -454,7 +455,7 @@ class BlogEntryPageAdmin(CustomAdmin, PlaceholderAdmin):
         }),
         ('Schedule Publish', {
             'fields': ['start_publication', 'end_publication'],
-            'classes': ('right-col', 'collapse')
+            'classes': ('right-col', 'collapsible-inner')
         }),
         (None, {
             'fields': ['categories', ],
@@ -462,7 +463,7 @@ class BlogEntryPageAdmin(CustomAdmin, PlaceholderAdmin):
         }),
         ('Advanced Options', {
             'fields': ['seo_title', 'meta_keywords', 'disqus_enabled'],
-            'classes': ('right-col', 'collapse', 'open')
+            'classes': ('right-col', 'collapsible-outer')
         }),
 
     )

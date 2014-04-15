@@ -1,6 +1,9 @@
 from django import forms
 from django.utils.safestring import mark_safe
 from django.contrib.admin.templatetags.admin_static import static
+from dateutil import tz, parser
+
+
 
 class ToggleWidget(forms.widgets.CheckboxInput):
 
@@ -112,3 +115,40 @@ class ButtonWidget(forms.widgets.CheckboxInput):
 
     def _has_changed(self, initial, data):
         return False
+
+
+class DateTimeWidget(forms.widgets.TextInput):
+
+    class Media:
+        css = {
+            'all': (
+                static('cms_blogger/css/redmond-jquery-ui.css'),
+                static('cms_blogger/css/datetimepicker-extension.css'),
+            )
+        }
+        js = (static('cms_blogger/js/jquery-1.9.1.min.js'),
+              static('cms_blogger/js/jquery-ui.min.js'),
+              static('cms_blogger/js/jquery-ui-timepicker-addon.js'),
+              static('cms_blogger/js/datetimepicker-field.js')
+              )
+
+    def render(self, name, value, attrs={}):
+        html = (
+            u"<input type='text' size='30' name='{name}' id='id_{name}' "
+            u"class='ui-button ui-corner-all ui-state-focus ui-textfield'/>"
+            u"<div id='picker_id_{name}'></div>"
+            u"<script type='text/javascript'>"
+            u"buildDatetimePickerField("
+            u"'#picker_id_{name}', '#id_{name}', '{initial}');"
+            u"</script>"
+        )
+        return mark_safe(html.format(name=name, initial=value or ''))
+
+    def value_from_datadict(self, data, files, name):
+        value = super(DateTimeWidget, self).value_from_datadict(
+            data, files, name)
+        try:
+            date = parser.parse(value).astimezone(tz.tzutc())
+        except:
+            date = None
+        return date

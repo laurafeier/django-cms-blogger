@@ -1,8 +1,8 @@
 {% ifnotequal page.paginator.num_pages 1 %}
-<div class="pagination">
+<div class="pagination clearfix">
    {% if page.has_previous %}
-      <span class="page">
-      <a href="?page={{ page.previous_page_number }}{{extra_params}}">&lt; newer posts</a>
+      <span class="page previous">
+      <a href="?page={{ page.previous_page_number }}{{extra_params}}"><img src="{{STATIC_URL}}cms_blogger/img/arrow-left.png">newer posts</a>
       </span>
    {% endif %}
 
@@ -14,7 +14,7 @@
    {% endif %}
    {% for linkpage in page_numbers %}
       {% ifequal linkpage page.number %}
-         <span class="current">{{ page.number }}</span>
+         <span class="current main_color_text">{{ page.number }}</span>
       {% else %}
          <span class="page"><a href="?page={{ linkpage }}{{extra_params}}">{{ linkpage }}</a></span>
       {% endifequal %}
@@ -26,7 +26,7 @@
       <span class="page"><a href="?page={{ page.paginator.num_pages }}{{extra_params}}">{{ page.paginator.num_pages }}</a></span>
    {% endif %}
    {% if page.has_next %}
-      <span class="page"><a href="?page={{ page.next_page_number }}{{extra_params}}">older posts &gt;</a></span>
+      <span class="page next"><a href="?page={{ page.next_page_number }}{{extra_params}}">older posts<img src="{{STATIC_URL}}cms_blogger/img/arrow-right.png"></a></span>
    {% endif %}
 </div>
 {% endifnotequal %}
