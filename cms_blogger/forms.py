@@ -19,7 +19,7 @@ from cms_layouts.slot_finder import (
     get_fixed_section_slots, MissingRequiredPlaceholder)
 from django_select2.fields import AutoModelSelect2MultipleField
 from .models import Blog, BlogEntryPage, BlogCategory
-from .widgets import TagItWidget, ButtonWidget
+from .widgets import TagItWidget, ButtonWidget, DateTimeWidget
 from .utils import user_display_name
 
 
@@ -305,6 +305,12 @@ class BlogEntryPageChangeForm(forms.ModelForm):
                   "jQuery('<input>').attr('type', 'hidden').attr("
                     "'name', '_pub_pressed').val(true)"
                   ");")))
+
+    start_publication = forms.Field(
+        required=False, widget=DateTimeWidget())
+    end_publication = forms.Field(
+        required=False, widget=DateTimeWidget())
+
     save = ButtonField(widget=ButtonWidget(submit=True))
     preview_on_top = ButtonField(widget=ButtonWidget(text='Preview'))
     preview_on_bottom = ButtonField(widget=ButtonWidget(text='Preview'))
