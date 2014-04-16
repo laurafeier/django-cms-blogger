@@ -313,7 +313,7 @@ class BlogEntryPageChangeForm(forms.ModelForm):
         label='Blog Entry', required=True,
         widget=_get_text_editor_widget())
     authors = MultipleUserField()
-    poster_image = forms.CharField(label="", widget=PosterImage())
+    poster_image_uploader = forms.CharField(label="", widget=PosterImage())
     categories = forms.ModelMultipleChoiceField(
         widget=forms.CheckboxSelectMultiple(),
         queryset=BlogCategory.objects.get_empty_query_set(), required=False)
@@ -370,8 +370,8 @@ class BlogEntryPageChangeForm(forms.ModelForm):
         if request and self.instance.authors.count() == 0:
             self.initial['authors'] = [request.user.pk]
 
-        self.fields['poster_image'].widget.blog_entry_id = instance.pk
-        self.fields['poster_image'].widget.image_url = (
+        self.fields['poster_image_uploader'].widget.blog_entry_id = instance.pk
+        self.fields['poster_image_uploader'].widget.image_url = (
             instance.poster_image.url if instance.poster_image.name else None)
 
         if self.instance:

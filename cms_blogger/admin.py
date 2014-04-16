@@ -422,7 +422,7 @@ class BlogEntryPageAdmin(CustomAdmin, PlaceholderAdmin):
         }),
 
         (None, {
-            'fields': ['poster_image', ],
+            'fields': ['poster_image_uploader', ],
             'classes': ('poster-image',)
         }),
 
