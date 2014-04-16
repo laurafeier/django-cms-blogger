@@ -19,25 +19,10 @@ from cms_layouts.slot_finder import (
     get_fixed_section_slots, MissingRequiredPlaceholder)
 from django_select2.fields import AutoModelSelect2MultipleField
 from .models import Blog, BlogEntryPage, BlogCategory
-from .widgets import TagItWidget, ButtonWidget, DateTimeWidget
+from .widgets import TagItWidget, ButtonWidget, DateTimeWidget, PosterImage
 from .utils import user_display_name
 from django.utils.safestring import mark_safe
 from django.template.loader import render_to_string
-from .settings import (MAXIMUM_THUMBNAIL_FILE_SIZE,
-                       ALLOWED_THUMBNAIL_IMAGE_TYPES)
-
-
-class PosterImage(forms.widgets.CheckboxInput):
-    def render(self, name, value, attrs=None):
-        return render_to_string(
-            "admin/cms_blogger/blogentrypage/poster_image.html",
-            {
-                'blog_entry_id': self.blog_entry_id,
-                'image_url': self.image_url,
-                'size_limit': MAXIMUM_THUMBNAIL_FILE_SIZE,
-                'image_types': ALLOWED_THUMBNAIL_IMAGE_TYPES,
-            }
-        )
 
 
 class BlogLayoutInlineFormSet(BaseGenericInlineFormSet):

@@ -81,9 +81,7 @@ $(function() {
         onSubmit: function(id, fileName){
             $('#fileInputQueue').html('\
                 <div id="fileUpload" class="clipboardItem fileUploadQueueItem">\
-                    <div class="thumbnail">\
-                        <div class="loadingThumb" />\
-                    </div>\
+                    <div class="loadingThumb" />\
                     <div class="label">\
                         <div>\
                             <span class="fileName">' + fileName + ' (<span class="size">?</span>)</span> [<span class="percentage">&nbsp;</span>]\
@@ -108,13 +106,13 @@ $(function() {
             var file = responseJSON;
             if (file.error) {
                 var html = '\
-                <td class="thumbnail"><img style="width: 32px;height: 32px;" src="{% filer_staticmedia_prefix %}/icons/missingfile_32x32.png" alt="{% trans 'file missing' %}" /></td>\
+                <td><img style="width: 32px;height: 32px;" src="{% filer_staticmedia_prefix %}/icons/missingfile_32x32.png" alt="{% trans 'file missing' %}" /></td>\
                 <td class="label">' + file.error + '</td>';
                 $('#fileUpload').html(html);
 
             } else {
                 var html = '\
-                    <td class="thumbnail">\
+                    <td>\
                         <a href="' + file.url + '" target="_blank">\
                             <img style="width: 340px;" src="' + file.url + '" /></td>\
                         </a>\

@@ -1,48 +1,50 @@
+from cms.admin.placeholderadmin import PlaceholderAdmin
+from cms.models import Title, CMSPlugin
+
+from django.conf import settings
+from django.conf.urls.defaults import patterns, url
 from django.contrib import admin
 from django.contrib.sites.models import Site
 from django.contrib.contenttypes.generic import GenericTabularInline
 from django.contrib.admin.templatetags.admin_static import static
+from django.core.exceptions import PermissionDenied
+from django.core.files.images import get_image_dimensions
+from django.core.urlresolvers import reverse
 from django.db import models
 from django.db.models import Q
 from django.forms import Media
+from django.http import HttpResponse
+from django.shortcuts import get_object_or_404, render_to_response
+from django.template.context import RequestContext
 from django.utils.html import escapejs
 from django.utils import timezone
 from django.utils.translation import get_language, ugettext_lazy as _
 from django.utils.safestring import mark_safe
-from django.core.urlresolvers import reverse
-from django.core.exceptions import PermissionDenied
-from django.conf.urls.defaults import patterns, url
-from django.conf import settings
-from django.shortcuts import get_object_or_404, render_to_response
-from django.template.context import RequestContext
-from django.http import HttpResponse
+from django.views.decorators.csrf import csrf_exempt
 
-from cms.admin.placeholderadmin import PlaceholderAdmin
-from cms.models import Title, CMSPlugin
+from filer.utils.files import handle_upload, UploadException
+
 from menus.menu_pool import menu_pool
 from menus.templatetags.menu_tags import cut_levels
 
 from cms_layouts.models import Layout
 from cms_layouts.slot_finder import get_mock_placeholder
 
+from .changelists import BlogChangeList, BlogEntryChangeList
 from .models import Blog, BlogEntryPage, BlogNavigationNode
 from .forms import (
     BlogLayoutForm, BlogForm, BlogAddForm, BlogEntryPageAddForm,
     BlogEntryPageChangeForm, BlogLayoutInlineFormSet,
     EntryChangelistForm)
-from .changelists import BlogChangeList, BlogEntryChangeList
-from .widgets import ToggleWidget
-from filer.utils.files import handle_upload, UploadException
-import imghdr
-from django.views.decorators.csrf import csrf_exempt
-import os
-import json
-from django.core.files.images import get_image_dimensions
 from .settings import (ALLOWED_THUMBNAIL_IMAGE_TYPES,
                        MINIMUM_POSTER_IMAGE_WIDTH,
                        POSTER_IMAGE_ASPECT_RATIO,
                        POSTER_IMAGE_ASPECT_RATIO_ERROR)
+from .widgets import ToggleWidget
 
+import imghdr
+import json
+import os
 
 class BlogLayoutInline(GenericTabularInline):
     form = BlogLayoutForm
