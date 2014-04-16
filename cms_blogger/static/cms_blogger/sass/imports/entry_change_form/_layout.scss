@@ -77,52 +77,6 @@
             float:left;
         }
 
-        #id_body_toolbargroup .arrow{
-            margin-left: 5px;
-            border:1px solid #2694e8;
-            float: right;
-            width: 32px;
-            height: 26px;
-            line-height: 24px;
-            text-align: center;
-            background-color: #d7ebf9;
-        }
-        #id_body_toolbargroup .arrow span{
-            width: 0;
-            height: 0;
-            display: inline-block;
-            vertical-align: middle;
-            border-top: 10px solid transparent;
-            border-bottom: 10px solid transparent;
-
-            border-right:10px solid #2779aa;
-            padding: 0;
-        }
-
-        #id_body_toolbargroup .arrow + span[role="application"] table + table{
-            display: none;
-        }
-
-        #id_body_toolbargroup .arrow:hover span{
-            border-right: 10px solid #036;
-        }
-
-        #id_body_toolbargroup .arrow:hover{
-            background-color: #e4f1fb;
-        }
-
-        #id_body_toolbargroup .arrow.open span{
-            border-left: 10px solid transparent;
-            border-right: 10px solid transparent;
-
-            border-top: 10px solid #2779aa;
-            border-bottom: 0;
-        }
-
-        #id_body_toolbargroup .arrow.open + span[role="application"] table + table{
-            display: table;
-        }
-
         #id_body_toolbargroup span[role="application"]{
             float:left;
         }
@@ -137,11 +91,7 @@
         }
 
         .field-preview_on_top{
-            position: absolute;
-            right: 0;
-            top:5px;
-            padding: 0;
-            overflow: visible;
+            text-align: right;
         }
 
         .field-preview_on_bottom{
@@ -158,6 +108,279 @@
     #{$ns}{
         @include overides();
 
+        .select2-drop{
+            border-color: $form-border-color;
+        }
+
+        #content{
+            background-color:#fdfdfd;
+            margin: 0;
+
+            #content-main,
+            & > h3{
+                width:$content-width;
+                margin: 25px auto;
+                float: none;
+                font-size: 22px;
+                color: $form-text-color;
+                font-weight: normal;
+            }
+
+            input.vTextField,
+            textarea,
+            ul.select2-choices{
+                min-height: 28px;
+                width: auto;
+                font-size: 15px;
+                border:1px solid $form-border-color;
+            }
+
+            input.vTextField{
+                line-height: 28px;
+                height:28px !important;
+                padding-top:5px;
+                padding-bottom:5px;
+                width: 86%;
+                padding-left:1%;
+                padding-right:1%;
+                margin-left:-2px;
+            }
+
+
+
+            .select2-container{
+                width: 84%;
+                min-width: 88%;
+                display: inline-block;
+                float: none;
+                .select2-choices{
+                    line-height: 28px;
+                    height:28px !important;
+                    padding-top:5px;
+                    padding-bottom:5px;
+                }
+            }
+
+            label{
+                font-size: 16px;
+                font-weight: normal !important;
+                color: $form-text-color;
+            }
+
+            .module{
+                border:1px solid $form-border-color;
+            }
+
+            .main-col{
+                width:685px;
+                margin-right: 20px;
+                .module:first-child,
+                .no-border{
+                    border:none;
+                }
+
+                .module:last-child{
+                    margin-bottom: 0;
+                }
+
+                .form-row{
+                    white-space: nowrap;
+                    padding: 13px 0;
+                    &.field-preview_on_top,
+                    &.field-body,
+                    &.field-preview_on_bottom{
+                        padding: 5px 0;
+                    }
+                    &:first-child{
+                        padding-top: 0;
+                    }
+                    label{
+                        white-space: normal;
+                    }
+                }
+
+                .field-short_description{
+                    position:relative;
+                    .help{
+                        font-size:12px;
+                        font-style: italic;
+                        color: $form-text-color;
+                        padding:0;
+                        &:before{
+                            content: "(";
+                        }
+                        &:after{
+                            content: ")";
+                        }
+                    }
+                }
+                label{
+                    font-size: 16px;
+                    font-weight: normal !important;
+                    color: $form-text-color;
+                    width: 10%;
+                    padding-right:0;
+                    margin-right: 2%;
+                    display: inline-block;
+                    &[for="id_short_description"]{
+                        white-space: nowrap !important;
+                        width: 22%;
+                        & + textarea,
+                        & + .help + textarea{
+                            width: 75%;
+                        }
+
+                        & + .help{
+                            display: inline-block;
+                            top: 0;
+                            left: 0;
+                            float: left;
+                            clear: left;
+                            margin: 0;
+                        }
+                    }
+                    &[for="id_body"]{
+                        display: none;
+                    }
+
+                }
+            }
+
+            div.right-col{
+                width:315px;
+                & > fieldset{
+                    width: auto;
+                    padding: 15px;
+                    margin-bottom: 25px;
+
+                    .field-seo_title,
+                    .field-meta_keywords,
+                    .field-disqus_enabled{
+                        white-space: nowrap;
+                        padding:25px 0 0 0;
+                        width: 100%;
+                        input,
+                        textarea{
+                            width: 69%;
+                            white-space: normal;
+                        }
+                        label{
+                            white-space: normal;
+                            width: 24%;
+                            margin-top: 5px;
+                            margin-right: 5px;
+                            font-size: 14px;
+                        }
+                    }
+
+                    .field-disqus_enabled{
+                        .help{
+                            margin:0;
+                            padding: 0;
+                            white-space: normal;
+                            float: left;
+                            color: $form-text-color;
+                            font-size: 14px !important;
+                            width: 75%;
+                        }
+                        label{
+                            display: none;
+                        }
+                        .toggle-modern{
+                            float: right;
+                        }
+                    }
+                    .field-categories{
+                        padding:0;
+                    }
+
+                }
+                & > fieldset:first-child{
+                    padding: 15px 25px;
+                }
+
+                .field-categories{
+                    & div > label{
+                        float: none;
+                        margin: 10px 0 15px 0;
+                        padding:0;
+                    }
+                    .categ-wrapper{
+                        border:1px solid $form-border-color;
+                        height: 170px;
+                    }
+                    ul {
+                        margin:0;
+                        padding:0;
+                        overflow:hidden;
+                        li{
+                            margin-top: 8px;
+                            &:first-child{
+                                margin-top: 0;
+                            }
+                        }
+                        label{
+                            font-size: 14px;
+                            text-transform: capitalize;
+                        }
+                    }
+
+                    .help{
+                        margin:0 0 20px 0;
+                        padding:0;
+                        color: $form-text-color;
+                        font-size: 14px !important;
+                    }
+                }
+
+            }
+
+            .collapse{
+                h2{
+                    background:none;
+                    a{
+                        font-size: 16px;
+                        color: $form-text-color;
+                        font-weight: normal;
+                        white-space: nowrap;
+                        &:hover{
+                            color:$btn-blue;
+                        }
+                        &:before{
+                            content: "\2013";
+                            background:$btn-blue;
+                            border-radius:10px;
+                            display: inline-block;
+                            width: 20px;
+                            height:20px;
+                            line-height: 20px;
+                            color: #fff;
+                            font-size: 18px;
+                            text-align: center;
+                            font-weight: bold;
+                            margin-right:7px;
+                            vertical-align: top;
+                        }
+                    }
+                }
+                &.collapsed{
+                    a:before{
+                        content: "+"
+                    }
+                }
+            }
+
+            .submit-row{
+                margin-top: 17px;
+                padding:18px 0;
+                border-bottom:0;
+                border-right:0;
+                border-left:0;
+                float: left;
+                width: 100%;
+            }
+
+        }
     }
 }
 
