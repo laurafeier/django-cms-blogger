@@ -282,75 +282,75 @@ class BlogAdmin(CustomAdmin):
                 blog_entry._old_poster_image = blog_entry.poster_image.name
 
         except BlogEntryPage.DoesNotExist:
-            blog_entry = None
+            raise UploadException(
+                "Blog entry with id={0} does not exist".format(id))
 
-        if blog_entry is not None:
-            mimetype = "application/json" if request.is_ajax() else "text/html"
-            upload = None
-            try:
-                upload, filename, _ = handle_upload(request)
+        mimetype = "application/json" if request.is_ajax() else "text/html"
+        upload = None
+        try:
+            upload, filename, _ = handle_upload(request)
 
-                width, height = get_image_dimensions(upload)
-                if width < MINIMUM_POSTER_IMAGE_WIDTH:
-                    raise UploadException(
-                        "Image width should be larger than {0}px".format(
-                            MINIMUM_POSTER_IMAGE_WIDTH))
+            width, height = get_image_dimensions(upload)
+            if width < MINIMUM_POSTER_IMAGE_WIDTH:
+                raise UploadException(
+                    "Image width should be larger than {0}px".format(
+                        MINIMUM_POSTER_IMAGE_WIDTH))
 
-                delta_ratio = width / float(height) - POSTER_IMAGE_ASPECT_RATIO
-                if abs(delta_ratio) > POSTER_IMAGE_ASPECT_RATIO_ERROR:
-                    horizontal_text, vertical_text = "narrower", "taller"
-                    if delta_ratio < 0:
-                        horizontal_text, vertical_text = "wider", "shorter"
+            delta_ratio = width / float(height) - POSTER_IMAGE_ASPECT_RATIO
+            if abs(delta_ratio) > POSTER_IMAGE_ASPECT_RATIO_ERROR:
+                horizontal_text, vertical_text = "narrower", "taller"
+                if delta_ratio < 0:
+                    horizontal_text, vertical_text = "wider", "shorter"
 
-                    horizontal_px, vertical_px = map(
-                        lambda x: abs(int(round(x))), [
-                            height * POSTER_IMAGE_ASPECT_RATIO - width,
-                            width / POSTER_IMAGE_ASPECT_RATIO - height])
+                horizontal_px, vertical_px = map(
+                    lambda x: abs(int(round(x))), [
+                        height * POSTER_IMAGE_ASPECT_RATIO - width,
+                        width / POSTER_IMAGE_ASPECT_RATIO - height])
 
-                    raise UploadException(
-                        "Image doesn't have a 16:9 aspect ratio. "
-                        "It should be {0}px {1} or {2}px {3}".format(
-                            horizontal_px, horizontal_text,
-                            vertical_px, vertical_text))
+                raise UploadException(
+                    "Image doesn't have a 16:9 aspect ratio. "
+                    "It should be {0}px {1} or {2}px {3}".format(
+                        horizontal_px, horizontal_text,
+                        vertical_px, vertical_text))
 
-                if ('CONTENT_LENGTH' in request.META and
-                    len(upload) != int(request.META.get('CONTENT_LENGTH'))):
+            if ('CONTENT_LENGTH' in request.META and
+                len(upload) != int(request.META.get('CONTENT_LENGTH'))):
 
-                    raise UploadException(
-                        "File not uploaded completely. "
-                        "Only {0} bytes uploaded".format(upload))
+                raise UploadException(
+                    "File not uploaded completely. "
+                    "Only {0} bytes uploaded".format(upload))
 
-                guessed_extension = imghdr.what(upload) or ""
+            guessed_extension = imghdr.what(upload) or ""
 
-                if guessed_extension not in ALLOWED_THUMBNAIL_IMAGE_TYPES:
-                    if not guessed_extension:
-                        displayed_extension = "Unknown"
-                    else:
-                        displayed_extension = guessed_extension
-                    raise UploadException(
-                        displayed_extension + " file type not allowed."
-                        " Please upload one of the following file types: " +
-                        ", ".join(ALLOWED_THUMBNAIL_IMAGE_TYPES))
+            if guessed_extension not in ALLOWED_THUMBNAIL_IMAGE_TYPES:
+                if not guessed_extension:
+                    displayed_extension = "Unknown"
+                else:
+                    displayed_extension = guessed_extension
+                raise UploadException(
+                    displayed_extension + " file type not allowed."
+                    " Please upload one of the following file types: " +
+                    ", ".join(ALLOWED_THUMBNAIL_IMAGE_TYPES))
 
-                extension = os.path.splitext(filename)[1]
-                if not extension:
-                    # try to guess if it's an image and append extension
+            extension = os.path.splitext(filename)[1]
+            if not extension:
+                # try to guess if it's an image and append extension
 
-                    if guessed_extension:
-                        filename = '%s.%s' % (filename, guessed_extension)
-                blog_entry.poster_image.save(filename, upload)
-                json_response = {
-                    'label': unicode(blog_entry.poster_image.name),
-                    'url': blog_entry.poster_image.url,
-                }
-                return HttpResponse(
-                    json.dumps(json_response), mimetype=mimetype)
-            except UploadException, e:
-                return HttpResponse(
-                    json.dumps({'error': unicode(e)}), mimetype=mimetype)
-            finally:
-                if upload:
-                    upload.close() #memory leak if not closed?
+                if guessed_extension:
+                    filename = '%s.%s' % (filename, guessed_extension)
+            blog_entry.poster_image.save(filename, upload)
+            json_response = {
+                'label': unicode(blog_entry.poster_image.name),
+                'url': blog_entry.poster_image.url,
+            }
+            return HttpResponse(
+                json.dumps(json_response), mimetype=mimetype)
+        except UploadException, e:
+            return HttpResponse(
+                json.dumps({'error': unicode(e)}), mimetype=mimetype)
+        finally:
+            if upload:
+                upload.close() #memory leak if not closed?
 
     @csrf_exempt
     def delete_thumbnail(self, request, blog_entry_id=None):
