@@ -1,7 +1,7 @@
 @import "imports/entry_change_form/globals";
 
 @mixin overides(){
-    fieldset{
+        fieldset{
             width: 100%;
         }
 
@@ -20,9 +20,6 @@
             clear: both;
             background: none;
         }
-
-
-
         .form-row, .no-border {
             border:none;
         }
@@ -101,6 +98,38 @@
 
         #id_body_tbl{
             height: auto !important;
+        }
+
+        .hide-label label{
+            display: none;
+        }
+
+        .collapsible-inner h2{
+            background: none;
+            color: inherit;
+        }
+
+        .collapsible-inner {
+            border: none;
+            background-color: #efefef;
+            border-top: 1px solid #ccc;
+        }
+
+        .collapsible-inner.closed {
+            background: inherit;
+            border-top: 1px solid transparent;
+        }
+
+        .collapsible-inner.closed div{
+            display:none;
+        }
+
+        .collapsible-inner h2 {
+            padding: 8px 12px;
+            cursor: pointer;
+        }
+        .collapsible-inner.closed .inline-deletelink{
+            display: none;
         }
 }
 

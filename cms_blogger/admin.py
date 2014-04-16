@@ -321,8 +321,16 @@ class BlogEntryPageAdmin(CustomAdmin, PlaceholderAdmin):
             'classes': ('right-col', )
         }),
         ('Schedule Publish', {
-            'fields': ['start_publication', 'end_publication'],
-            'classes': ('right-col', 'collapse')
+            'fields': ['start_publication', 'schedule_publish'],
+            'description': _('Schedule Start Date description'),
+            'classes': ('right-col', 'collapsible-inner', 'hide-label',
+                        'closed')
+        }),
+        ('Schedule Unpublish', {
+            'fields': ['end_publication', 'schedule_unpublish'],
+            'description': _('Schedule End Date description'),
+            'classes': ('right-col', 'collapsible-inner', 'hide-label',
+                        'closed')
         }),
         (None, {
             'fields': ['categories', ],
@@ -330,7 +338,7 @@ class BlogEntryPageAdmin(CustomAdmin, PlaceholderAdmin):
         }),
         ('Advanced Options', {
             'fields': ['seo_title', 'meta_keywords', 'disqus_enabled'],
-            'classes': ('right-col', 'collapse', 'open')
+            'classes': ('right-col', 'collapsible-outer')
         }),
 
     )

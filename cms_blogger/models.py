@@ -82,6 +82,34 @@ def getCMSContentModel(**kwargs):
     return ModelWithCMSContent
 
 
+def contribute_with_title(cls):
+    # required in order to make sure page_attribute templatetag will fetch
+    #   these attributes from the title object
+    # this decorator requires the definition of get_title_obj method
+    #   that will return an instance on LayoutTitle
+    valid_title_attributes = [
+        "title", "slug", "meta_description", "meta_keywords", "page_title",
+        "menu_title"]
+
+    for attr in valid_title_attributes:
+        def get_title_obj_attribute(obj, *args, **kwargs):
+            return getattr(obj.get_title_obj(), attr, '')
+
+        cls.add_to_class('get_%s' % attr, get_title_obj_attribute)
+    return cls
+
+
+def blog_page(cls):
+    # adds a blog foreign key(with a related name if specified) to a model
+    # blog foreign key is required by all blog related pages.
+    blog = models.ForeignKey(
+        Blog, related_name=getattr(cls, 'blog_related_name', None))
+    cls.add_to_class('blog', blog)
+    cls = contribute_with_title(cls)
+    return cls
+
+
+@contribute_with_title
 class AbstractBlog(models.Model):
 
     title = models.CharField(
@@ -127,7 +155,7 @@ class AbstractBlog(models.Model):
 
     def get_title_obj(self):
         title = LayoutTitle()
-        title.page_title = self.title
+        title.page_title = title.title = self.title
         title.slug = self.slug
         return title
 
@@ -224,15 +252,6 @@ class Blog(AbstractBlog):
         return self.get_layout_for(Blog.LANDING_PAGE)
 
 
-def withBlogField(cls):
-    # adds a blog foreign key(with a related name if specified) to a model
-    # blog foreign key is required by all blog related pages.
-    blog = models.ForeignKey(
-        Blog, related_name=getattr(cls, 'blog_related_name', None))
-    cls.add_to_class('blog', blog)
-    return cls
-
-
 class BlogRelatedPage(object):
     # any blog related pages needs to have a layout, a content and a header
     #   that can be rendered by the layout
@@ -258,7 +277,7 @@ class BlogRelatedPage(object):
         raise NotImplementedError
 
 
-@withBlogField
+@blog_page
 class BioPage(models.Model, BlogRelatedPage):
 
     uses_layout_type = Blog.BIO_PAGE
@@ -293,7 +312,7 @@ def upload_entry_image(instance, filename):
     )
 
 
-@withBlogField
+@blog_page
 class BlogEntryPage(
     getCMSContentModel(content_attr='content'), BlogRelatedPage):
 
@@ -381,7 +400,7 @@ class BlogEntryPage(
         title.title = self.title
         title.page_title = self.seo_title
         title.slug = self.slug
-        title.short_description = self.short_description
+        title.meta_description = self.short_description
         title.meta_keywords = self.meta_keywords
         return title
 
@@ -445,7 +464,7 @@ class BlogEntryPage(
         return "<Draft Empty Blog Entry>" if self.is_draft else self.title
 
 
-@withBlogField
+@blog_page
 class BlogCategory(models.Model, BlogRelatedPage):
     blog_related_name = 'categories'
     name = models.CharField(_('name'), max_length=30, db_index=True)
