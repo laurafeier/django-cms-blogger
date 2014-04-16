@@ -13,7 +13,7 @@ class ToggleWidget(forms.widgets.CheckboxInput):
         css = {
             'all': (
                 static('cms_blogger/css/toggle-to-right.css'),
-                static('cms_blogger/css/toggles-modern.css'),)
+                static('cms_blogger/css/toggles-light.css'),)
         }
         js = (static('cms_blogger/js/jquery-1.9.1.min.js'),
               static('cms_blogger/js/toggles.min.js'),)
@@ -22,10 +22,12 @@ class ToggleWidget(forms.widgets.CheckboxInput):
         "<script type='text/javascript'> jQuery("
         "function(){jQuery('.toggle_%s').toggles({"
         "checkbox: jQuery('#id_%s'), "
+        "height: 30,"
+        "width: 65,"
         "on:jQuery('#id_%s').is(':checked')});});</script>")
 
     toggle_html = (
-        '<div class="toggle-modern" style="display:inline-block"> '
+        '<div class="toggle-light" style="display:inline-block"> '
         '<div class="toggle_%s toggle-select" data-type="select"> '
         '</div></div>%s %s')
 
