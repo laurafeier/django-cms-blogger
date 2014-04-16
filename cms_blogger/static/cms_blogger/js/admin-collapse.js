@@ -24,7 +24,24 @@
                 fieldset.addClass("collapsed").trigger("hide.fieldset", [$(this).attr("id")]);
                 return false;
             }
-        })
+        });
+
+        // Add anchor tag for Show/Hide link
+        $('fieldset.collapsible-inner').each(function(index, Element) {
+            var prev_fieldset = $(this).prev();
+            var fieldset = $(this);
+            if(prev_fieldset.length){
+                fieldset.appendTo(prev_fieldset);
+                var anchor = $('<a class="collapse-toggle"></a>')
+                var header = fieldset.find("h2")
+                anchor.off('click').on('click', function(event){
+                    event.preventDefault();
+                    fieldset.toggleClass('closed');
+                });
+                header.wrap(anchor);
+                $("<a class='inline-deletelink'/>").appendTo(header);
+            }
+        });
 
     });
 })(django.jQuery);
