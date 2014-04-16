@@ -44,10 +44,15 @@ def getCMSContentModel(**kwargs):
         def save(self, *args, **kwargs):
             super(ModelWithCMSContent, self).save(*args, **kwargs)
             plugin = getattr(self, plugin_getter)()
-            plugin_data = getattr(self, body_attr)
-            if plugin and plugin.body != plugin_data:
-                plugin.body = plugin_data
-                plugin.save()
+            if plugin is None:
+                return
+            # get_attached_plugin always fetches the plugin from the db;
+            #   the html cleaning cannot be done in the clean method since the
+            #   plugin instance from there will be different from this one
+            plugin.body = getattr(self, body_attr)
+            plugin.clean()
+            plugin.clean_plugins()
+            plugin.save()
 
         class Meta:
             abstract = True
