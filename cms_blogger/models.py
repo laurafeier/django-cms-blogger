@@ -22,12 +22,14 @@ from cms_layouts.models import LayoutTitle, Layout
 from cms_layouts.layout_response import LayoutResponse
 from filer.fields.image import FilerImageField
 import filer
-from .settings import USE_FILER_STORAGE, UPLOAD_TO_PREFIX, FILENAME_LENGTH
+from .settings import USE_FILER_STORAGE, UPLOAD_TO_PREFIX
 from .utils import user_display_name
-from os.path import splitext
-from os import sep as os_sep
+import os
 from .managers import EntriesManager
+import datetime
+from filer.settings import FILER_PUBLICMEDIA_STORAGE
 
+FILENAME_LENGTH = 100
 
 def getCMSContentModel(**kwargs):
     content_attr = kwargs.get('content_attr', 'content')
@@ -280,9 +282,6 @@ class BlogRelatedPage(object):
     def get_absolute_url(self):
         raise NotImplementedError
 
-    #def __init__(self, *args, **kwargs):
-    #    super(BlogRelatedPage, self).__init__(*args, **kwargs)
-
 
 @blog_page
 class BioPage(models.Model, BlogRelatedPage):
@@ -311,23 +310,21 @@ class BioPage(models.Model, BlogRelatedPage):
 
 
 def upload_entry_image(instance, filename):
-    base, ext = splitext(filename)
+    base, ext = os.path.splitext(filename)
     new_base = '%s%s%s_%s' % (
         UPLOAD_TO_PREFIX,
-        os_sep,
-        timezone.now().strftime("%Y%m%d_%H%M%S_%f"),
+        os.sep,
+        datetime.datetime.utcnow().strftime("%Y%m%d_%H%M%S_%f"),
         slugify(base),)
 
-    new_base_trimmed = new_base[:(FILENAME_LENGTH - len(ext))]
-
     new_ext = ext[:1] + slugify(ext[1:].lower())
+    new_base_trimmed = new_base[:(FILENAME_LENGTH - len(new_ext))]
 
     return new_base_trimmed + new_ext
 
 
 def get_image_storage():  # TODO cache this
     if USE_FILER_STORAGE:
-        from filer.settings import FILER_PUBLICMEDIA_STORAGE
         return FILER_PUBLICMEDIA_STORAGE
     return None
 
@@ -335,12 +332,7 @@ def get_image_storage():  # TODO cache this
 @blog_page
 class BlogEntryPage(
     getCMSContentModel(content_attr='content'), BlogRelatedPage):
-
-    def __init__(self, *args, **kwargs):
-        super(BlogEntryPage, self).__init__(*args, **kwargs)
-
     uses_layout_type = Blog.ENTRY_PAGE
-
     title = models.CharField(_('title'), max_length=120)
     slug = models.SlugField(
         _('slug'), max_length=255,
@@ -492,14 +484,13 @@ class BlogEntryPage(
     def delete(self, *args, **kwargs):
         path = self.poster_image.path
         super(BlogEntryPage, self).delete(*args, **kwargs)
-        get_image_storage.delete(path)
+        self.poster_image.storage.delete(path)
 
     def save(self, *args, **kwargs):
         super(BlogEntryPage, self).save(*args, **kwargs)
         if hasattr(self, '_old_poster_image'):
             old_poster_image_path = self._old_poster_image
-            get_image_storage().delete(old_poster_image_path)
-
+            self.poster_image.storage.delete(old_poster_image_path)
 
 
 @blog_page

@@ -23,36 +23,24 @@ from .widgets import TagItWidget, ButtonWidget, DateTimeWidget
 from .utils import user_display_name
 from django.utils.safestring import mark_safe
 from django.template.loader import render_to_string
-from os.path import split
 from .settings import (MAXIMUM_THUMBNAIL_FILE_SIZE,
                        ALLOWED_THUMBNAIL_IMAGE_TYPES)
 
 
-class UploadButton(forms.widgets.CheckboxInput):
-    def __init__(self, *args, **kwargs):
-        super(UploadButton, self).__init__(*args, **kwargs)
-
+class PosterImage(forms.widgets.CheckboxInput):
     def render(self, name, value, attrs=None):
         return render_to_string(
-            "admin/cms_blogger/blogentrypage/upload_button_js.html",
+            "admin/cms_blogger/blogentrypage/poster_image.html",
             {
-                'thumbnail_upload_url': 'admin:cms_blogger-upload-thumbnail',
                 'blog_entry_id': self.blog_entry_id,
                 'image_url': self.image_url,
-                'image_label': self.image_label,
                 'size_limit': MAXIMUM_THUMBNAIL_FILE_SIZE,
                 'image_types': ALLOWED_THUMBNAIL_IMAGE_TYPES,
             }
         )
 
 
-class TextWidget(forms.widgets.CheckboxInput):
-    def render(self, name, value, attrs=None):
-        return mark_safe(self.attrs['label'])
-
-
 class BlogLayoutInlineFormSet(BaseGenericInlineFormSet):
-
     def clean(self):
         if any(self.errors):
             return
@@ -325,7 +313,7 @@ class BlogEntryPageChangeForm(forms.ModelForm):
         label='Blog Entry', required=True,
         widget=_get_text_editor_widget())
     authors = MultipleUserField()
-    upload_button = forms.CharField(label="", widget=UploadButton())
+    poster_image = forms.CharField(label="", widget=PosterImage())
     categories = forms.ModelMultipleChoiceField(
         widget=forms.CheckboxSelectMultiple(),
         queryset=BlogCategory.objects.get_empty_query_set(), required=False)
@@ -364,13 +352,9 @@ class BlogEntryPageChangeForm(forms.ModelForm):
             categories_field.initial = instance.categories.all()
         super(BlogEntryPageChangeForm, self).__init__(*args, **kwargs)
 
-        self.fields['upload_button'].widget.blog_entry_id = instance.pk
-        if instance.poster_image.name:
-            self.fields['upload_button'].widget.image_url = instance.poster_image.url
-            self.fields['upload_button'].widget.image_label = instance.poster_image.name
-        else:
-            self.fields['upload_button'].widget.image_url = None
-            self.fields['upload_button'].widget.image_label = None
+        self.fields['poster_image'].widget.blog_entry_id = instance.pk
+        self.fields['poster_image'].widget.image_url = (
+            instance.poster_image.url if instance.poster_image.name else None)
 
         if self.instance:
             preview1 = self.fields['preview_on_top'].widget
