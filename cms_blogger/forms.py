@@ -274,14 +274,14 @@ def _get_text_editor_widget():
     if USE_TINYMCE and "tinymce" in settings.INSTALLED_APPS:
         from cms.plugins.text.widgets.tinymce_widget import TinyMCEEditor
         return TinyMCEEditor(installed_plugins=plugins, mce_attrs={
-            'theme_advanced_buttons1': 'forecolor, bold, italic, underline, \
-                                        link, unlink, numlist, bullist, \
-                                        outdent, indent, formatselect, image, \
-                                        code',
-            'theme_advanced_buttons2_add': 'justifyleft, justifycenter, \
-                                            justifyright, justifyfull, \
-                                            fontselect, fontsizeselect',
-            'theme_advanced_buttons3_add': 'strikethrough, sub, sup, fullscreen',
+            'theme_advanced_buttons1': (
+                'forecolor, bold, italic, underline, link, unlink, numlist, '
+                'bullist, outdent, indent, formatselect, image, code'),
+            'theme_advanced_buttons2_add': (
+                'justifyleft, justifycenter, justifyright, justifyfull,'
+                'fontselect, fontsizeselect'),
+            'theme_advanced_buttons3_add': (
+                'strikethrough, sub, sup, fullscreen'),
             'theme_advanced_toolbar_location': 'top',
             'theme_advanced_toolbar_align': 'left',
             })
@@ -344,7 +344,7 @@ class BlogEntryPageChangeForm(forms.ModelForm):
                        "cms_blogger/css/jquery.fs.scroller.css" )}
         js = ('cms_blogger/js/tinymce-extend.js',
               'cms_blogger/js/entry-admin.js',
-              'cms_blogger/js/jquery.fs.scroller.js', )
+              'cms_blogger/js/jquery.fs.scroller.js',
               'cms_blogger/js/admin-collapse.js',
               'cms_blogger/js/entry-preview.js', )
 

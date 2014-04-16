@@ -338,7 +338,7 @@ class BlogEntryPageAdmin(CustomAdmin, PlaceholderAdmin):
         }),
         ('Advanced Options', {
             'fields': ['seo_title', 'meta_keywords', 'disqus_enabled'],
-            'classes': ('right-col', 'collapsible-outer')
+            'classes': ('right-col', 'collapse')
         }),
 
     )

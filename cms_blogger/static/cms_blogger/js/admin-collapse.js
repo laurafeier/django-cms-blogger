@@ -1,5 +1,7 @@
 (function($) {
-    $(document).ready(function() {
+    //make sure the reaady callback is added only once
+    $(document).unbind('ready.collapseFiledset')
+    $(document).bind('ready.collapseFiledset', function() {
         // Add anchor tag for Show/Hide link
         $("fieldset.collapse").each(function(i, elem) {
             // Don't hide if fields in this fieldset have errors
