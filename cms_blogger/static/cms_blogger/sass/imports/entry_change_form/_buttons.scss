@@ -1,0 +1,82 @@
+@mixin formButton($type){
+    @if $type == "light-gray"{
+        background: $btn-light-gray !important;
+        color: $form-text-color;
+        border-color: #d2d1d1;
+        &:hover{
+            background:darken($btn-light-gray, 10%)  !important;
+        }
+    }@else if $type == "dark-gray"{
+        background: $btn-dark-gray !important;
+        color:#fff;
+        border-color: $form-text-color;
+        &:hover{
+            background:darken($btn-dark-gray, 10%)  !important;
+        }
+    }@else if $type == "blue"{
+        background: $btn-blue  !important;
+        color:#fff;
+        border-color: #27729e;
+        &:hover{
+            background:darken($btn-blue, 10%)  !important;
+        }
+    }@else if $type == "gray"{
+        background: $btn-gray  !important;
+        color:#fff;
+        border-color: #8a949f;
+        &:hover{
+            background:darken($btn-gray, 10%)  !important;
+        }
+    }@else {
+        background: $btn-light-gray !important;
+        color: $form-text-color;
+        border-color: #d2d1d1;
+        &:hover{
+            background:darken($btn-light-gray, 10%)  !important;
+        }
+    }
+
+    border-radius: 3px;
+    padding: 5px 20px;
+    text-align: center;
+    span{
+        padding: 0;
+        font-size: 16px;
+        line-height: 24px;
+    }
+}
+
+@mixin buttons($ns){
+    #{$ns}{
+        .ui-button{
+            @include formButton("light-gray");
+        }
+        #id_publish,
+        #publish_form_bottom{
+            @include formButton("blue");
+        }
+        #id_save,
+        #save_form_bottom{
+            @include formButton("dark-gray");
+        }
+        #delete_form_bottom{
+            @include formButton("gray");
+        }
+        #id_publish,
+        #id_save{
+            display: block;
+            padding-top:12px;
+            padding-bottom:12px;
+            border-radius:4px;
+            span{
+                font-size: 18px;
+            }
+        }
+
+        #delete_form_bottom{
+            float: left;
+        }
+    }
+}
+
+@include buttons($namespace)
