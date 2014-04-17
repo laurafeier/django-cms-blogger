@@ -351,8 +351,10 @@ class BlogEntryPage(
     poster_image = models.ImageField(
         _("Thumbnail Image"), upload_to=upload_entry_image, blank=True,
         storage=get_image_storage())
-    caption = models.CharField(_('caption'), max_length=70)
-    credit = models.CharField(_('credit'), max_length=35)
+    caption = models.CharField(_('caption'),
+        max_length=70, blank=True, null=True)
+    credit = models.CharField(_('credit'),
+        max_length=35, blank=True, null=True)
 
     authors = models.ManyToManyField(User,
         verbose_name=_('Blog Entry Authors'), related_name='blog_entries')
