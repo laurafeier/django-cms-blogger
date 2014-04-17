@@ -322,13 +322,13 @@ def upload_entry_image(instance, filename):
         datetime.datetime.utcnow().strftime("%Y%m%d_%H%M%S_%f"),
         slugify(base),)
 
-    new_ext = ext[:1] + slugify(ext[1:].lower())
+    new_ext = ext[:1] + ext[1:].lower()
     new_base_trimmed = new_base[:(FILENAME_LENGTH - len(new_ext))]
 
     return new_base_trimmed + new_ext
 
 
-def get_image_storage():  # TODO cache this
+def get_image_storage():
     if USE_FILER_STORAGE:
         return FILER_PUBLICMEDIA_STORAGE
     return None

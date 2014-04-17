@@ -13,7 +13,7 @@ from django.core.urlresolvers import reverse
 from django.db import models
 from django.db.models import Q
 from django.forms import Media
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseNotFound
 from django.shortcuts import get_object_or_404, render_to_response
 from django.template.context import RequestContext
 from django.utils.html import escapejs
@@ -327,13 +327,11 @@ class BlogAdmin(CustomAdmin):
         try:
             blog_entry = BlogEntryPage.objects.get(id=blog_entry_id)
         except BlogEntryPage.DoesNotExist:
-            blog_entry = None
-        if blog_entry:
-            if blog_entry.poster_image and blog_entry.poster_image.name:
-                blog_entry.poster_image.delete()
-                return HttpResponse("OK")
-            return HttpResponse("No file to delete")
-        return HttpResponse("BlogEntry does not exist")
+            return HttpResponseNotFound("BlogEntry does not exist")
+        if blog_entry.poster_image and blog_entry.poster_image.name:
+            blog_entry.poster_image.delete()
+            return HttpResponse("OK")
+        return HttpResponseNotFound("No file to delete")
 
     def navigation_tool(self, request, blog_id):
         if (request.method not in ['GET', 'POST'] or
@@ -431,9 +429,10 @@ class BlogEntryPageAdmin(CustomAdmin, PlaceholderAdmin):
             'classes': ('poster-image',)
         }),
 
-        (None, {
+        ("Credit/Caption", {
             'fields': ['caption', 'credit'],
-            'classes': ('poster-image-description',)
+            'classes': ('collapsible-inner', 'closed')
+
         }),
 
         (None, {

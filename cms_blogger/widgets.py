@@ -161,6 +161,10 @@ class DateTimeWidget(forms.widgets.TextInput):
 
 
 class PosterImage(forms.widgets.CheckboxInput):
+
+    class Media:
+        js = (static('filer/js/fileuploader.js'),)
+
     def render(self, name, value, attrs=None):
         return render_to_string(
             "admin/cms_blogger/blogentrypage/poster_image.html",

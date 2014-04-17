@@ -346,7 +346,6 @@ class BlogEntryPageChangeForm(forms.ModelForm):
         css = {"all": ("cms_blogger/css/entry-change-form.css",
                        "cms_blogger/css/jquery.fs.scroller.css" )}
         js = ('cms_blogger/js/tinymce-extend.js',
-              'cms_blogger/js/fileuploader.js',
               'cms_blogger/js/entry-admin.js',
               'cms_blogger/js/jquery.fs.scroller.js',
               'cms_blogger/js/admin-collapse.js',
@@ -363,22 +362,11 @@ class BlogEntryPageChangeForm(forms.ModelForm):
         self._init_categ_field(instance) if instance else ''
         super(BlogEntryPageChangeForm, self).__init__(*args, **kwargs)
         self._init_preview_buttons()
+        self._init_poster_image_widget()
         self._init_publish_button()
         if request and self.instance.authors.count() == 0:
             self.initial['authors'] = [request.user.pk]
 
-        self.fields['poster_image_uploader'].widget.blog_entry_id = instance.pk
-        self.fields['poster_image_uploader'].widget.image_url = (
-            instance.poster_image.url if instance.poster_image.name else None)
-
-        if self.instance:
-            preview1 = self.fields['preview_on_top'].widget
-            preview2 = self.fields['preview_on_bottom'].widget
-            url = reverse('admin:cms_blogger-entry-preview',
-                args=[self.instance.id])
-            preview1.link_url = preview2.link_url = url
-            popup_js = "return showEntryPreviewPopup(this);"
-            preview1.on_click = preview2.on_click = popup_js
         self.fields['body'].initial = self.instance.content_body
         # prepare for save
         self.instance.draft_id = None
@@ -404,6 +392,11 @@ class BlogEntryPageChangeForm(forms.ModelForm):
         preview1.link_url = preview2.link_url = url
         popup_js = "return showEntryPreviewPopup(this);"
         preview1.on_click = preview2.on_click = popup_js
+
+    def _init_poster_image_widget(self):
+        self.fields['poster_image_uploader'].widget.blog_entry_id = self.instance.pk
+        self.fields['poster_image_uploader'].widget.image_url = (
+            self.instance.poster_image.url if self.instance.poster_image.name else None)
 
     def clean_body(self):
         body = self.cleaned_data.get('body')

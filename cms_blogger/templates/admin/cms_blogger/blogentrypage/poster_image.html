@@ -10,7 +10,6 @@
         <div id="upload-button" class="poster-image-button" title="{% trans 'upload files' %}"> {% trans 'Upload' %}</div>
         <div id="delete-button" class="poster-image-button"> {% trans 'Remove' %}</div>
 
-        <span id="optionalk"> Credit/Caption </span>
     </div>
 
     <div id="fileInputQueue" style="float:left;">
@@ -35,24 +34,6 @@
     $(document).ready(function(){
         toggleState= true;
         addFields = true;
-        $("#optionalk").click(function(){
-            if(toggleState)
-            {
-                $("#poster-image-description").animate({height: "80"}, 300);
-                if(addFields)
-                {
-                    $(".field-caption").appendTo('#poster-image-description');
-                    $(".field-credit").appendTo('#poster-image-description');
-                    addFields = false;
-                }
-            }
-            else
-            {
-                $("#poster-image-description").animate({height: "0"}, 300);
-            }
-            toggleState = !toggleState;
-        });
-
         $('#delete-button').click(function(){
             var answer = confirm("Are you sure you want to remove image?");
             if(answer)
