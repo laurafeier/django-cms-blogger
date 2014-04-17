@@ -3,7 +3,7 @@
         var HTML = "";
         HTML += "<td><span><table style='border-collapse:collapse' class='mceListBox mceListBoxEnabled mce_formatselect more'>"
         HTML += "<tr>"
-        HTML += "<td class='mceFirst'><a href='javascript:void(0);' class='mceText'>More</a></td>"
+        HTML += "<td class='mceFirst'><a href='javascript:void(0);' class='mceText'>Advanced</a></td>"
         HTML += "<td class='mceLast'><a href='javascript:void(0);' class='mceOpen' ><span><span ></span></span></a></td>"
         HTML += "</tr></table></span></td>"
 
@@ -14,19 +14,19 @@
             $(this).toggleClass('open');
             if(!$(this).hasClass('open')){
                 $('.mceToolbar:gt(1)').hide();
-                $(this).find('.mceText').html("More")
+                $(this).find('.mceText').html("Advanced")
             }else{
                 $('.mceToolbar:gt(1)').show();
-                $(this).find('.mceText').html("Hide")
+                $(this).find('.mceText').html("Simple")
             }
         })
 
         if(!$(this).hasClass('open')){
             $('.mceToolbar:gt(1)').hide();
-            $(this).find('.mceText').html("More")
+            $(this).find('.mceText').html("Advanced")
         }else{
             $('.mceToolbar:gt(1)').show()
-            $(this).find('.mceText').html("Hide")
+            $(this).find('.mceText').html("Simple")
         }
     })
 }(django.jQuery || jQuery))

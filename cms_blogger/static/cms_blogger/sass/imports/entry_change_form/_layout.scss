@@ -325,7 +325,71 @@
 
                 }
                 & > fieldset:first-child{
-                    padding: 15px 25px;
+                    padding: 15px 0 0 0;
+                    background-color:#f6f6f6;
+                }
+
+                & > fieldset{
+                    .field-start_publication,
+                    .field-end_publication{
+                        text-align: center;
+                        input[type="text"]{
+                            width:80%;
+                            text-align:left;
+                            border-radius:0;
+                            margin-bottom: -1px;
+                            font-size: 14px;
+                            padding:2% 5%;
+                            cursor: text !important;
+                        }
+
+                        #picker_id_start_publication,
+                        #picker_id_end_publication{
+                            width: 100%;
+                            margin: 0 auto;
+                        }
+                    }
+
+                    .field-schedule_publish{
+                        padding:12px;
+                    }
+
+                    .field-publish,
+                    .field-save{
+                        padding-left:27px;
+                        padding-right:27px;
+                    }
+
+                    .collapsible-inner{
+                        &.closed{
+                            border:0;
+                            margin-top: 0px;
+                            &  h2{
+                                padding: 8px 27px;
+                            }
+                        }
+                        &:first-of-type{
+                            margin-top: 10px;
+                        }
+                        &:last-of-type{
+                            border-bottom:0;
+                            padding-bottom: 15px;
+                        }
+                        margin-bottom: 0;
+                        border-left:0;
+                        border-right:0;
+                        h2{
+                            color: $btn-blue;
+                            font-size: 14px;
+                            font-weight: normal;
+                            padding:12px;
+                        }
+                        .description{
+                            padding:12px;
+                        }
+
+                    }
+
                 }
 
                 .field-categories{
@@ -337,6 +401,11 @@
                     .categ-wrapper{
                         border:1px solid $form-border-color;
                         height: 170px;
+                        &[class="categ-wrapper scroller"]{
+                            .scroller-content{
+                                padding:20px;
+                            }
+                        }
                     }
                     ul {
                         margin:0;

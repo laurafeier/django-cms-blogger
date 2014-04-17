@@ -15,30 +15,31 @@
   bottom: 0;
   right: 0;
   z-index: 0;
+  max-height: 100%;
 }
-/* line 19, ../sass/imports/blogger/_blog-header.scss */
+/* line 20, ../sass/imports/blogger/_blog-header.scss */
 .cms-blogger .blog-header #blog-tagline {
   font-size: 16px;
   color: #747474;
 }
-/* line 22, ../sass/imports/blogger/_blog-header.scss */
+/* line 23, ../sass/imports/blogger/_blog-header.scss */
 .cms-blogger .blog-header #blog-tagline * {
   color: #747474;
 }
 @media (max-width: 480px) {
-  /* line 19, ../sass/imports/blogger/_blog-header.scss */
+  /* line 20, ../sass/imports/blogger/_blog-header.scss */
   .cms-blogger .blog-header #blog-tagline {
     display: none;
   }
 }
-/* line 29, ../sass/imports/blogger/_blog-header.scss */
+/* line 30, ../sass/imports/blogger/_blog-header.scss */
 .cms-blogger .blog-header #blog-title {
   font-size: 40px;
   text-transform: uppercase;
   margin-bottom: 5px;
 }
 @media (max-width: 480px) {
-  /* line 29, ../sass/imports/blogger/_blog-header.scss */
+  /* line 30, ../sass/imports/blogger/_blog-header.scss */
   .cms-blogger .blog-header #blog-title {
     font-size: 30px;
   }

@@ -62,6 +62,10 @@
         #delete_form_bottom{
             @include formButton("gray");
         }
+        #id_schedule_publish,
+        #id_schedule_unpublish{
+            @include formButton("blue");
+        }
         #id_publish,
         #id_save{
             display: block;
@@ -75,6 +79,11 @@
 
         #delete_form_bottom{
             float: left;
+        }
+
+        .ui-datepicker-buttonpane button{
+            @include formButton("gray");
+            font-weight: bold;
         }
     }
 }
