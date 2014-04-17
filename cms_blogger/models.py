@@ -22,9 +22,14 @@ from cms_layouts.models import LayoutTitle, Layout
 from cms_layouts.layout_response import LayoutResponse
 from filer.fields.image import FilerImageField
 import filer
+from .settings import USE_FILER_STORAGE, UPLOAD_TO_PREFIX
 from .utils import user_display_name
+import os
 from .managers import EntriesManager
+import datetime
+from filer.settings import FILER_PUBLICMEDIA_STORAGE
 
+FILENAME_LENGTH = 100
 
 def getCMSContentModel(**kwargs):
     content_attr = kwargs.get('content_attr', 'content')
@@ -44,10 +49,15 @@ def getCMSContentModel(**kwargs):
         def save(self, *args, **kwargs):
             super(ModelWithCMSContent, self).save(*args, **kwargs)
             plugin = getattr(self, plugin_getter)()
-            plugin_data = getattr(self, body_attr)
-            if plugin and plugin.body != plugin_data:
-                plugin.body = plugin_data
-                plugin.save()
+            if plugin is None:
+                return
+            # get_attached_plugin always fetches the plugin from the db;
+            #   the html cleaning cannot be done in the clean method since the
+            #   plugin instance from there will be different from this one
+            plugin.body = getattr(self, body_attr)
+            plugin.clean()
+            plugin.clean_plugins()
+            plugin.save()
 
         class Meta:
             abstract = True
@@ -192,6 +202,7 @@ class Blog(AbstractBlog):
     tagline = models.CharField(
         _('tagline'), max_length=60, blank=True, null=True,
         help_text=_('Blog Tagline'))
+
     branding_image = FilerImageField(
         null=True, blank=True, on_delete=models.SET_NULL,
         default=None, help_text=_('Blog Branding Image'))
@@ -304,20 +315,29 @@ class BioPage(models.Model, BlogRelatedPage):
 
 
 def upload_entry_image(instance, filename):
-    import os
-    filename_base, filename_ext = os.path.splitext(filename)
-    return 'blog/%s%s' % (
-        timezone.now().strftime("%Y%m%d%H%M%S"),
-        filename_ext.lower(),
-    )
+    base, ext = os.path.splitext(filename)
+    new_base = '%s%s%s_%s' % (
+        UPLOAD_TO_PREFIX,
+        os.sep,
+        datetime.datetime.utcnow().strftime("%Y%m%d_%H%M%S_%f"),
+        slugify(base),)
+
+    new_ext = ext[:1] + ext[1:].lower()
+    new_base_trimmed = new_base[:(FILENAME_LENGTH - len(new_ext))]
+
+    return new_base_trimmed + new_ext
+
+
+def get_image_storage():
+    if USE_FILER_STORAGE:
+        return FILER_PUBLICMEDIA_STORAGE
+    return None
 
 
 @blog_page
 class BlogEntryPage(
     getCMSContentModel(content_attr='content'), BlogRelatedPage):
-
     uses_layout_type = Blog.ENTRY_PAGE
-
     title = models.CharField(_('title'), max_length=120)
     slug = models.SlugField(
         _('slug'), max_length=255,
@@ -328,8 +348,11 @@ class BlogEntryPage(
         help_text=_("Used to build the entry's URL."))
     modified_at = models.DateTimeField(auto_now=True, db_index=True)
 
-    thumbnail_image = models.ImageField(
-        _("Thumbnail Image"), upload_to=upload_entry_image, blank=True)
+    poster_image = models.ImageField(
+        _("Thumbnail Image"), upload_to=upload_entry_image, blank=True,
+        storage=get_image_storage())
+    caption = models.CharField(_('caption'), max_length=70)
+    credit = models.CharField(_('credit'), max_length=35)
 
     authors = models.ManyToManyField(User,
         verbose_name=_('Blog Entry Authors'), related_name='blog_entries')
@@ -424,7 +447,7 @@ class BlogEntryPage(
                 "<h1>This Entry does not have a layout to render.</h1>")
         from django.template.context import RequestContext
         context = RequestContext(request)
-        context.update({'entry': self, 'blog': self.blog,})
+        context.update({'entry': self, 'blog': self.blog, })
         return LayoutResponse(
             self, layout, request, context=context).make_response()
 
@@ -462,6 +485,17 @@ class BlogEntryPage(
 
     def __unicode__(self):
         return "<Draft Empty Blog Entry>" if self.is_draft else self.title
+
+    def delete(self, *args, **kwargs):
+        path = self.poster_image.path
+        super(BlogEntryPage, self).delete(*args, **kwargs)
+        self.poster_image.storage.delete(path)
+
+    def save(self, *args, **kwargs):
+        super(BlogEntryPage, self).save(*args, **kwargs)
+        if hasattr(self, '_old_poster_image'):
+            old_poster_image_path = self._old_poster_image
+            self.poster_image.storage.delete(old_poster_image_path)
 
 
 @blog_page

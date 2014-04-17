@@ -13,6 +13,7 @@ class BlogPromotionPlugin(CMSPluginBase):
     formfield_overrides = {
         models.BooleanField: {'widget': ToggleWidget}
     }
+
     def render(self, context, instance, placeholder):
         plugin = instance
         blog = instance.blog

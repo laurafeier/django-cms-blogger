@@ -2,6 +2,7 @@ from django import template
 
 register = template.Library()
 
+
 def paginator(context, page, adjacent_pages=2):
     """
     Based on the logic provided here: https://djangosnippets.org/snippets/73/

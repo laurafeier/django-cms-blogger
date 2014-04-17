@@ -131,6 +131,30 @@
         .collapsible-inner.closed .inline-deletelink{
             display: none;
         }
+        .poster-image{
+            background-color: #F6F6F6;
+        }
+
+        #upload-button{
+            background-color: #3482B0;
+        }
+
+        #delete-button{
+            background-color: #575757;
+        }
+
+        .poster-image-button{
+            cursor: pointer;
+            color: white;
+            display: block;
+            padding: 10px 30px;
+            border-radius: 3px;
+            font-size: 14px;
+            margin-top: 10px;
+            margin-left:auto;
+            margin-right:0;
+            width: 50px;
+        }
 }
 
 @mixin layout($ns){

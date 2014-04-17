@@ -7,9 +7,9 @@
         {% include "cms_blogger/social_widgets.html" %}
     </div>
     <div class='right-col clearfix'>
-        {% if entry.thumbnail_image and not hide_entry_image %}
+        {% if entry.poster_image and not hide_entry_image %}
             <div class='right-col'>
-                <div class="entry-image"><img src='{{entry.thumbnail_image.url}}' /></div>
+                <div class="entry-image"><img src='{{entry.poster_image.url}}' /></div>
             </div>
         {% endif %}
         <div class='left-col'>
