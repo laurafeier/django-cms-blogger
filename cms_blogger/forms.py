@@ -19,12 +19,13 @@ from cms_layouts.slot_finder import (
     get_fixed_section_slots, MissingRequiredPlaceholder)
 from django_select2.fields import AutoModelSelect2MultipleField
 from .models import Blog, BlogEntryPage, BlogCategory
-from .widgets import TagItWidget, ButtonWidget, DateTimeWidget
+from .widgets import TagItWidget, ButtonWidget, DateTimeWidget, PosterImage
 from .utils import user_display_name
+from django.utils.safestring import mark_safe
+from django.template.loader import render_to_string
 
 
 class BlogLayoutInlineFormSet(BaseGenericInlineFormSet):
-
     def clean(self):
         if any(self.errors):
             return
@@ -126,7 +127,8 @@ class MultipleUserField(AutoModelSelect2MultipleField):
 class BlogForm(forms.ModelForm):
     categories = forms.CharField(
         widget=TagItWidget(attrs={
-            'tagit': '{allowSpaces: true, tagLimit: 20, caseSensitive: false}'}),
+            'tagit': '{allowSpaces: true, tagLimit: 20, '
+                     'caseSensitive: false}'}),
         help_text=_('Categories help text'))
 
     allowed_users = MultipleUserField(label="Add Users")
@@ -304,6 +306,7 @@ class BlogEntryPageChangeForm(forms.ModelForm):
         label='Blog Entry', required=True,
         widget=_get_text_editor_widget())
     authors = MultipleUserField()
+    poster_image_uploader = forms.CharField(label="", widget=PosterImage())
     categories = forms.ModelMultipleChoiceField(
         widget=forms.CheckboxSelectMultiple(),
         help_text=_("Check all the categories to apply to this post. Uncheck to remove."),
@@ -348,6 +351,7 @@ class BlogEntryPageChangeForm(forms.ModelForm):
               'cms_blogger/js/admin-collapse.js',
               'cms_blogger/js/entry-preview.js', )
 
+
     class Meta:
         model = BlogEntryPage
         exclude = ('content', 'blog', 'slug', 'publication_date')
@@ -358,6 +362,7 @@ class BlogEntryPageChangeForm(forms.ModelForm):
         self._init_categ_field(instance) if instance else ''
         super(BlogEntryPageChangeForm, self).__init__(*args, **kwargs)
         self._init_preview_buttons()
+        self._init_poster_image_widget()
         self._init_publish_button()
         if request and self.instance.authors.count() == 0:
             self.initial['authors'] = [request.user.pk]
@@ -387,6 +392,11 @@ class BlogEntryPageChangeForm(forms.ModelForm):
         preview1.link_url = preview2.link_url = url
         popup_js = "return showEntryPreviewPopup(this);"
         preview1.on_click = preview2.on_click = popup_js
+
+    def _init_poster_image_widget(self):
+        self.fields['poster_image_uploader'].widget.blog_entry_id = self.instance.pk
+        self.fields['poster_image_uploader'].widget.image_url = (
+            self.instance.poster_image.url if self.instance.poster_image.name else None)
 
     def clean_body(self):
         body = self.cleaned_data.get('body')
@@ -436,4 +446,3 @@ class BlogEntryPageChangeForm(forms.ModelForm):
             raise ValidationError("Incorrect publication dates interval.")
         self._set_publication_date()
         return self.cleaned_data
-

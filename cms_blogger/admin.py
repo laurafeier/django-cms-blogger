@@ -1,38 +1,50 @@
+from cms.admin.placeholderadmin import PlaceholderAdmin
+from cms.models import Title, CMSPlugin
+
+from django.conf import settings
+from django.conf.urls.defaults import patterns, url
 from django.contrib import admin
 from django.contrib.sites.models import Site
 from django.contrib.contenttypes.generic import GenericTabularInline
 from django.contrib.admin.templatetags.admin_static import static
+from django.core.exceptions import PermissionDenied
+from django.core.files.images import get_image_dimensions
+from django.core.urlresolvers import reverse
 from django.db import models
 from django.db.models import Q
 from django.forms import Media
+from django.http import HttpResponse, HttpResponseNotFound
+from django.shortcuts import get_object_or_404, render_to_response
+from django.template.context import RequestContext
 from django.utils.html import escapejs
 from django.utils import timezone
 from django.utils.translation import get_language, ugettext_lazy as _
 from django.utils.safestring import mark_safe
-from django.core.urlresolvers import reverse
-from django.core.exceptions import PermissionDenied
-from django.conf.urls.defaults import patterns, url
-from django.conf import settings
-from django.shortcuts import get_object_or_404, render_to_response
-from django.template.context import RequestContext
-from django.http import HttpResponse
+from django.views.decorators.csrf import csrf_exempt
 
-from cms.admin.placeholderadmin import PlaceholderAdmin
-from cms.models import Title, CMSPlugin
+from filer.utils.files import handle_upload, UploadException
+
 from menus.menu_pool import menu_pool
 from menus.templatetags.menu_tags import cut_levels
 
 from cms_layouts.models import Layout
 from cms_layouts.slot_finder import get_mock_placeholder
 
+from .changelists import BlogChangeList, BlogEntryChangeList
 from .models import Blog, BlogEntryPage, BlogNavigationNode
 from .forms import (
     BlogLayoutForm, BlogForm, BlogAddForm, BlogEntryPageAddForm,
     BlogEntryPageChangeForm, BlogLayoutInlineFormSet,
     EntryChangelistForm)
-from .changelists import BlogChangeList, BlogEntryChangeList
+from .settings import (ALLOWED_THUMBNAIL_IMAGE_TYPES,
+                       MINIMUM_POSTER_IMAGE_WIDTH,
+                       POSTER_IMAGE_ASPECT_RATIO,
+                       POSTER_IMAGE_ASPECT_RATIO_ERROR)
 from .widgets import ToggleWidget
 
+import imghdr
+import json
+import os
 
 class BlogLayoutInline(GenericTabularInline):
     form = BlogLayoutForm
@@ -173,7 +185,7 @@ class BlogAdmin(CustomAdmin):
     prepopulated_fields = {"slug": ("title",)}
 
     def _get_nodes(self, request, nodes, node_id, output):
-       for node in nodes:
+        for node in nodes:
             if node.id == node_id:
                 output.append('<li class="current-node">')
             else:
@@ -247,9 +259,79 @@ class BlogAdmin(CustomAdmin):
         url_patterns = patterns('',
             url(r'^(?P<blog_id>\d+)/navigation_tool/$',
                 self.admin_site.admin_view(self.navigation_tool),
-                name='cms_blogger-navigation-tool'), )
+                name='cms_blogger-navigation-tool'),
+
+            url(r'^(?P<blog_entry_id>\d+)/upload_file/$',
+                self.admin_site.admin_view(self.upload_thumbnail),
+                name='cms_blogger-upload-thumbnail'),
+
+            url(r'^(?P<blog_entry_id>\d+)/delete_file/$',
+                self.admin_site.admin_view(self.delete_thumbnail),
+                name='cms_blogger-delete-thumbnail'),
+        )
         url_patterns.extend(urls)
         return url_patterns
+
+    @csrf_exempt
+    def upload_thumbnail(self, request, blog_entry_id=None):
+
+        try:
+            blog_entry = BlogEntryPage.objects.get(id=blog_entry_id)
+
+            if blog_entry.poster_image.name:
+                blog_entry._old_poster_image = blog_entry.poster_image.name
+
+        except BlogEntryPage.DoesNotExist:
+            raise UploadException(
+                "Blog entry with id={0} does not exist".format(id))
+
+        mimetype = "application/json" if request.is_ajax() else "text/html"
+        upload = None
+        try:
+            upload, filename, _ = handle_upload(request)
+            validate_image_dimensions(upload)
+            validate_image_size(upload, request)
+            guessed_extension = imghdr.what(upload) or ""
+            if guessed_extension not in ALLOWED_THUMBNAIL_IMAGE_TYPES:
+                if not guessed_extension:
+                    displayed_extension = "Unknown"
+                else:
+                    displayed_extension = guessed_extension
+                raise UploadException(
+                    displayed_extension + " file type not allowed."
+                    " Please upload one of the following file types: " +
+                    ", ".join(ALLOWED_THUMBNAIL_IMAGE_TYPES))
+
+            extension = os.path.splitext(filename)[1]
+            if not extension:
+                # try to guess if it's an image and append extension
+
+                if guessed_extension:
+                    filename = '%s.%s' % (filename, guessed_extension)
+            blog_entry.poster_image.save(filename, upload)
+            json_response = {
+                'label': unicode(blog_entry.poster_image.name),
+                'url': blog_entry.poster_image.url,
+            }
+            return HttpResponse(
+                json.dumps(json_response), mimetype=mimetype)
+        except UploadException, e:
+            return HttpResponse(
+                json.dumps({'error': unicode(e)}), mimetype=mimetype)
+        finally:
+            if upload:
+                upload.close() #memory leak if not closed?
+
+    @csrf_exempt
+    def delete_thumbnail(self, request, blog_entry_id=None):
+        try:
+            blog_entry = BlogEntryPage.objects.get(id=blog_entry_id)
+        except BlogEntryPage.DoesNotExist:
+            return HttpResponseNotFound("BlogEntry does not exist")
+        if blog_entry.poster_image and blog_entry.poster_image.name:
+            blog_entry.poster_image.delete()
+            return HttpResponse("OK")
+        return HttpResponseNotFound("No file to delete")
 
     def navigation_tool(self, request, blog_id):
         if (request.method not in ['GET', 'POST'] or
@@ -286,9 +368,42 @@ class BlogAdmin(CustomAdmin):
         })
 
         if blog.navigation_node:
-            context.update({'initial_blog_node': blog.navigation_node,})
+            context.update({'initial_blog_node': blog.navigation_node, })
         return render_to_response(
             'admin/cms_blogger/blog/navigation.html', context)
+
+
+def validate_image_dimensions(upload):
+    width, height = get_image_dimensions(upload)
+    if width < MINIMUM_POSTER_IMAGE_WIDTH:
+        raise UploadException(
+            "Image width should be larger than {0}px".format(
+                MINIMUM_POSTER_IMAGE_WIDTH))
+
+    delta_ratio = width / float(height) - POSTER_IMAGE_ASPECT_RATIO
+    if abs(delta_ratio) > POSTER_IMAGE_ASPECT_RATIO_ERROR:
+        horizontal_text, vertical_text = "narrower", "taller"
+        if delta_ratio < 0:
+            horizontal_text, vertical_text = "wider", "shorter"
+
+        horizontal_px, vertical_px = map(
+            lambda x: abs(int(round(x))), [
+                height * POSTER_IMAGE_ASPECT_RATIO - width,
+                width / POSTER_IMAGE_ASPECT_RATIO - height])
+
+        raise UploadException(
+            "Image doesn't have a 16:9 aspect ratio. "
+            "It should be {0}px {1} or {2}px {3}".format(
+                horizontal_px, horizontal_text,
+                vertical_px, vertical_text))
+
+def validate_image_size(upload, request):
+    if ('CONTENT_LENGTH' in request.META and
+        len(upload) != int(request.META.get('CONTENT_LENGTH'))):
+
+        raise UploadException(
+            "File not uploaded completely. "
+            "Only {0} bytes uploaded".format(len(upload)))
 
 
 class BlogEntryPageAdmin(CustomAdmin, PlaceholderAdmin):
@@ -308,10 +423,18 @@ class BlogEntryPageAdmin(CustomAdmin, PlaceholderAdmin):
         (None, {
             'fields': ['title', 'authors', 'short_description', ],
         }),
+
         (None, {
-            'fields': ['thumbnail_image', ],
+            'fields': ['poster_image_uploader', ],
             'classes': ('poster-image',)
         }),
+
+        ("Credit/Caption", {
+            'fields': ['caption', 'credit'],
+            'classes': ('collapsible-inner', 'closed')
+
+        }),
+
         (None, {
             'fields': ['preview_on_top', 'body', 'preview_on_bottom'],
             'classes': ('no-border', 'body-wrapper')
