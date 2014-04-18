@@ -1,9 +1,4 @@
 {% spaceless %}
-    <script>
-        facebook_share = function(){if(typeof _gaq !== 'undefined'){_gaq.push(['_trackSocial', 'facebook', 'send']);}}
-        twitter_share = function(){if(typeof _gaq !== 'undefined'){_gaq.push(['_trackSocial', 'twitter', 'tweet']);}}
-        email_share = function(){if(typeof _gaq !== 'undefined'){_gaq.push(['_trackSocial', 'email', 'send']);}}
-    </script>
     {% if blog.enable_facebook or blog.enable_twitter or blog.email_account_link %}
     <div class="social">
     {% if blog.enable_facebook %}
