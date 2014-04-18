@@ -5,7 +5,11 @@
     {{ block.super }}
     <style>
     input[type="checkbox"]:checked:before{
-      background: url({{ STATIC_URL}}admin/img/checkbox.png) no-repeat 0 0;
+      background: url("{{ STATIC_URL}}admin/img/checkbox.png") no-repeat 0 0;
+    }
+    .cms_blogger-blogentrypage div.right-col .field-start_publication input[type="text"],
+    .cms_blogger-blogentrypage .field-end_publication input[type="text"]{
+      background:#fff url("{{ STATIC_URL}}admin/img/calendar.jpg") no-repeat 98% 50% !important;
     }
     </style>
 {% endblock %}

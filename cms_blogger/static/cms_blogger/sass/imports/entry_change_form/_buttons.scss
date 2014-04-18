@@ -39,6 +39,8 @@
     border-radius: 3px;
     padding: 5px 20px;
     text-align: center;
+    font-size: 16px;
+    line-height: 24px;
     span{
         padding: 0;
         font-size: 16px;
@@ -56,11 +58,17 @@
             @include formButton("blue");
         }
         #id_save,
-        #save_form_bottom{
+        #save_form_bottom,
+        #upload-button{
             @include formButton("dark-gray");
         }
-        #delete_form_bottom{
+        #delete_form_bottom,
+        #delete-button{
             @include formButton("gray");
+        }
+        #id_schedule_publish,
+        #id_schedule_unpublish{
+            @include formButton("blue");
         }
         #id_publish,
         #id_save{
@@ -75,6 +83,20 @@
 
         #delete_form_bottom{
             float: left;
+        }
+
+        .ui-datepicker-buttonpane button{
+            @include formButton("gray");
+            font-weight: bold;
+        }
+
+        .poster-image-button{
+            padding: 10px 30px;
+            margin-top: 10px;
+            margin-left:auto;
+            margin-right:0;
+            width:70px;
+            cursor: pointer;
         }
     }
 }
