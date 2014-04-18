@@ -473,8 +473,8 @@ class BlogEntryPage(
             Q(Q(publication_date=self.publication_date) &
               Q(slug__gt=self.slug)) |
             Q(publication_date__gt=self.publication_date))
-        next_post = self.blog.get_entries().exclude(
-            id=self.id).filter(query_for_next)[:1]
+        next_post = self.blog.get_entries().order_by(
+            'publication_date').exclude(id=self.id).filter(query_for_next)[:1]
         if next_post:
             return next_post[0]
         return None
