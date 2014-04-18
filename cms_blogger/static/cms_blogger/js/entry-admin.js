@@ -3,7 +3,7 @@
 
         this.init = function(){
             DOMChanges();
-
+            explandErrorFields();
         };
 
         function DOMChanges(){
@@ -14,6 +14,11 @@
             $('.field-categories ul').wrap("<div class='categ-wrapper'>");
 
             $('.field-categories .categ-wrapper').scroller();
+        }
+
+        function explandErrorFields(){
+            $('.errors:hidden').closest('.closed').removeClass('closed');
+            $('.errors:hidden').closest('.collapsed').removeClass('collapsed');
         }
 
         return this;

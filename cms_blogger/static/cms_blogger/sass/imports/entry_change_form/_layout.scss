@@ -111,12 +111,12 @@
 
         .collapsible-inner {
             border: none;
-            background-color: #efefef;
+            background-color: #efefef !important;
             border-top: 1px solid #ccc;
         }
 
         .collapsible-inner.closed {
-            background: inherit;
+            background: inherit !important;
             border-top: 1px solid transparent;
         }
 
@@ -135,34 +135,26 @@
             background-color: #F6F6F6;
         }
 
-        #upload-button{
-            background-color: #3482B0;
-        }
-
-        #delete-button{
-            background-color: #575757;
-        }
-
-        .poster-image-button{
-            cursor: pointer;
-            color: white;
-            display: block;
-            padding: 10px 30px;
-            border-radius: 3px;
-            font-size: 14px;
-            margin-top: 10px;
-            margin-left:auto;
-            margin-right:0;
-            width: 50px;
-        }
 }
 
 @mixin layout($ns){
     #{$ns}{
         @include overides();
+        font-family: Lucida Grande, Lucida Sans, Arial, sans-serif;
 
+        .field,
         .select2-drop{
             border-color: $form-border-color;
+        }
+
+        .select2-container-multi .select2-choices .select2-search-choice{
+            padding: 7px 5px 6px 18px;
+            margin: 0px 0 0px 5px;
+
+        }
+
+        .select2-container-multi .select2-search-choice-close{
+            margin-top: 3px;
         }
 
         #content{
@@ -198,8 +190,77 @@
                 padding-right:1%;
                 margin-left:-2px;
             }
+            .poster-image{
 
+                background: #f6f6f6 !important;
+                .collapsible-inner{
+                    .form-row{
+                        padding: 13px;
+                    }
+                }
+                .poster-image-container{
+                    margin: 0 auto;
+                    width:80%;
+                    .left-side{
+                        text-align: right;
+                        margin-right: 2%;
+                        width: 48%;
+                        float:left;
+                    }
+                    .right-side{
+                        width: 48%;
+                        margin-left: 2%;
+                        margin-top: 10px;
+                        white-space: normal;
+                        float:left;
+                        td{
+                            border:0;
+                            padding: 0;
+                        }
 
+                    }
+                    .title{
+                        margin-top:15px;
+                        font-size: 18px
+                    }
+
+                    .help{
+                        margin:5px 0 10px 0;
+                        font-style: italic;
+                        font-size: 12px !important;
+                        color: $form-text-color;
+                        white-space: normal;
+                        display: inline-block;
+                    }
+
+                    .thumbnail{
+                        width: 240px;
+                    }
+
+                    #fileUpload{
+                        width: 240px;
+                        height: 135px;
+                        border: 1px solid $form-border-color;
+                        display: inline-block;
+                        position:relative;
+                    }
+                    .progress{
+                        position:absolute;
+                        top:40%;
+                        left:10%;
+                        width:80%;
+                        text-align: center;
+                        .fileUploadProgress{
+                            border: 1px solid $form-border-color;
+                            background-color: $header-bg-color;
+                            .fileUploadProgressBar{
+                                background-color: $btn-blue;
+                            }
+                        }
+                    }
+
+                }
+            }
 
             .select2-container{
                 width: 84%;
@@ -211,6 +272,7 @@
                     height:28px !important;
                     padding-top:5px;
                     padding-bottom:5px;
+                    background-image: none;
                 }
             }
 
@@ -222,6 +284,7 @@
 
             .module{
                 border:1px solid $form-border-color;
+                background: none;
             }
 
             .main-col{
@@ -349,7 +412,44 @@
 
                 }
                 & > fieldset:first-child{
-                    padding: 15px 25px;
+                    padding: 15px 0 0 0;
+                    background-color:#f6f6f6;
+                }
+
+                & > fieldset{
+                    background:#fff;
+                    .field-start_publication,
+                    .field-end_publication{
+                        text-align: center;
+                        input[type="text"]{
+                            width:80%;
+                            text-align:left;
+                            border-radius:0;
+                            margin-bottom: -1px;
+                            font-size: 14px;
+                            padding:2% 5%;
+                            cursor: text !important;
+                        }
+
+                        #picker_id_start_publication,
+                        #picker_id_end_publication{
+                            width: 100%;
+                            margin: 0 auto;
+                        }
+                    }
+
+                    .field-schedule_publish{
+                        padding:12px;
+                    }
+
+                    .field-publish,
+                    .field-save{
+                        padding-left:35px;
+                        padding-right:35px;
+                    }
+
+
+
                 }
 
                 .field-categories{
@@ -361,6 +461,11 @@
                     .categ-wrapper{
                         border:1px solid $form-border-color;
                         height: 170px;
+                        &[class="categ-wrapper scroller"]{
+                            .scroller-content{
+                                padding:20px;
+                            }
+                        }
                     }
                     ul {
                         margin:0;
@@ -388,6 +493,35 @@
 
             }
 
+            .collapsible-inner{
+                &.closed{
+                    border:0;
+                    margin-top: 0px;
+                    &  h2{
+                        padding: 8px 35px;
+                    }
+                }
+                &:first-of-type{
+                    margin-top: 10px;
+                }
+                &:last-of-type{
+                    border-bottom:0;
+                    padding-bottom: 15px;
+                }
+                margin-bottom: 0;
+                border-left:0;
+                border-right:0;
+                h2{
+                    color: $btn-blue;
+                    font-size: 14px;
+                    font-weight: normal;
+                    padding:12px;
+                }
+                .description{
+                    padding:12px;
+                }
+
+            }
             .collapse{
                 h2{
                     background:none;
