@@ -15,7 +15,7 @@
             color:$entry-text-color;
             background: #fff;
             & > .left-col{
-                display: table-cell;
+                float:left;
                 width: 50px;
                 padding-right:15px;
                 padding-bottom:30px;
@@ -39,19 +39,30 @@
                 }
             }
             & > .right-col{
-                display: table-cell;
-                width: 100%;
                 text-align: left;
-                padding-bottom:30px;
-                @if $container == "blog-entry"{
-                    @include entry-border();
+                padding-bottom:25px;
+                margin-left: $left-col-width !important;
+                margin-bottom: 0;
+                .entry-image{
+                    margin-top: 15px;
                 }
 
+                @if $container == "blog-entry"{
+                    @include entry-border();
+                    .entry-image{
+                        margin-top: 0;
+                    }
+                }
+
+
+                h1{
+                    line-height: 38px;
+                    font-size: 30px;
+                }
                 & > .left-col{
                     @media (min-width:600px){
-                        float:left;
+                        display: table-cell;
                         padding-right: 2%;
-                        width: 50%;
                     }
                     text-align: left;
                     white-space: normal;
@@ -62,6 +73,7 @@
                     @media (min-width:600px){
                         float:right;
                         width: 48%;
+                        padding-left: 2%;
                     }
                     @media (max-width:599px){
                         .entry-image{

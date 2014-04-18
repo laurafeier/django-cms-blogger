@@ -10,8 +10,6 @@
             .pull-left,
             .pull-right{
                 padding:20px 0px 40px 0px;
-                display: table-cell;
-                float: none;
                 text-decoration: none;
                 &:hover{
                     .arrow-left,
@@ -20,9 +18,16 @@
                     }
                 }
             }
+            .pull-left + .pull-right{
+                border-left:1px solid $entry-footer-border-color;
+                margin-left: -1px;
+            }
+
             .pull-left{
-                border-right:1px solid $entry-footer-border-color;
-                padding-right: 15px;
+
+                padding-right: 2%;
+                float: left;
+                width: 48%%;
                 img{
                     padding-right:10px;
                     width: 12px;
@@ -35,7 +40,9 @@
             }
             .pull-right{
                 text-align: right;
-                padding-left: 15px;
+                padding-left: 2%;
+                float: right;
+                width: 48%;
                 img{
                     padding-left:10px;
                     width: 12px;
