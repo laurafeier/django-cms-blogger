@@ -1,8 +1,10 @@
 @mixin checkboxes($ns){
     #{$ns}{
         input[type="checkbox"]{
-            width:0;
-            margin-right:20px;
+
+            margin:0;
+            margin-right:5px;
+            vertical-align: top;
             &:before{
                 content: "";
                 width: 15px;
@@ -10,7 +12,7 @@
                 border:1px solid $header-border-color;
                 display: inline-block;
                 background: #f7f7f7;
-                margin-top: -3px;
+                padding: 0;
             }
         }
     }
