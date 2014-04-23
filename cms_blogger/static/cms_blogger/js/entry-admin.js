@@ -14,6 +14,8 @@
             $('.field-categories ul').wrap("<div class='categ-wrapper'>");
 
             $('.field-categories .categ-wrapper').scroller();
+
+            $('#id_short_description').attr('maxlength', 400);
         }
 
         function explandErrorFields(){

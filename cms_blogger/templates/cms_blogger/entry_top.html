@@ -14,18 +14,16 @@
 </script>
 <div class='left-col'>
     <div class="date">
-        <span class="month">{{entry.publication_date|date:"M"}}</span>
-        <span class="day">{{entry.publication_date.day}}</span>
+        <div class="month">{{entry.publication_date|date:"M"}}</div>
+        <div class="day">{{entry.publication_date.day}}</div>
     </div>
     {% include "cms_blogger/social_widgets.html" %}
 </div>
 <div class='right-col'>
     <h1 id='entry-title' class="main_color_text">{{entry.title}}</h1>
     <p class="subtitle">
-        Posted by <a href="#" class="author">{{entry.author_display_name}}</a>
+        Posted by <span class="author">{{entry.authors_display_name}}</span>
     </p>
 
-    {% if entry.poster_image %}
-    <div class="entry-image"><img src='{{entry.poster_image.url}}' /></div>
-    {% endif %}
+    {% include "cms_blogger/poster_image.html" %}
 </div>

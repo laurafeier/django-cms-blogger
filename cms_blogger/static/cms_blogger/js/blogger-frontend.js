@@ -36,7 +36,7 @@
         }
 
         function normalizeSocialURLs(){
-            var widgets = $('.blog-entry a.social, .blog-post a.social ');
+            var widgets = $('.blog-entry a.social, .blog-post a.social');
 
             widgets.each(function(){
                 var shreLink, url, prefix,
@@ -54,8 +54,20 @@
 
                 href = href.split("?")[0] + "?" + flattenParams(params);
                 $(this).attr("href", href);
-
+                showPopup($(this));
             });
+        }
+
+
+        function showPopup(elem){
+            if(elem.attr('href').indexOf('mailto:') === -1){
+                elem.off('click').on('click', function(e){
+                    var win = window.open(
+                        $(this).attr('href'), 'ShareBlogPost', 'height=800,width=960,resizable=yes,scrollbars=yes');
+                    win.focus();
+                    e.preventDefault();
+                });
+            }
         }
 
         return this;
