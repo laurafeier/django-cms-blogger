@@ -3,6 +3,9 @@
 
 {% block extrahead %}
     {{ block.super }}
+    <!--[if lte IE 9]>
+    <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}cms_blogger/css/toggles_ie8.css">
+    <![endif]-->
     <style>
     input[type="checkbox"]:checked:before{
       background: url("{{ STATIC_URL}}admin/img/checkbox.png") no-repeat 0 0;
