@@ -1,7 +1,3 @@
-from cms.admin.placeholderadmin import PlaceholderAdmin
-from cms.models import Title, CMSPlugin
-
-from django.conf import settings
 from django.conf.urls.defaults import patterns, url
 from django.contrib import admin
 from django.contrib.sites.models import Site
@@ -22,10 +18,12 @@ from django.utils.translation import get_language, ugettext_lazy as _
 from django.utils.safestring import mark_safe
 from django.views.decorators.csrf import csrf_exempt
 
-from filer.utils.files import handle_upload, UploadException
-
+from cms.admin.placeholderadmin import PlaceholderAdmin
+from cms.models import Title, CMSPlugin
 from menus.menu_pool import menu_pool
 from menus.templatetags.menu_tags import cut_levels
+
+from filer.utils.files import handle_upload, UploadException
 
 from cms_layouts.models import Layout
 from cms_layouts.slot_finder import get_mock_placeholder
@@ -45,6 +43,7 @@ from .widgets import ToggleWidget
 import imghdr
 import json
 import os
+
 
 class BlogLayoutInline(GenericTabularInline):
     form = BlogLayoutForm
@@ -237,15 +236,6 @@ class BlogAdmin(CustomAdmin):
             return "(save first)"
     location_in_navigation.allow_tags = True
     location_in_navigation.short_description = 'Select location'
-
-    def save_related(self, request, form, formsets, change):
-        super(BlogAdmin, self).save_related(request, form, formsets, change)
-        submitted_categories = form.cleaned_data.get('categories', [])
-
-        for existing in form.instance.categories.all():
-            if existing not in submitted_categories:
-                existing.delete()
-        form.instance.categories = submitted_categories
 
     def get_formsets(self, request, obj=None):
         # don't show layout inline in add view

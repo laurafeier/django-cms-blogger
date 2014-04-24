@@ -143,17 +143,19 @@ class BlogForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super(BlogForm, self).__init__(*args, **kwargs)
-        if (self.instance and 'categories' in self.fields and
-                not self.fields['categories'].initial):
-            self.fields['categories'].initial = ', '.join(
-                self.instance.categories.values_list('name', flat=True))
-        if (not self.is_bound and self.instance and self.instance.pk and
-                self.instance.layouts.count() == 0):
+        self._init_categories_field(self.instance)
+        if (not self.is_bound and self.instance.layouts.count() == 0):
             self.missing_layouts = ErrorList([
                 "This blog is missing a layout. "
                 "Add one in the Layouts section."])
         else:
             self.missing_layouts = False
+
+    def _init_categories_field(self, blog):
+        categories_field = self.fields.get('categories', None)
+        if blog and blog.pk and not categories_field.initial:
+            categories_field.initial = ', '.join(
+                blog.categories.values_list('name', flat=True))
 
     def clean_categories(self):
         categories = self.cleaned_data.get('categories', '')
@@ -162,26 +164,7 @@ class BlogForm(forms.ModelForm):
 
         categories_names = [name.strip().lower()
                             for name in categories.split(',')]
-
-        if len(categories_names) != len(set(categories_names)):
-            raise ValidationError(
-                "Category names not unique.")
-
-        blog = self.instance
-        categories_slugs = {slugify(name): name
-                            for name in categories_names}
-        existing_slugs = {categ.slug: categ
-                          for categ in blog.categories.all()}
-        category_objs = []
-        for slug, name in categories_slugs.items():
-            if slug not in existing_slugs:
-                category = BlogCategory()
-                category.slug = slug
-                category.name = name
-            else:
-                category = existing_slugs[slug]
-            category_objs.append(category)
-        return category_objs
+        return categories_names
 
     def clean_in_navigation(self):
         in_navigation = self.cleaned_data.get('in_navigation', False)
@@ -200,6 +183,35 @@ class BlogForm(forms.ModelForm):
         if disqus_enabled and not disqus_shortname:
             raise ValidationError('Disqus shortname required.')
         return disqus_shortname
+
+    def _save_categories(self, saved_blog):
+        names = set(self.cleaned_data.get('categories', []))
+        existing_names = set(saved_blog.categories.values_list(
+            'name', flat=True))
+        removed_categories = existing_names - names
+        new_category_names = names - existing_names
+
+        for name in new_category_names:
+            BlogCategory.objects.create(name=name, blog=saved_blog)
+
+        for category in BlogCategory.objects.filter(
+                name__in=removed_categories, blog=saved_blog):
+            category.delete()
+
+    def save(self, commit=True):
+        saved_instance = super(BlogForm, self).save(commit=commit)
+        if commit:
+            self._save_categories(saved_instance)
+        else:
+            original_save_m2m = self.save_m2m
+            if not hasattr(original_save_m2m, '_save_categories_attached'):
+                def _extra_save_m2m():
+                    self._save_categories(saved_instance)
+                    original_save_m2m()
+                self.save_m2m = _extra_save_m2m
+                setattr(self.save_m2m, '_save_categories_attached', True)
+
+        return saved_instance
 
 
 class BlogAddForm(forms.ModelForm):

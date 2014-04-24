@@ -4,33 +4,35 @@ from django.utils.translation import ugettext_lazy as _
 from django.utils import timezone
 from django.contrib.auth.models import User
 from django.contrib.sites.models import Site
-from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes.generic import GenericRelation
 from django.utils.translation import get_language
 from django.template.defaultfilters import slugify
-from django.template import Context
 from django.template.loader import get_template
 from django.db.models import signals
 from django.dispatch import receiver
 from django.http import HttpResponseNotFound
-from django.conf import settings
 
 from cms.models.fields import PlaceholderField
-from cms.models import Page, Placeholder, CMSPlugin
+from cms.models import Placeholder, CMSPlugin
 
 from cms_layouts.models import LayoutTitle, Layout
 from cms_layouts.layout_response import LayoutResponse
+
 from filer.fields.image import FilerImageField
+from filer.settings import FILER_PUBLICMEDIA_STORAGE
 import filer
+
 from .settings import USE_FILER_STORAGE, UPLOAD_TO_PREFIX
 from .utils import user_display_name
 from .slug import get_unique_slug
-import os
 from .managers import EntriesManager
+
+import os
 import datetime
-from filer.settings import FILER_PUBLICMEDIA_STORAGE
+
 
 FILENAME_LENGTH = 100
+
 
 def getCMSContentModel(**kwargs):
     content_attr = kwargs.get('content_attr', 'content')
@@ -531,7 +533,7 @@ class BlogEntryPage(
 class BlogCategory(models.Model, BlogRelatedPage):
     blog_related_name = 'categories'
     name = models.CharField(_('name'), max_length=30, db_index=True)
-    slug = models.SlugField(_('slug'), max_length=60)
+    slug = models.SlugField(_('slug'), max_length=30)
     blog_entry = models.ForeignKey(BlogEntryPage, on_delete=models.SET_NULL,
         null=True, blank=True, related_name='categories')
 
@@ -553,6 +555,12 @@ class BlogCategory(models.Model, BlogRelatedPage):
 
     def get_layout(self):
         return self.blog.get_layout_for(Blog.LANDING_PAGE)
+
+    def save(self, *args, **kwargs):
+        if not self.slug and self.name and self.blog:
+            unique_qs = BlogCategory.objects.filter(blog=self.blog)
+            self.slug = get_unique_slug(self, self.name, unique_qs)
+        super(BlogCategory, self).save(*args, **kwargs)
 
     def __unicode__(self):
         return self.name
