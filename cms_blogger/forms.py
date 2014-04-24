@@ -162,6 +162,15 @@ class BlogForm(forms.ModelForm):
             raise ValidationError(
                 "Category names not unique.")
 
+        max_len = BlogCategory._meta.get_field('name').max_length
+
+        invalid_categories = [c for c in categories_names if len(c) > max_len]
+        if invalid_categories:
+            raise ValidationError(
+                "Categor%s too long: %s" % (
+                    "y" if len(invalid_categories)==1 else "ies",
+                    ' '.join(invalid_categories)))
+
         blog = self.instance
         categories_slugs = {slugify(name): name
                             for name in categories_names}
