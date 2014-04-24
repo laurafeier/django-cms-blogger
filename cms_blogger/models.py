@@ -24,6 +24,7 @@ from filer.fields.image import FilerImageField
 import filer
 from .settings import USE_FILER_STORAGE, UPLOAD_TO_PREFIX
 from .utils import user_display_name
+from .slug import get_unique_slug
 import os
 from .managers import EntriesManager
 import datetime
@@ -288,30 +289,53 @@ class BlogRelatedPage(object):
         raise NotImplementedError
 
 
+class Author(models.Model):
+
+    name = models.CharField(_('name'), max_length=150)
+    user = models.ForeignKey(User, on_delete=models.SET_NULL,
+        null=True, blank=True, related_name='blog_authors')
+    slug = models.SlugField(
+        _('slug'), max_length=150,
+        help_text=_("Used to build the author's URL."))
+
+    def save(self, *args, **kwargs):
+        if not self.slug and self.display_name:
+            unique_qs = Author.objects.all()
+            self.slug = get_unique_slug(self, self.display_name, unique_qs)
+        super(Author, self).save(*args, **kwargs)
+
+    @property
+    def display_name(self):
+        return self.name or user_display_name(self.user)
+
+    def __unicode__(self):
+        return self.display_name
+
+
 @blog_page
 class BioPage(models.Model, BlogRelatedPage):
 
     uses_layout_type = Blog.BIO_PAGE
-    author_name = models.CharField(max_length=255)
+    author = models.ForeignKey(Author)
 
     @property
     def slug(self):
-        return slugify(self.author_name)
+        return self.author.slug
 
     @models.permalink
     def get_absolute_url(self):
         return ('cms_blogger.views.entry_or_bio_page', (), {
             'blog_slug': self.blog.slug,
-            'slug': self.slug})
+            'slug': self.slug })
 
     def get_title_obj(self):
         title = LayoutTitle()
-        title.page_title = self.author_name.title()
+        title.page_title = self.author.display_name.title()
         title.slug = self.slug
         return title
 
     def __unicode__(self):
-        return self.author_name.title()
+        return self.author.display_name.title()
 
 
 def upload_entry_image(instance, filename):
@@ -356,7 +380,7 @@ class BlogEntryPage(
     credit = models.CharField(_('credit'),
         max_length=35, blank=True, null=True)
 
-    authors = models.ManyToManyField(User,
+    authors = models.ManyToManyField(Author,
         verbose_name=_('Blog Entry Authors'), related_name='blog_entries')
 
     short_description = models.TextField(
@@ -400,7 +424,7 @@ class BlogEntryPage(
 
     @property
     def authors_display_name(self):
-        return ", ".join((user_display_name(author)
+        return ", ".join(('%s' % author
                           for author in self.authors.all()))
 
     def extra_html_before_content(self, request, context):
@@ -479,6 +503,20 @@ class BlogEntryPage(
             return next_post[0]
         return None
 
+    def delete(self, *args, **kwargs):
+        path = self.poster_image.path
+        super(BlogEntryPage, self).delete(*args, **kwargs)
+        self.poster_image.storage.delete(path)
+
+    def save(self, *args, **kwargs):
+        if not self.slug and self.title:
+            unique_qs = BlogEntryPage.objects.filter(
+                blog=self.blog_id, draft_id=None)
+            self.slug = get_unique_slug(self, self.title, unique_qs)
+        super(BlogEntryPage, self).save(*args, **kwargs)
+        if hasattr(self, '_old_poster_image'):
+            old_poster_image_path = self._old_poster_image
+            self.poster_image.storage.delete(old_poster_image_path)
 
     class Meta:
         verbose_name = "blog entry"
@@ -487,17 +525,6 @@ class BlogEntryPage(
 
     def __unicode__(self):
         return "<Draft Empty Blog Entry>" if self.is_draft else self.title
-
-    def delete(self, *args, **kwargs):
-        path = self.poster_image.path
-        super(BlogEntryPage, self).delete(*args, **kwargs)
-        self.poster_image.storage.delete(path)
-
-    def save(self, *args, **kwargs):
-        super(BlogEntryPage, self).save(*args, **kwargs)
-        if hasattr(self, '_old_poster_image'):
-            old_poster_image_path = self._old_poster_image
-            self.poster_image.storage.delete(old_poster_image_path)
 
 
 @blog_page

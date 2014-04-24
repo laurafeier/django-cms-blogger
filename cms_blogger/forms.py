@@ -9,23 +9,28 @@ from django.contrib.sites.models import Site
 from django.utils.translation import ugettext_lazy as _
 from django.utils import timezone
 from django.contrib.auth.models import User
+from django.db import router
+
 from cms.plugin_pool import plugin_pool
 from cms.plugins.text.settings import USE_TINYMCE
 from cms.plugins.text.widgets.wymeditor_widget import WYMEditor
 from cms.utils.plugins import get_placeholders
 from cms.models import Page
+
 from cms_layouts.models import Layout
 from cms_layouts.slot_finder import (
     get_fixed_section_slots, MissingRequiredPlaceholder)
-from django_select2.fields import AutoModelSelect2MultipleField
-from .models import Blog, BlogEntryPage, BlogCategory
+
+from django_select2.fields import (
+    AutoModelSelect2MultipleField, AutoModelSelect2TagField)
+
+from .models import Blog, BlogEntryPage, BlogCategory, Author
 from .widgets import TagItWidget, ButtonWidget, DateTimeWidget, PosterImage
 from .utils import user_display_name
-from django.utils.safestring import mark_safe
-from django.template.loader import render_to_string
 
 
 class BlogLayoutInlineFormSet(BaseGenericInlineFormSet):
+
     def clean(self):
         if any(self.errors):
             return
@@ -299,13 +304,39 @@ class ButtonField(forms.Field):
         super(ButtonField, self).__init__(*args, **kwargs)
 
 
+class AuthorsField(AutoModelSelect2TagField):
+    queryset = Author.objects.db_manager(router.db_for_write(Author))
+    empty_values = [None, '', 0]
+    search_fields = ['name__icontains', 'user__first_name__icontains',
+                     'user__last_name__icontains', 'user__email__icontains',
+                     'user__username__icontains']
+
+    def get_model_field_values(self, value):
+        return {'name': value}
+
+    def make_authors(self):
+        # since this is a GET request and it does a db updates, ensure it
+        #   uses the 'write' db for reads also
+        author_mgr = Author.objects.db_manager(router.db_for_write(Author))
+        user_mgr = User.objects.db_manager(router.db_for_write(User))
+        users_used = author_mgr.values_list('user', flat=True)
+        candidates_for_author = user_mgr.exclude(id__in=users_used)
+        for user in candidates_for_author:
+            author_mgr.get_or_create(name='', user=user)
+        return author_mgr.all()
+
+    def __init__(self, *args, **kwargs):
+        self.make_authors()
+        super(AuthorsField, self).__init__(*args, **kwargs)
+
+
 class BlogEntryPageChangeForm(forms.ModelForm):
     requires_request = True
 
     body = forms.CharField(
         label='Blog Entry', required=True,
         widget=_get_text_editor_widget())
-    authors = MultipleUserField()
+    authors = AuthorsField()
     poster_image_uploader = forms.CharField(label="", widget=PosterImage())
     categories = forms.ModelMultipleChoiceField(
         widget=forms.CheckboxSelectMultiple(),
@@ -365,7 +396,8 @@ class BlogEntryPageChangeForm(forms.ModelForm):
         self._init_poster_image_widget()
         self._init_publish_button()
         if request and self.instance.authors.count() == 0:
-            self.initial['authors'] = [request.user.pk]
+            self.initial['authors'] = Author.objects.filter(
+                name='', user=request.user.pk)[:1]
 
         self.fields['body'].initial = self.instance.content_body
         # prepare for save
@@ -402,22 +434,6 @@ class BlogEntryPageChangeForm(forms.ModelForm):
         body = self.cleaned_data.get('body')
         self.instance.content_body = body
         return body
-
-    def clean_title(self):
-        title = self.cleaned_data.get('title', '')
-        slug = slugify(title)
-        blog_id = self.instance.blog_id
-        try:
-            BlogEntryPage.objects.exclude(pk=self.instance.pk).get(
-                slug=slug, blog=blog_id, draft_id=None)
-        except BlogEntryPage.DoesNotExist:
-            pass
-        else:
-            raise ValidationError(
-                "Entry with slug %s already exists. Choose a different "
-                "title." % slug)
-        self.instance.slug = slug
-        return title
 
     def _set_publication_date(self):
         publish_toggle = bool(self.data.get('_pub_pressed'))

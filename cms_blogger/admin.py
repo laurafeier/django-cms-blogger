@@ -70,7 +70,8 @@ class BlogLayoutInline(GenericTabularInline):
             available_choices = Title.objects.filter(
                 page__site=obj.site,
                 language=get_language()).values_list(
-                    'page', 'page__level', 'title')
+                    'page', 'page__level', 'title').order_by(
+                        'page__tree_id', 'page__lft')
             available_choices = [
                 (page, mark_safe('%s%s' % ('&nbsp;' * level * 2, title)))
                 for page, level, title in available_choices]
