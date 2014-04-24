@@ -9,7 +9,7 @@ function showEntryPreviewPopup(triggeringLink) {
     href += (href.indexOf('?') == -1) ?  '?': '&';
     href += jQuery.param(params);
     var win = window.open(
-        href, name, 'height=500,width=800,resizable=yes,scrollbars=yes');
+        href, name, 'height=800,width=1024,resizable=yes,scrollbars=yes');
     win.focus();
     return false;
 }

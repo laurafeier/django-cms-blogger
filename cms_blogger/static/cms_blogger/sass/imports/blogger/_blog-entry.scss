@@ -60,9 +60,11 @@
                     font-size: 30px;
                 }
                 & > .left-col{
-                    @media (min-width:600px){
-                        display: table-cell;
-                        padding-right: 2%;
+                    display: table-cell;
+                    padding-right: 2%;
+                    @media (max-width:599px){
+                        display: block;
+                        padding-right:0;
                     }
                     text-align: left;
                     white-space: normal;
@@ -70,12 +72,13 @@
                 }
                 & > .right-col{
                     text-align: left;
-                    @media (min-width:600px){
-                        float:right;
-                        width: 48%;
-                        padding-left: 2%;
-                    }
+                    float:right;
+                    width: 48%;
+                    padding-left: 2%;
                     @media (max-width:599px){
+                        float: none;
+                        width: auto;
+                        padding-left: 0;
                         .entry-image{
                             margin-bottom: 10px;
                         }
@@ -108,6 +111,9 @@
                 margin:0;
                 font-size: 14px;
                 @include border-radius(3px);
+                &:hover{
+                    background-color:darken($read-more-bg-color, 7%)
+                }
             }
 
             .subtitle{

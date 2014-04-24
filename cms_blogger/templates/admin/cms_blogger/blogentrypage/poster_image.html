@@ -29,33 +29,35 @@
 </div>
 
 <script type="text/javascript">
-    $(document).ready(function(){
-        toggleState= true;
-        addFields = true;
-        $('#delete-button').click(function(){
-            if(!$('#fileUpload img').length) return;
-            var answer = confirm("Are you sure you want to remove image?");
-            if(answer)
-            {
-                $.ajax({
-                    url: "{% url 'admin:cms_blogger-delete-thumbnail' blog_entry_id=blog_entry_id %}",
-                    type: 'post',
-                    data: '',
-                    success: function(data)
-                    {
-                        $('#fileUpload').empty();
-                        $('#delete_image').html('');
-                        $('#fileInputQueue .help').show();
-                        alert('Image deleted successfully.');
-                    }
-                });
-                return false;
-            }
-        });
-    });
-
 //<![CDATA[
 $(function() {
+    toggleState= true;
+    addFields = true;
+    $('#delete-button').click(function(){
+        if(!$('#fileUpload img').length) return;
+        var answer = confirm("Are you sure you want to remove image?");
+        if(answer)
+        {
+            $.ajax({
+                url: "{% url 'admin:cms_blogger-delete-thumbnail' blog_entry_id=blog_entry_id %}",
+                type: 'post',
+                data: '',
+                success: function(data)
+                {
+                    $('#fileUpload').empty();
+                    $('#delete_image').html('');
+                    $('#fileInputQueue .help').show();
+                    alert('Image deleted successfully.');
+                }
+            });
+            return false;
+        }
+    });
+
+    if($('#fileUpload .thumbnail').length){
+        $('#fileInputQueue .help').hide();
+    }
+
     var uploader = new qq.FileUploaderBasic({
         action: '{% url 'admin:cms_blogger-upload-thumbnail' blog_entry_id=blog_entry_id %}',
         button: document.getElementById('upload-button'),

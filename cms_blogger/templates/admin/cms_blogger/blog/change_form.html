@@ -61,6 +61,9 @@ form ul.tagit {
 
 {% block extrahead %}
 {{block.super}}
+<!--[if lte IE 9]>
+<link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}cms_blogger/css/toggles_ie8.css">
+<![endif]-->
 <script type="text/javascript" src="{{ STATIC_URL }}cms_blogger/js/popupHandler.js"></script>
 <script type="text/javascript">
 {% if not add %}

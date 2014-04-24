@@ -9,16 +9,16 @@
     <div class='right-col clearfix'>
         {% if entry.poster_image and not hide_entry_image %}
             <div class='right-col'>
-                <div class="entry-image"><img src='{{entry.poster_image.url}}' /></div>
+                {% include "cms_blogger/poster_image.html" %}
             </div>
         {% endif %}
         <div class='left-col'>
             <h1 id='entry-title'><a class="main_color_text" href="{{PROXY_REWRITE_RULE}}{{entry.get_absolute_url}}">{{entry.title}}</a></h1>
             <p class="subtitle">
-                Posted by <a href="#" class="author">{{entry.author_display_name}}</a>
+                Posted by <span class="author">{{entry.authors_display_name}}</span>
             </p>
             {% if entry.short_description and not hide_entry_description %}
-            <p class="entry-summary">{{entry.short_description}}</p>
+            <p class="entry-summary">{{entry.short_description|truncatechars:400}}</p>
             <a class="entry-read-more main_color_text" href="{{PROXY_REWRITE_RULE}}{{entry.get_absolute_url}}">Read More</a>
             {% endif %}
         </div>

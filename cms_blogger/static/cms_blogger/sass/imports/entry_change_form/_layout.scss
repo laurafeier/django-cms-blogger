@@ -140,7 +140,8 @@
 @mixin layout($ns){
     #{$ns}{
         @include overides();
-        font-family: Lucida Grande, Lucida Sans, Arial, sans-serif;
+
+        font-family: Verdana,Arial,sans-serif;
 
         .field,
         .select2-drop{
@@ -317,6 +318,7 @@
 
                 .field-short_description{
                     position:relative;
+                    overflow: visible;
                     .help{
                         font-size:12px;
                         font-style: italic;
@@ -343,7 +345,7 @@
                         width: 22%;
                         & + textarea,
                         & + .help + textarea{
-                            width: 75%;
+                            width: 74.7%;
                         }
 
                         & + .help{
@@ -377,7 +379,7 @@
                         width: 100%;
                         input,
                         textarea{
-                            width: 69%;
+                            width: 68%;
                             white-space: normal;
                         }
                         label{
@@ -461,9 +463,10 @@
                     .categ-wrapper{
                         border:1px solid $form-border-color;
                         height: 170px;
+                        padding:0;
                         &[class="categ-wrapper scroller"]{
                             .scroller-content{
-                                padding:20px;
+                                padding:0;
                             }
                         }
                     }
@@ -472,10 +475,12 @@
                         padding:0;
                         overflow:hidden;
                         li{
-                            margin-top: 8px;
                             &:first-child{
-                                margin-top: 0;
+                                padding-top: 8px;
                             }
+                            padding-top: 4px;
+                            padding-bottom: 4px;
+                            padding-left:20px;
                         }
                         label{
                             font-size: 14px;
@@ -536,17 +541,18 @@
                         &:before{
                             content: "\2013";
                             background:$btn-blue;
-                            border-radius:10px;
+                            border-radius:50%;
                             display: inline-block;
-                            width: 20px;
-                            height:20px;
-                            line-height: 20px;
+                            width: 21px;
+                            height:21px;
+                            line-height: 19px;
                             color: #fff;
                             font-size: 18px;
                             text-align: center;
                             font-weight: bold;
                             margin-right:7px;
                             vertical-align: top;
+                            text-indent: -0.5px;
                         }
                     }
                 }

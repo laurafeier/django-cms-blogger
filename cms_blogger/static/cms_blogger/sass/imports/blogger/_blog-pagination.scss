@@ -15,6 +15,18 @@
             a{
                 color: $entry-date-color;
             }
+            td{
+                width: 50%;
+                text-align: center;
+                &.prev{
+                    width: 25%;
+                    text-align: left;
+                }
+                &.next{
+                    width: 25%;
+                    text-align: right;
+                }
+            }
             .current{
                 text-decoration: underline;
             }
@@ -26,8 +38,6 @@
             .previous,
             .next{
                 margin:0;
-                a{
-                }
                 img{
                     text-decoration: none;
                     width: 12px;
@@ -35,13 +45,14 @@
             }
 
             .previous{
-                float: left;
+                float: none;
+                text-align: left;
                 img{
                     padding-right:10px;
                 }
             }
             .next{
-                float: right;
+                float: none;
                 img{
                     padding-left:10px;
                 }

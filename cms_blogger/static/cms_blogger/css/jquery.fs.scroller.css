@@ -22,11 +22,9 @@
 	.scroller-content::-webkit-resizer { background: transparent; opacity: 0; }
 
 	/* Active Scrollbar */
-	.scroller-active .scroller-content { padding: 20px; }
 	.scroller-active .scroller-bar { display: block; }
 
 	/* Setup Scrollbar - Should match 'active' styles for proper sizing */
-	.scroller-active .scroller-content { padding: 20px; }
 	.scroller-active .scroller-bar { display: block; }
 
 	/* Horizontal */
