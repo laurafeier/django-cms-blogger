@@ -303,6 +303,7 @@ def _get_text_editor_widget():
                 'strikethrough, sub, sup, fullscreen'),
             'theme_advanced_toolbar_location': 'top',
             'theme_advanced_toolbar_align': 'left',
+            'setup' : 'tinyMCESetup'
             })
     else:
         return WYMEditor(installed_plugins=plugins)
