@@ -24,7 +24,7 @@
             border:none;
         }
 
-        #id_publish, #id_save{
+        #id_publish, #id_save_button{
             font-size: medium;
         }
 
@@ -445,7 +445,7 @@
                     }
 
                     .field-publish,
-                    .field-save{
+                    .field-save_button{
                         padding-left:35px;
                         padding-right:35px;
                     }

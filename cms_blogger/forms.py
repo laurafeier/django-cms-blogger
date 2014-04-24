@@ -381,7 +381,7 @@ class BlogEntryPageChangeForm(forms.ModelForm):
     end_publication = forms.Field(
         required=False, widget=DateTimeWidget())
 
-    save = ButtonField(widget=ButtonWidget(submit=True))
+    save_button = ButtonField(widget=ButtonWidget(submit=True, text='Save'))
     preview_on_top = ButtonField(widget=ButtonWidget(text='Preview'))
     preview_on_bottom = ButtonField(widget=ButtonWidget(text='Preview'))
 
@@ -438,14 +438,27 @@ class BlogEntryPageChangeForm(forms.ModelForm):
         preview1.on_click = preview2.on_click = popup_js
 
     def _init_poster_image_widget(self):
-        self.fields['poster_image_uploader'].widget.blog_entry_id = self.instance.pk
-        self.fields['poster_image_uploader'].widget.image_url = (
-            self.instance.poster_image.url if self.instance.poster_image.name else None)
+        poster_widget = self.fields['poster_image_uploader'].widget
+        poster_widget.blog_entry_id = self.instance.pk
+        poster_widget.image_url = None
+        if self.instance.poster_image and self.instance.poster_image.name:
+            poster_widget.image_url = self.instance.poster_image.url
 
     def clean_body(self):
         body = self.cleaned_data.get('body')
         self.instance.content_body = body
         return body
+
+    def clean_title(self):
+        title = self.cleaned_data.get('title').strip()
+        slug = slugify(title)
+        entries_with_slug = BlogEntryPage.objects.filter(
+            blog=self.instance.blog, draft_id=None, slug=slug)
+        if entries_with_slug.exclude(pk=self.instance.pk).exists():
+            raise ValidationError(
+                "Entry with the same slug already exists. "
+                "Choose a different title.")
+        return title
 
     def _set_publication_date(self):
         publish_toggle = bool(self.data.get('_pub_pressed'))
@@ -474,3 +487,26 @@ class BlogEntryPageChangeForm(forms.ModelForm):
             raise ValidationError("Incorrect publication dates interval.")
         self._set_publication_date()
         return self.cleaned_data
+
+    def _save_categories(self, saved_entry):
+        submitted_categories = self.cleaned_data.get('categories', [])
+        blog = saved_entry.blog
+        saved_entry.categories.clear()
+        if blog:
+            saved_entry.categories = blog.categories.filter(
+                pk__in=submitted_categories)
+
+    def save(self, commit=True):
+        saved_instance = super(BlogEntryPageChangeForm, self).save(
+            commit=commit)
+        if commit:
+            self._save_categories(saved_instance)
+        else:
+            original_save_m2m = self.save_m2m
+            if not hasattr(original_save_m2m, '_save_categories_attached'):
+                def _extra_save_m2m():
+                    self._save_categories(saved_instance)
+                    original_save_m2m()
+                self.save_m2m = _extra_save_m2m
+                setattr(self.save_m2m, '_save_categories_attached', True)
+        return saved_instance

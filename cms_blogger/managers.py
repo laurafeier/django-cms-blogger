@@ -34,7 +34,16 @@ class EmptyEntriesQueryset(models.query.EmptyQuerySet, EntriesQuerysetMixin):
 
 
 class EntriesQueryset(models.query.QuerySet, EntriesQuerysetMixin):
-    pass
+
+    def delete(self):
+        # deletes all poster images from the storage
+        files_to_delete = list(self.values_list('poster_image', flat=True))
+        super(EntriesQueryset, self).delete()
+        storage = self.model._meta.get_field('poster_image').storage
+        for file_name in filter(lambda x: x, files_to_delete):
+            storage.delete(file_name)
+
+    delete.alters_data = True
 
 
 class EntriesManager(models.Manager):

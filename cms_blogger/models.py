@@ -506,9 +506,10 @@ class BlogEntryPage(
         return None
 
     def delete(self, *args, **kwargs):
-        path = self.poster_image.path
+        path = self.poster_image.name if self.poster_image else None
         super(BlogEntryPage, self).delete(*args, **kwargs)
-        self.poster_image.storage.delete(path)
+        if path:
+            self.poster_image.storage.delete(path)
 
     def save(self, *args, **kwargs):
         if not self.slug and self.title:

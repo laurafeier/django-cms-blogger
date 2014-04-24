@@ -431,7 +431,7 @@ class BlogEntryPageAdmin(CustomAdmin, PlaceholderAdmin):
             'classes': ('no-border', 'body-wrapper')
         }),
         (None, {
-            'fields': ['publish', 'save'],
+            'fields': ['publish', 'save_button'],
             'classes': ('right-col', )
         }),
         ('Schedule Publish', {
@@ -515,20 +515,6 @@ class BlogEntryPageAdmin(CustomAdmin, PlaceholderAdmin):
         if request.user.is_superuser:
             return qs
         return qs.filter(blog__allowed_users=request.user)
-
-    def save_related(self, request, form, formsets, change):
-        super(BlogEntryPageAdmin, self).save_related(
-            request, form, formsets, change)
-        submitted_categories = form.cleaned_data.get('categories', [])
-        entry = form.instance
-        if not entry.blog:
-            entry.categories = []
-        else:
-            ids_in_blog = entry.blog.categories.values_list('pk', flat=True)
-            entry.categories = [
-                valid_category
-                for valid_category in submitted_categories
-                if valid_category.pk in ids_in_blog]
 
     def lookup_allowed(self, lookup, value):
         if lookup == BlogEntryChangeList.site_lookup:
