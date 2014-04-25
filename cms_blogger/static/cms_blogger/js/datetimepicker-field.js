@@ -32,13 +32,14 @@ function buildDatetimePickerField(picker_field, input_picker_field, initial){
     var input_picker_field = $(input_picker_field);
 
     if(initial){
-        initial = new Date(initial);
+        //use moment.js to format date appropriately for IE8
+        initial = new Date(moment(initial));
     } else {
         initial = null;
     }
 
     function _setDate(value){
-        if (!value){
+        if (!value || isNaN(value)){
             // reset sliders first
             picker_field.datetimepicker('setDate', new Date(0,0,0,1,0,0));
             picker_field.datetimepicker('setDate', null);

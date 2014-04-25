@@ -57,7 +57,7 @@
         #publish_form_bottom{
             @include formButton("blue");
         }
-        #id_save,
+        #id_save_button,
         #save_form_bottom,
         #upload-button{
             @include formButton("dark-gray");
@@ -71,7 +71,7 @@
             @include formButton("blue");
         }
         #id_publish,
-        #id_save{
+        #id_save_button{
             display: block;
             padding-top:12px;
             padding-bottom:12px;

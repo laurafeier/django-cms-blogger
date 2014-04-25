@@ -135,7 +135,8 @@ class DateTimeWidget(forms.widgets.TextInput):
         js = (static('cms_blogger/js/jquery-1.9.1.min.js'),
               static('cms_blogger/js/jquery-ui.min.js'),
               static('cms_blogger/js/jquery-ui-timepicker-addon.js'),
-              static('cms_blogger/js/datetimepicker-field.js')
+              static('cms_blogger/js/datetimepicker-field.js'),
+              static('cms_blogger/js/moment.min.js')
               )
 
     def render(self, name, value, attrs={}):
