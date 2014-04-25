@@ -1,15 +1,26 @@
 
-
 function showEntryPreviewPopup(triggeringLink) {
-    var name = 'entry-preview';
-    href = triggeringLink.href
-    var params = {
-        _popup:1,
-        body: tinyMCE.activeEditor.getContent() };
-    href += (href.indexOf('?') == -1) ?  '?': '&';
-    href += jQuery.param(params);
-    var win = window.open(
-        href, name, 'height=800,width=1024,resizable=yes,scrollbars=yes');
-    win.focus();
-    return false;
+    
+    $.ajax({
+           type:  "POST",
+       datatype:  "text",
+            url:  triggeringLink.href,
+           data:  {"body": tinyMCE.activeEditor.getContent()},
+        success:  function(data) {
+            var win = window.open('', 'about:blank', 'height=800,width=1024,resizable=yes,scrollbars=yes'); 
+            if (win && win.document)
+            {
+                with(win.document)
+                {
+                    open();
+                    write(data); 
+                    close();
+                } 
+            }
+            else
+            {
+                alert('Your popup blocker is preventing the Preview Page from opening.');
+            }
+        }
+    });
 }
