@@ -5,7 +5,7 @@ function showEntryPreviewPopup(triggeringLink) {
         url:  triggeringLink.href,
         data:  { "body": tinyMCE.activeEditor.getContent() },
         success: function(data) {
-            var win = window.open('', 'about:blank', 'height=800,width=1024,resizable=yes,scrollbars=yes');
+            var win = window.open('', 'entry-preview', 'height=800,width=1024,resizable=yes,scrollbars=yes');
             if (win && win.document) {
                 with(win.document) {
                     open();
