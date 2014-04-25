@@ -13,7 +13,9 @@
                 .insertAfter($('.field-short_description label:eq(0)'));
             $('.field-categories ul').wrap("<div class='categ-wrapper'>");
 
-            $('.field-categories .categ-wrapper').scroller();
+            $('.field-categories .categ-wrapper')
+            .addClass('default-skin')
+            .customScrollbar();
 
             $('#id_short_description').attr('maxlength', 400);
         }

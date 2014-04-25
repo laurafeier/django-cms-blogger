@@ -345,10 +345,10 @@ class BlogEntryPageChangeForm(forms.ModelForm):
 
     class Media:
         css = {"all": ("cms_blogger/css/entry-change-form.css",
-                       "cms_blogger/css/jquery.fs.scroller.css" )}
+                       "cms_blogger/css/jquery.custom-scrollbar.css" )}
         js = ('cms_blogger/js/tinymce-extend.js',
               'cms_blogger/js/entry-admin.js',
-              'cms_blogger/js/jquery.fs.scroller.js',
+              'cms_blogger/js/jquery.custom-scrollbar.min.js',
               'cms_blogger/js/admin-collapse.js',
               'cms_blogger/js/entry-preview.js', )
 
