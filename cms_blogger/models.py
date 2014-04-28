@@ -172,6 +172,13 @@ class AbstractBlog(models.Model):
         title.slug = self.slug
         return title
 
+    def save(self, *args, **kwargs):
+        try:
+            self.site
+        except Site.DoesNotExist:
+            self.site = Site.objects.get_current()
+        super(AbstractBlog, self).save(*args, **kwargs)
+
     def __unicode__(self):
         return "%s - %s" % (self.title, self.site.name)
 

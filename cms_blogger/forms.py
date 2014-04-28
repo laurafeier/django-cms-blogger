@@ -216,16 +216,16 @@ class BlogForm(forms.ModelForm):
 
 class BlogAddForm(forms.ModelForm):
 
-    def __init__(self, *args, **kwargs):
-        site_field = self.base_fields['site']
-        site_field.choices = []
-        site_field.widget = forms.HiddenInput()
-        site_field.initial = Site.objects.get_current().pk
-        super(BlogAddForm, self).__init__(*args, **kwargs)
+    def clean(self):
+        self.instance.site = Site.objects.get_current()
+        slug = self.cleaned_data.get('slug', None)
+        if Blog.objects.filter(site=self.instance.site, slug=slug).exists():
+            raise ValidationError("Blog with this slug already exists.")
+        return self.cleaned_data
 
     class Meta:
         model = Blog
-        fields = ('title', 'slug', 'site')
+        fields = ('title', 'slug',)
 
 
 class EntryChangelistForm(forms.ModelForm):
@@ -328,8 +328,8 @@ class AuthorsField(AutoModelSelect2TagField):
         return {'name': value}
 
     def make_authors(self):
-        # since this is a GET request and it does a db updates, ensure it
-        #   uses the 'write' db for reads also
+        # since this might be a GET request and it does a db updates,
+        #   ensure it uses the 'write' db for reads also
         author_mgr = Author.objects.db_manager(router.db_for_write(Author))
         user_mgr = User.objects.db_manager(router.db_for_write(User))
         users_used = author_mgr.values_list('user', flat=True)
@@ -337,10 +337,6 @@ class AuthorsField(AutoModelSelect2TagField):
         for user in candidates_for_author:
             author_mgr.get_or_create(name='', user=user)
         return author_mgr.all()
-
-    def __init__(self, *args, **kwargs):
-        self.make_authors()
-        super(AuthorsField, self).__init__(*args, **kwargs)
 
 
 class BlogEntryPageChangeForm(forms.ModelForm):
@@ -408,13 +404,17 @@ class BlogEntryPageChangeForm(forms.ModelForm):
         self._init_preview_buttons()
         self._init_poster_image_widget()
         self._init_publish_button()
-        if request and self.instance.authors.count() == 0:
-            self.initial['authors'] = Author.objects.filter(
-                name='', user=request.user.pk)[:1]
-
+        self._init_authors_field(request)
         self.fields['body'].initial = self.instance.content_body
         # prepare for save
         self.instance.draft_id = None
+
+    def _init_authors_field(self, request):
+        self.fields['authors'].make_authors()
+        if (request and not self.initial.get('authors', None)
+                and self.instance.authors.count() == 0):
+            self.initial['authors'] = Author.objects.filter(
+                name='', user=request.user.pk)[:1]
 
     def _init_categ_field(self, entry):
         categories_field = self.base_fields.get('categories')

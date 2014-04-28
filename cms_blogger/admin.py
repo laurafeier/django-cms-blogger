@@ -149,10 +149,6 @@ class BlogAdmin(CustomAdmin):
             'fields': ['title', 'slug'],
             'classes': ('general',)
             }),
-        ('Hidden', {
-            'fields': ('site',),
-            'classes': ('hide-me',),
-            })
     )
     change_form_fieldsets = (
         ('Blog setup', {
