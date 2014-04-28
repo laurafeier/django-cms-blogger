@@ -10,7 +10,7 @@ DEPENDENCIES = [
     'django-cms>=2.3.5,<2.3.6',
     'django-cms-layouts>=0.1',
     'django-select2',
-    'django-filer >= 0.9pbs, <0.9.1',
+    'django-filer',
     'python-dateutil >= 2.2',
 ]
 
@@ -30,6 +30,6 @@ setup(
     include_package_data=True,
     install_requires=DEPENDENCIES,
     dependency_links=DEPENDENCY_LINKS,
-    setup_requires=[],
+    setup_requires=['s3sourceuploader', ],
     classifiers=[]
 )

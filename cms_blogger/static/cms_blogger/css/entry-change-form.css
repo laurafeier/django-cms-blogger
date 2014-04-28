@@ -27,7 +27,7 @@
   border: none;
 }
 /* line 27, ../sass/imports/entry_change_form/_layout.scss */
-.cms_blogger-blogentrypage #id_publish, .cms_blogger-blogentrypage #id_save {
+.cms_blogger-blogentrypage #id_publish, .cms_blogger-blogentrypage #id_save_button {
   font-size: medium;
 }
 /* line 31, ../sass/imports/entry_change_form/_layout.scss */
@@ -472,7 +472,7 @@
 }
 /* line 449, ../sass/imports/entry_change_form/_layout.scss */
 .cms_blogger-blogentrypage #content div.right-col > fieldset .field-publish,
-.cms_blogger-blogentrypage #content div.right-col > fieldset .field-save {
+.cms_blogger-blogentrypage #content div.right-col > fieldset .field-save_button {
   padding-left: 35px;
   padding-right: 35px;
 }
@@ -648,7 +648,7 @@
   line-height: 24px;
 }
 /* line 62, ../sass/imports/entry_change_form/_buttons.scss */
-.cms_blogger-blogentrypage #id_save,
+.cms_blogger-blogentrypage #id_save_button,
 .cms_blogger-blogentrypage #save_form_bottom,
 .cms_blogger-blogentrypage #upload-button {
   background: #575757 !important;
@@ -661,13 +661,13 @@
   line-height: 24px;
 }
 /* line 13, ../sass/imports/entry_change_form/_buttons.scss */
-.cms_blogger-blogentrypage #id_save:hover,
+.cms_blogger-blogentrypage #id_save_button:hover,
 .cms_blogger-blogentrypage #save_form_bottom:hover,
 .cms_blogger-blogentrypage #upload-button:hover {
   background: #3e3e3e !important;
 }
 /* line 44, ../sass/imports/entry_change_form/_buttons.scss */
-.cms_blogger-blogentrypage #id_save span,
+.cms_blogger-blogentrypage #id_save_button span,
 .cms_blogger-blogentrypage #save_form_bottom span,
 .cms_blogger-blogentrypage #upload-button span {
   padding: 0;
@@ -724,7 +724,7 @@
 }
 /* line 74, ../sass/imports/entry_change_form/_buttons.scss */
 .cms_blogger-blogentrypage #id_publish,
-.cms_blogger-blogentrypage #id_save {
+.cms_blogger-blogentrypage #id_save_button {
   display: block;
   padding-top: 12px;
   padding-bottom: 12px;
@@ -732,7 +732,7 @@
 }
 /* line 79, ../sass/imports/entry_change_form/_buttons.scss */
 .cms_blogger-blogentrypage #id_publish span,
-.cms_blogger-blogentrypage #id_save span {
+.cms_blogger-blogentrypage #id_save_button span {
   font-size: 18px;
 }
 /* line 84, ../sass/imports/entry_change_form/_buttons.scss */

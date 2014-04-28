@@ -9,23 +9,28 @@ from django.contrib.sites.models import Site
 from django.utils.translation import ugettext_lazy as _
 from django.utils import timezone
 from django.contrib.auth.models import User
+from django.db import router
+
 from cms.plugin_pool import plugin_pool
 from cms.plugins.text.settings import USE_TINYMCE
 from cms.plugins.text.widgets.wymeditor_widget import WYMEditor
 from cms.utils.plugins import get_placeholders
 from cms.models import Page
+
 from cms_layouts.models import Layout
 from cms_layouts.slot_finder import (
     get_fixed_section_slots, MissingRequiredPlaceholder)
-from django_select2.fields import AutoModelSelect2MultipleField
-from .models import Blog, BlogEntryPage, BlogCategory
+
+from django_select2.fields import (
+    AutoModelSelect2MultipleField, AutoModelSelect2TagField)
+
+from .models import Blog, BlogEntryPage, BlogCategory, Author
 from .widgets import TagItWidget, ButtonWidget, DateTimeWidget, PosterImage
 from .utils import user_display_name
-from django.utils.safestring import mark_safe
-from django.template.loader import render_to_string
 
 
 class BlogLayoutInlineFormSet(BaseGenericInlineFormSet):
+
     def clean(self):
         if any(self.errors):
             return
@@ -138,17 +143,19 @@ class BlogForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super(BlogForm, self).__init__(*args, **kwargs)
-        if (self.instance and 'categories' in self.fields and
-                not self.fields['categories'].initial):
-            self.fields['categories'].initial = ', '.join(
-                self.instance.categories.values_list('name', flat=True))
-        if (not self.is_bound and self.instance and self.instance.pk and
-                self.instance.layouts.count() == 0):
+        self._init_categories_field(self.instance)
+        if (not self.is_bound and self.instance.layouts.count() == 0):
             self.missing_layouts = ErrorList([
                 "This blog is missing a layout. "
                 "Add one in the Layouts section."])
         else:
             self.missing_layouts = False
+
+    def _init_categories_field(self, blog):
+        categories_field = self.fields.get('categories', None)
+        if blog and blog.pk and not categories_field.initial:
+            categories_field.initial = ', '.join(
+                blog.categories.values_list('name', flat=True))
 
     def clean_categories(self):
         categories = self.cleaned_data.get('categories', '')
@@ -157,26 +164,7 @@ class BlogForm(forms.ModelForm):
 
         categories_names = [name.strip().lower()
                             for name in categories.split(',')]
-
-        if len(categories_names) != len(set(categories_names)):
-            raise ValidationError(
-                "Category names not unique.")
-
-        blog = self.instance
-        categories_slugs = {slugify(name): name
-                            for name in categories_names}
-        existing_slugs = {categ.slug: categ
-                          for categ in blog.categories.all()}
-        category_objs = []
-        for slug, name in categories_slugs.items():
-            if slug not in existing_slugs:
-                category = BlogCategory()
-                category.slug = slug
-                category.name = name
-            else:
-                category = existing_slugs[slug]
-            category_objs.append(category)
-        return category_objs
+        return categories_names
 
     def clean_in_navigation(self):
         in_navigation = self.cleaned_data.get('in_navigation', False)
@@ -196,19 +184,48 @@ class BlogForm(forms.ModelForm):
             raise ValidationError('Disqus shortname required.')
         return disqus_shortname
 
+    def _save_categories(self, saved_blog):
+        names = set(self.cleaned_data.get('categories', []))
+        existing_names = set(saved_blog.categories.values_list(
+            'name', flat=True))
+        removed_categories = existing_names - names
+        new_category_names = names - existing_names
+
+        for name in new_category_names:
+            BlogCategory.objects.create(name=name, blog=saved_blog)
+
+        for category in BlogCategory.objects.filter(
+                name__in=removed_categories, blog=saved_blog):
+            category.delete()
+
+    def save(self, commit=True):
+        saved_instance = super(BlogForm, self).save(commit=commit)
+        if commit:
+            self._save_categories(saved_instance)
+        else:
+            original_save_m2m = self.save_m2m
+            if not hasattr(original_save_m2m, '_save_categories_attached'):
+                def _extra_save_m2m():
+                    self._save_categories(saved_instance)
+                    original_save_m2m()
+                self.save_m2m = _extra_save_m2m
+                setattr(self.save_m2m, '_save_categories_attached', True)
+
+        return saved_instance
+
 
 class BlogAddForm(forms.ModelForm):
 
-    def __init__(self, *args, **kwargs):
-        site_field = self.base_fields['site']
-        site_field.choices = []
-        site_field.widget = forms.HiddenInput()
-        site_field.initial = Site.objects.get_current().pk
-        super(BlogAddForm, self).__init__(*args, **kwargs)
+    def clean(self):
+        self.instance.site = Site.objects.get_current()
+        slug = self.cleaned_data.get('slug', None)
+        if Blog.objects.filter(site=self.instance.site, slug=slug).exists():
+            raise ValidationError("Blog with this slug already exists.")
+        return self.cleaned_data
 
     class Meta:
         model = Blog
-        fields = ('title', 'slug', 'site')
+        fields = ('title', 'slug',)
 
 
 class EntryChangelistForm(forms.ModelForm):
@@ -300,13 +317,35 @@ class ButtonField(forms.Field):
         super(ButtonField, self).__init__(*args, **kwargs)
 
 
+class AuthorsField(AutoModelSelect2TagField):
+    queryset = Author.objects.db_manager(router.db_for_write(Author))
+    empty_values = [None, '', 0]
+    search_fields = ['name__icontains', 'user__first_name__icontains',
+                     'user__last_name__icontains', 'user__email__icontains',
+                     'user__username__icontains']
+
+    def get_model_field_values(self, value):
+        return {'name': value}
+
+    def make_authors(self):
+        # since this might be a GET request and it does a db updates,
+        #   ensure it uses the 'write' db for reads also
+        author_mgr = Author.objects.db_manager(router.db_for_write(Author))
+        user_mgr = User.objects.db_manager(router.db_for_write(User))
+        users_used = author_mgr.values_list('user', flat=True)
+        candidates_for_author = user_mgr.exclude(id__in=users_used)
+        for user in candidates_for_author:
+            author_mgr.get_or_create(name='', user=user)
+        return author_mgr.all()
+
+
 class BlogEntryPageChangeForm(forms.ModelForm):
     requires_request = True
 
     body = forms.CharField(
         label='Blog Entry', required=True,
         widget=_get_text_editor_widget())
-    authors = MultipleUserField()
+    authors = AuthorsField()
     poster_image_uploader = forms.CharField(label="", widget=PosterImage())
     categories = forms.ModelMultipleChoiceField(
         widget=forms.CheckboxSelectMultiple(),
@@ -339,7 +378,7 @@ class BlogEntryPageChangeForm(forms.ModelForm):
     end_publication = forms.Field(
         required=False, widget=DateTimeWidget())
 
-    save = ButtonField(widget=ButtonWidget(submit=True))
+    save_button = ButtonField(widget=ButtonWidget(submit=True, text='Save'))
     preview_on_top = ButtonField(widget=ButtonWidget(text='Preview'))
     preview_on_bottom = ButtonField(widget=ButtonWidget(text='Preview'))
 
@@ -365,12 +404,17 @@ class BlogEntryPageChangeForm(forms.ModelForm):
         self._init_preview_buttons()
         self._init_poster_image_widget()
         self._init_publish_button()
-        if request and self.instance.authors.count() == 0:
-            self.initial['authors'] = [request.user.pk]
-
+        self._init_authors_field(request)
         self.fields['body'].initial = self.instance.content_body
         # prepare for save
         self.instance.draft_id = None
+
+    def _init_authors_field(self, request):
+        self.fields['authors'].make_authors()
+        if (request and not self.initial.get('authors', None)
+                and self.instance.authors.count() == 0):
+            self.initial['authors'] = Author.objects.filter(
+                name='', user=request.user.pk)[:1]
 
     def _init_categ_field(self, entry):
         categories_field = self.base_fields.get('categories')
@@ -395,9 +439,11 @@ class BlogEntryPageChangeForm(forms.ModelForm):
         preview1.on_click = preview2.on_click = popup_js
 
     def _init_poster_image_widget(self):
-        self.fields['poster_image_uploader'].widget.blog_entry_id = self.instance.pk
-        self.fields['poster_image_uploader'].widget.image_url = (
-            self.instance.poster_image.url if self.instance.poster_image.name else None)
+        poster_widget = self.fields['poster_image_uploader'].widget
+        poster_widget.blog_entry_id = self.instance.pk
+        poster_widget.image_url = None
+        if self.instance.poster_image and self.instance.poster_image.name:
+            poster_widget.image_url = self.instance.poster_image.url
 
     def clean_body(self):
         body = self.cleaned_data.get('body')
@@ -405,19 +451,14 @@ class BlogEntryPageChangeForm(forms.ModelForm):
         return body
 
     def clean_title(self):
-        title = self.cleaned_data.get('title', '')
+        title = self.cleaned_data.get('title').strip()
         slug = slugify(title)
-        blog_id = self.instance.blog_id
-        try:
-            BlogEntryPage.objects.exclude(pk=self.instance.pk).get(
-                slug=slug, blog=blog_id, draft_id=None)
-        except BlogEntryPage.DoesNotExist:
-            pass
-        else:
+        entries_with_slug = BlogEntryPage.objects.filter(
+            blog=self.instance.blog, draft_id=None, slug=slug)
+        if entries_with_slug.exclude(pk=self.instance.pk).exists():
             raise ValidationError(
-                "Entry with slug %s already exists. Choose a different "
-                "title." % slug)
-        self.instance.slug = slug
+                "Entry with the same slug already exists. "
+                "Choose a different title.")
         return title
 
     def _set_publication_date(self):
@@ -447,3 +488,26 @@ class BlogEntryPageChangeForm(forms.ModelForm):
             raise ValidationError("Incorrect publication dates interval.")
         self._set_publication_date()
         return self.cleaned_data
+
+    def _save_categories(self, saved_entry):
+        submitted_categories = self.cleaned_data.get('categories', [])
+        blog = saved_entry.blog
+        saved_entry.categories.clear()
+        if blog:
+            saved_entry.categories = blog.categories.filter(
+                pk__in=submitted_categories)
+
+    def save(self, commit=True):
+        saved_instance = super(BlogEntryPageChangeForm, self).save(
+            commit=commit)
+        if commit:
+            self._save_categories(saved_instance)
+        else:
+            original_save_m2m = self.save_m2m
+            if not hasattr(original_save_m2m, '_save_categories_attached'):
+                def _extra_save_m2m():
+                    self._save_categories(saved_instance)
+                    original_save_m2m()
+                self.save_m2m = _extra_save_m2m
+                setattr(self.save_m2m, '_save_categories_attached', True)
+        return saved_instance

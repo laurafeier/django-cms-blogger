@@ -49,10 +49,19 @@ class Migration(SchemaMigration):
         ))
         db.create_unique('cms_blogger_blog_allowed_users', ['blog_id', 'user_id'])
 
+        # Adding model 'Author'
+        db.create_table('cms_blogger_author', (
+            ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
+            ('name', self.gf('django.db.models.fields.CharField')(max_length=150)),
+            ('user', self.gf('django.db.models.fields.related.ForeignKey')(blank=True, related_name='blog_authors', null=True, on_delete=models.SET_NULL, to=orm['auth.User'])),
+            ('slug', self.gf('django.db.models.fields.SlugField')(max_length=150)),
+        ))
+        db.send_create_signal('cms_blogger', ['Author'])
+
         # Adding model 'BioPage'
         db.create_table('cms_blogger_biopage', (
             ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
-            ('author_name', self.gf('django.db.models.fields.CharField')(max_length=255)),
+            ('author', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['cms_blogger.Author'])),
             ('blog', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['cms_blogger.Blog'])),
         ))
         db.send_create_signal('cms_blogger', ['BioPage'])
@@ -87,9 +96,9 @@ class Migration(SchemaMigration):
         db.create_table('cms_blogger_blogentrypage_authors', (
             ('id', models.AutoField(verbose_name='ID', primary_key=True, auto_created=True)),
             ('blogentrypage', models.ForeignKey(orm['cms_blogger.blogentrypage'], null=False)),
-            ('user', models.ForeignKey(orm['auth.user'], null=False))
+            ('author', models.ForeignKey(orm['cms_blogger.author'], null=False))
         ))
-        db.create_unique('cms_blogger_blogentrypage_authors', ['blogentrypage_id', 'user_id'])
+        db.create_unique('cms_blogger_blogentrypage_authors', ['blogentrypage_id', 'author_id'])
 
         # Adding model 'BlogCategory'
         db.create_table('cms_blogger_blogcategory', (
@@ -136,6 +145,9 @@ class Migration(SchemaMigration):
 
         # Removing M2M table for field allowed_users on 'Blog'
         db.delete_table('cms_blogger_blog_allowed_users')
+
+        # Deleting model 'Author'
+        db.delete_table('cms_blogger_author')
 
         # Deleting model 'BioPage'
         db.delete_table('cms_blogger_biopage')
@@ -186,7 +198,7 @@ class Migration(SchemaMigration):
         'cms.cmsplugin': {
             'Meta': {'object_name': 'CMSPlugin'},
             'changed_date': ('django.db.models.fields.DateTimeField', [], {'auto_now': 'True', 'blank': 'True'}),
-            'creation_date': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime(2014, 4, 17, 0, 0)'}),
+            'creation_date': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime(2014, 4, 23, 0, 0)'}),
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'language': ('django.db.models.fields.CharField', [], {'max_length': '15', 'db_index': 'True'}),
             'level': ('django.db.models.fields.PositiveIntegerField', [], {'db_index': 'True'}),
@@ -233,9 +245,16 @@ class Migration(SchemaMigration):
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'slot': ('django.db.models.fields.CharField', [], {'max_length': '50', 'db_index': 'True'})
         },
+        'cms_blogger.author': {
+            'Meta': {'object_name': 'Author'},
+            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'name': ('django.db.models.fields.CharField', [], {'max_length': '150'}),
+            'slug': ('django.db.models.fields.SlugField', [], {'max_length': '150'}),
+            'user': ('django.db.models.fields.related.ForeignKey', [], {'blank': 'True', 'related_name': "'blog_authors'", 'null': 'True', 'on_delete': 'models.SET_NULL', 'to': "orm['auth.User']"})
+        },
         'cms_blogger.biopage': {
             'Meta': {'object_name': 'BioPage'},
-            'author_name': ('django.db.models.fields.CharField', [], {'max_length': '255'}),
+            'author': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['cms_blogger.Author']"}),
             'blog': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['cms_blogger.Blog']"}),
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'})
         },
@@ -268,7 +287,7 @@ class Migration(SchemaMigration):
         },
         'cms_blogger.blogentrypage': {
             'Meta': {'unique_together': "(('slug', 'blog', 'draft_id'),)", 'object_name': 'BlogEntryPage'},
-            'authors': ('django.db.models.fields.related.ManyToManyField', [], {'related_name': "'blog_entries'", 'symmetrical': 'False', 'to': "orm['auth.User']"}),
+            'authors': ('django.db.models.fields.related.ManyToManyField', [], {'related_name': "'blog_entries'", 'symmetrical': 'False', 'to': "orm['cms_blogger.Author']"}),
             'blog': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['cms_blogger.Blog']"}),
             'caption': ('django.db.models.fields.CharField', [], {'max_length': '70', 'null': 'True', 'blank': 'True'}),
             'content': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['cms.Placeholder']", 'null': 'True'}),
