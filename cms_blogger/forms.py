@@ -27,6 +27,7 @@ from django_select2.fields import (
 from .models import Blog, BlogEntryPage, BlogCategory, Author
 from .widgets import TagItWidget, ButtonWidget, DateTimeWidget, PosterImage
 from .utils import user_display_name
+from cms.templatetags.cms_admin import admin_static_url
 
 
 class BlogLayoutInlineFormSet(BaseGenericInlineFormSet):
@@ -435,7 +436,7 @@ class BlogEntryPageChangeForm(forms.ModelForm):
         url = reverse('admin:cms_blogger-entry-preview',
             args=[self.instance.id])
         preview1.link_url = preview2.link_url = url
-        popup_js = "return showEntryPreviewPopup(this);"
+        popup_js = "return showEntryPreviewPopup(this,'%s');" % admin_static_url()
         preview1.on_click = preview2.on_click = popup_js
 
     def _init_poster_image_widget(self):

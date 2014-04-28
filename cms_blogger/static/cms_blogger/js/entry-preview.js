@@ -1,5 +1,28 @@
-function showEntryPreviewPopup(triggeringLink) {
+function showEntryPreviewPopup(triggeringLink, admin_static_url) {
     var win = window.open('', 'entry-preview', 'height=800,width=1024,resizable=yes,scrollbars=yes');
+    if(win)
+    {
+        with(win.document)
+        {
+            open();
+             html = '\
+                <!DOCTYPE html>\
+                <html>\
+                    <body>\
+                        <style>\
+                            html {\
+                                width:100%;\
+                                height:100%;\
+                                background:url(\"'+admin_static_url+'img/spinner.gif\") center center no-repeat;\
+                            }\
+                        </style>\
+                    </body>\
+                </html>';
+             write(html);
+             close();
+        }
+    }
+
     $.ajax({
         type:  "POST",
         datatype:  "text",
