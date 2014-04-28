@@ -72,3 +72,4 @@ CACHE_BACKEND = 'locmem:///'
 
 CMS_PLUGIN_PROCESSORS = ('cms_layouts.context_processor.add_extra_html', )
 SOUTH_TESTS_MIGRATE = False
+BLOGGER_ALLOWED_SITES_FOR_USER =  'cms_blogger.tests.utils.get_allowed_sites'

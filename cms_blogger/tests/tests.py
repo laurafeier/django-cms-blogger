@@ -1,5 +1,6 @@
 from django.test import TestCase
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Permission
+from django.contrib.sites.models import Site
 from django.contrib.admin.util import flatten_fieldsets
 from django.core.urlresolvers import reverse
 
@@ -184,11 +185,112 @@ class TestBlogModel(TestCase):
 
 class TestChangeLists(TestCase):
 
-    def test_site_session_changes(self):
-        pass
+    def setUp(self):
+        self.superuser = User.objects.create_superuser(
+            'admin', 'admin@cms_blogger.com', 'secret')
+        self.regular_user = User.objects.create_user(
+            'regular', email='regular@cms_blogger.com', password='secret')
+        self.regular_user.user_permissions = Permission.objects.all()
+        self.regular_user.is_staff = True
+        self.regular_user.save()
+        # regular users will not see new sites blogs since the rule from
+        #   cms_blogger.tests.utils.get_allowed_sites is applied
+        self.new_site = Site.objects.create(
+            name='new_site', domain='new_site.com')
 
-    def test_allowed_users(self):
-        pass
+    def test_site_session_changes_for_superuser(self):
+        self.client.login(username='admin', password='secret')
+        url = reverse('admin:cms_blogger_blog_changelist')
+        response = self.client.get(url)
+        self.assertCurrentSite(response, 1)
+        response = self.client.get(url, {'site__exact': self.new_site.pk})
+        self.assertCurrentSite(response, self.new_site.pk)
+        self.client.logout()
+
+    def test_site_session_changes_for_regular_user(self):
+        self.client.login(username='regular', password='secret')
+        url = reverse('admin:cms_blogger_blog_changelist')
+        response = self.client.get(url)
+        self.assertCurrentSite(response, 1)
+        response = self.client.get(url, {'site__exact': 1})
+        self.assertCurrentSite(response, 1)
+        # even if the user requests a site that he has permissions on it
+        #   should got to the default that he has access on
+        response = self.client.get(url, {'site__exact': self.new_site.pk})
+        self.assertCurrentSite(response, 1)
+        self.client.logout()
+
+    def assertCurrentSite(self, response, site):
+        self.assertEquals(response.client.session['cms_admin_site'], site)
+        self.assertEquals(response.context_data['cl'].current_site.pk, site)
+
+    def _items(self, response):
+        items = response.context_data['cl'].paginator
+        return [el.pk for el in items.object_list]
+
+    def test_blogs_displayed_by_site(self):
+        self.client.login(username='admin', password='secret')
+        url = reverse('admin:cms_blogger_blog_changelist')
+
+        data = {'title': 'one title', 'slug': 'one-title'}
+        b1 = Blog.objects.create(**data)
+
+        response = self.client.get(url)
+        self.assertItemsEqual(self._items(response), [b1.pk])
+        # create a new one
+        response = self.client.get(url, {'site__exact': self.new_site.pk})
+        self.assertEquals(len(self._items(response)), 0)
+        data.update({'site': self.new_site})
+        b2 = Blog.objects.create(**data)
+        # new site is still the current one
+        response = self.client.get(url)
+        self.assertItemsEqual(self._items(response), [b2.pk])
+
+        response = self.client.get(url, {'site__exact': 1})
+        self.assertItemsEqual(self._items(response), [b1.pk])
+
+    def test_allowed_users_for_entries_list(self):
+        data = {'title': 'one title', 'slug': 'one-title'}
+        blog = Blog.objects.create(**data)
+        entry = BlogEntryPage.objects.create(**{
+            'title': 'first entry', 'blog': blog,
+            'short_description': 'short_description'})
+
+        url = reverse('admin:cms_blogger_blogentrypage_changelist')
+        self.client.login(username='admin', password='secret')
+        response = self.client.get(url)
+        self.assertItemsEqual(self._items(response), [entry.pk])
+        self.client.logout()
+
+        self.client.login(username='regular', password='secret')
+        response = self.client.get(url)
+        self.assertEquals(len(self._items(response)), 0)
+        blog.allowed_users.add(self.regular_user)
+        response = self.client.get(url)
+        self.assertItemsEqual(self._items(response), [entry.pk])
+        self.client.logout()
+
+    def test_allowed_users_for_entry_add_form(self):
+        data = {'title': 'one title', 'slug': 'one-title'}
+        blog = Blog.objects.create(**data)
+
+        url = reverse('admin:cms_blogger_blogentrypage_add')
+        self.client.login(username='admin', password='secret')
+        response = self.client.get(url)
+        qs = response.context_data['adminform'].form.fields['blog'].queryset
+        self.assertEquals(len(qs), 1)
+        self.client.logout()
+
+        self.client.login(username='regular', password='secret')
+        response = self.client.get(url)
+        qs = response.context_data['adminform'].form.fields['blog'].queryset
+        self.assertEquals(len(qs), 0)
+
+        blog.allowed_users.add(self.regular_user)
+        response = self.client.get(url)
+        qs = response.context_data['adminform'].form.fields['blog'].queryset
+        self.assertEquals(len(qs), 1)
+        self.client.logout()
 
 
 class TestBlogEntryModel(TestCase):

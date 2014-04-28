@@ -11,19 +11,19 @@ class BlogChangeList(ChangeList):
     """
     site_lookup = 'site__exact'
 
-    def __init__(self, request, *args, **kwargs):
-        self._current_site = self.get_current_site(request)
-        super(BlogChangeList, self).__init__(request, *args, **kwargs)
-        if self._current_site:
-            request.session['cms_admin_site'] = self._current_site.pk
-        self.set_sites(request)
+    def __init__(self, request, model, *args, **kwargs):
         # set site choices for the site chooser widget
+        self.set_sites(request, model)
         self.has_access_to_multiple_sites = len(self.sites) > 1
 
-    def set_sites(self, request):
+        self.user_session = request.session
+        self.current_site = self.get_current_site(request)
+        super(BlogChangeList, self).__init__(request, model, *args, **kwargs)
+
+    def set_sites(self, request, model):
         if ALLOWED_SITES_FOR_USER:
             get_sites_for = load_object(ALLOWED_SITES_FOR_USER)
-            self.sites = get_sites_for(request.user, self.model)
+            self.sites = get_sites_for(request.user, model)
         elif settings.CMS_PERMISSION:
             from cms.utils.permissions import get_user_sites_queryset
             self.sites = get_user_sites_queryset(request.user)
@@ -31,26 +31,31 @@ class BlogChangeList(ChangeList):
             self.sites = Site.objects.all()
 
     def get_current_site(self, request):
-        # similar with cms.utils.plugins.current_site but it accepts
-        #   other site lookups
         if self.site_lookup in request.REQUEST:
-            return Site.objects.get(pk=request.REQUEST[self.site_lookup])
+            site_pk = request.REQUEST[self.site_lookup]
         else:
             site_pk = request.session.get('cms_admin_site', None)
-            if site_pk:
-                try:
-                    return Site.objects.get(pk=site_pk)
-                except Site.DoesNotExist:
-                    return None
-            else:
-                return Site.objects.get_current()
+
+        if site_pk:
+            try:
+                return self.sites.get(pk=site_pk)
+            except Site.DoesNotExist:
+                pass
+
+        return Site.objects.get_current()
 
     def get_query_set(self, request):
         qs = super(BlogChangeList, self).get_query_set(request)
-        return qs.filter(**{self.site_lookup: self._current_site})
+        return qs.filter(**{self.site_lookup: self.current_site})
 
+    @property
     def current_site(self):
         return self._current_site
+
+    @current_site.setter
+    def current_site(self, value):
+        self._current_site = value
+        self.user_session['cms_admin_site'] = self._current_site.pk
 
 
 class BlogEntryChangeList(BlogChangeList):
