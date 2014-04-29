@@ -74,13 +74,24 @@ def _paginate_entries_on_blog(request, entries, blog):
 
 
 def landing_page(request, blog_slug):
-    blog = get_object_or_404(
-        Blog, slug=blog_slug, site=Site.objects.get_current())
+    if not blog_slug:
+        site = Site.objects.get_current()
+        if Blog.objects.filter(site=site).count() == 1:
+            blog = Blog.objects.filter(site=site)[0]
+        else:
+            return HttpResponseNotFound(
+                "<h1>The blog slug is missing from the URL")
+    else:
+        blog = get_object_or_404(
+            Blog, slug=blog_slug, site=Site.objects.get_current())
+
     layout = blog.get_layout()
+
     if not layout:
         return HttpResponseNotFound(
             "<h1>This Blog Landing Page does not have a "
             "layout to render.</h1>")
+
     extra_params, entries = _paginate_entries_on_blog(
         request, blog.get_entries(), blog)
     context = RequestContext(request)
