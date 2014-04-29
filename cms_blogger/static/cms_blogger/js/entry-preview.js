@@ -1,22 +1,16 @@
 function showEntryPreviewPopup(triggeringLink, admin_static_url) {
     var win = window.open('', 'entry-preview', 'height=800,width=1024,resizable=yes,scrollbars=yes');
-    if(win)
-    {
-        with(win.document)
-        {
-            open();
-            html = '\
-                <!DOCTYPE html>\
-                <html><head>\
-                    <style>\
-                        html {\
-                        width: 100%; height: 100%;\
-                        background: url(\"' + admin_static_url + 'img/spinner.gif\") center center no-repeat;}\
-                    </style>\
-                </head></html>';
-            write(html);
-            close();
-        }
+    if(win) {
+        html = '';
+        html += '<div class="loading"></div>';
+        html += '<style>';
+        html += '.loading {';
+        html += 'width: 100%; height: 100%;';
+        html += 'background: url(\"' + admin_static_url + 'img/spinner.gif\") center center no-repeat;}';
+        html += '</style>';
+        win.document.open();
+        win.document.write(html);
+        win.document.close();
     }
 
     $.ajax({
@@ -25,11 +19,9 @@ function showEntryPreviewPopup(triggeringLink, admin_static_url) {
         url: triggeringLink.href,
         data: { "body": tinyMCE.activeEditor.getContent() },
         success: function(data) {
-            with(win.document) {
-                open();
-                write(data);
-                close();
-            }
+            win.document.open();
+            win.document.write(data);
+            win.document.close();
         }
     });
 }
