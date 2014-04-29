@@ -295,11 +295,43 @@ class TestChangeLists(TestCase):
 
 class TestBlogEntryModel(TestCase):
 
-    def test_deletion(self):
-        pass
+    def _make_blog(self):
+        data = {'title': 'one title', 'slug': 'one-title'}
+        return Blog.objects.create(**data)
+
+    def test_content_deletion(self):
+        blog = self._make_blog()
+        entry = BlogEntryPage.objects.create(**{
+            'title': 'first entry', 'blog': blog,
+            'short_description': 'desc'})
+        entry.content_body = 'custom text'
+        entry.save()
+        Placeholder = entry.content.__class__
+        CMSPlugin = entry.content.cmsplugin_set.model
+        self.assertEquals(Placeholder.objects.count(), 1)
+        self.assertEquals(CMSPlugin.objects.count(), 1)
+        self.assertEquals(entry.get_content_plugin().body, 'custom text')
+
+        blog_id = blog.pk
+        entry.delete()
+        self.assertEquals(Placeholder.objects.count(), 0)
+        self.assertEquals(CMSPlugin.objects.count(), 0)
+        self.assertTrue(Blog.objects.filter(pk=blog.pk).exists())
 
     def test_next_prev_post(self):
-        pass
+        blog = self._make_blog()
+        for i in range(4):
+            BlogEntryPage.objects.create(**{
+                'title': '%s' % i, 'blog': blog,
+                'short_description': 'desc', 'is_published': True})
+        entries = {e.title: e for e in BlogEntryPage.objects.all()}
+
+        self.assertEquals(entries["0"].previous_post(), None)
+        self.assertEquals(entries["0"].next_post().pk, entries["1"].pk)
+        self.assertEquals(entries["1"].previous_post().pk, entries["0"].pk)
+        self.assertEquals(entries["1"].next_post().pk, entries["2"].pk)
+        self.assertEquals(entries["3"].previous_post().pk, entries["2"].pk)
+        self.assertEquals(entries["3"].next_post(), None)
 
     def test_draft(self):
         pass
@@ -311,6 +343,9 @@ class TestBlogEntryModel(TestCase):
         pass
 
     def test_poster_image_deletion(self):
+        pass
+
+    def test_title_rendering(self):
         pass
 
 

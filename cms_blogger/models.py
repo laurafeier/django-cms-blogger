@@ -62,6 +62,20 @@ def getCMSContentModel(**kwargs):
             plugin.clean_plugins()
             plugin.save()
 
+        def delete(self, *args, **kwargs):
+            try:
+                placeholder_pk = getattr(self, content_attr).pk
+            except Placeholder.DoesNotExist:
+                pass
+            super(ModelWithCMSContent, self).delete(*args, **kwargs)
+            try:
+                phd = Placeholder.objects.get(pk=placeholder_pk)
+                for plg in phd.cmsplugin_set.all():
+                    plg.delete()
+                phd.delete()
+            except Placeholder.DoesNotExist:
+                pass
+
         class Meta:
             abstract = True
 
