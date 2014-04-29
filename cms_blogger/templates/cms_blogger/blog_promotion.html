@@ -1,5 +1,12 @@
+{% load digg_pagination %}
 <link rel="stylesheet" type="text/css" href="{{STATIC_URL}}cms_blogger/css/blogger.css">
 <script type="text/javascript" src="{{STATIC_URL}}cms_blogger/js/blog-targetting.js"></script>
-{% include 'cms_blogger/blog_header.html' %}
+<div class='blog-promotion-header'>
+    {% if plugin.title %}
+    <h1 id='blog-promotion-title' >{{plugin.title}}</h1>
+    {% endif %}
+</div>
 {% include 'cms_blogger/entries_list.html' %}
-
+{% if paginate_entries %}
+{% paginator entries 2 %}
+{% endif %}

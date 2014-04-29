@@ -556,8 +556,8 @@ class BlogCategory(models.Model, BlogRelatedPage):
     blog_related_name = 'categories'
     name = models.CharField(_('name'), max_length=30, db_index=True)
     slug = models.SlugField(_('slug'), max_length=30)
-    blog_entry = models.ForeignKey(BlogEntryPage, on_delete=models.SET_NULL,
-        null=True, blank=True, related_name='categories')
+    entries = models.ManyToManyField(
+        BlogEntryPage, related_name='categories')
 
     @models.permalink
     def get_absolute_url(self):
@@ -572,8 +572,8 @@ class BlogCategory(models.Model, BlogRelatedPage):
         return title
 
     def get_entries(self):
-        return BlogEntryPage.objects.published().filter(
-            blog=self.blog, categories=self)
+        return self.entries.published().filter(
+            blog=self.blog).order_by('-publication_date', 'slug').distinct()
 
     def get_layout(self):
         return self.blog.get_layout_for(Blog.LANDING_PAGE)
@@ -593,15 +593,20 @@ class BlogCategory(models.Model, BlogRelatedPage):
 
 class BlogPromotion(CMSPlugin):
 
-    blog = models.ForeignKey(Blog)
-    blog_title = models.BooleanField(default=True)
-    blog_tagline = models.BooleanField(default=True)
-    branding_image = models.BooleanField(default=True)
-
+    title = models.CharField(_('title'), max_length=100)
+    categories = models.ManyToManyField(BlogCategory)
     display_abstract = models.BooleanField(default=True)
     display_thumbnails = models.BooleanField(default=True)
+    paginate_entries = models.BooleanField(default=True)
     number_of_entries = models.PositiveIntegerField(
         _('Entries to Display'), default=10)
+
+    def get_entries(self):
+        qs = BlogEntryPage.objects.published().filter(
+            categories__in=self.categories.all(),
+            blog__site=Site.objects.get_current()
+        ).distinct().order_by('-publication_date', 'slug')
+        return qs
 
 
 @receiver(signals.post_save, sender=BlogEntryPage)

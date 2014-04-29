@@ -1,0 +1,21 @@
+{% extends "admin/cms/page/plugin_change_form.html" %}
+{% load url from future %}
+{% block extrahead %}
+{{ block.super }}
+<script>
+    $(document).ready(function() {
+        //makes the iframe larger to accommodate dropdown list
+        function maximize() {
+            s = '#iframe_' + {{ plugin.id }};
+            var frame = $(s,window.parent.document);
+            currentHeight = document.body.scrollHeight+20;
+            if (frame.height()<currentHeight) {
+                frame.height(currentHeight + 'px');
+            }
+        }
+
+        //call once on load
+        maximize();
+    });
+</script>
+{% endblock %}

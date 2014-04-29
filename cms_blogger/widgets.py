@@ -176,3 +176,31 @@ class PosterImage(forms.widgets.CheckboxInput):
                 'image_types': ALLOWED_THUMBNAIL_IMAGE_TYPES,
             }
         )
+
+
+class SpinnerWidget(forms.widgets.TextInput):
+
+    class Media:
+        css = {
+            'all': (
+                static('cms_blogger/css/redmond-jquery-ui.css'),
+            )
+        }
+        js = (static('cms_blogger/js/jquery-1.9.1.min.js'),
+              static('cms_blogger/js/jquery-ui.min.js'), )
+
+    spinner_script = (
+        "<script type='text/javascript'>"
+        "jQuery('#id_%s').spinner(%s);"
+        "</script>")
+
+    def __init__(self, attrs=None):
+        super(SpinnerWidget, self).__init__(attrs=attrs)
+        self.spinner_attrs = attrs.pop('spinner', '{}')
+
+    def render(self, name, value, attrs={}):
+        widget_html = super(SpinnerWidget, self).render(
+            name, value, attrs=attrs)
+        output = "%s%s" % (
+            widget_html, self.spinner_script % (name, self.spinner_attrs))
+        return mark_safe(output)

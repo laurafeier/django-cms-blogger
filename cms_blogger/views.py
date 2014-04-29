@@ -7,6 +7,7 @@ from django.db.models import Q
 from cms_layouts.layout_response import LayoutResponse
 from .models import BlogEntryPage, Blog, BlogCategory
 from .settings import POSTS_ON_LANDING_PAGE
+from .utils import paginate_queryset
 import re
 
 
@@ -60,16 +61,8 @@ def _paginate_entries_on_blog(request, entries, blog):
         search_fields = ('title', 'short_description')
         entries = entries.filter(get_query(search_q, search_fields))
 
-    paginator = Paginator(entries, POSTS_ON_LANDING_PAGE)
-    page = request.GET.get('page')
-    try:
-        entries = paginator.page(page)
-    except PageNotAnInteger:
-        # If page is not an integer, deliver first page.
-        entries = paginator.page(1)
-    except EmptyPage:
-        # If page is out of range (e.g. 9999), deliver last page of results.
-        entries = paginator.page(paginator.num_pages)
+    entries = paginate_queryset(
+        entries, request.GET.get('page'), POSTS_ON_LANDING_PAGE)
     return extra_params, entries
 
 

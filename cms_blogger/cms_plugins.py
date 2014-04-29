@@ -2,41 +2,45 @@ from cms.plugin_base import CMSPluginBase
 from cms.plugin_pool import plugin_pool
 from django.utils.translation import ugettext_lazy as _
 from django.db import models
+
 from .models import BlogPromotion
 from .widgets import ToggleWidget
+from .forms import BlogPromotionForm
+from .admin_helper import AdminHelper
+from .utils import paginate_queryset
 
 
-class BlogPromotionPlugin(CMSPluginBase):
+class BlogPromotionPlugin(AdminHelper, CMSPluginBase):
     model = BlogPromotion
     name = _("Blog Promotion Plugin")
     render_template = "cms_blogger/blog_promotion.html"
+    form = BlogPromotionForm
+    change_form_template = "admin/cms_blogger/promotion_plugin_form.html"
     formfield_overrides = {
         models.BooleanField: {'widget': ToggleWidget}
     }
 
     def render(self, context, instance, placeholder):
-        plugin = instance
-        blog = instance.blog
+        request = context['request']
+        entries = paginate_queryset(
+            instance.get_entries(), request.GET.get('blog_promo_page'),
+            instance.number_of_entries)
         context.update({
-            'plugin': plugin,
-            'blog': blog,
-            'hide_blog_title': not instance.blog_title,
-            'hide_blog_tagline': not instance.blog_tagline,
-            'hide_blog_image': not instance.branding_image,
+            'plugin': instance,
+            'entries': entries,
             'hide_entry_description': not instance.display_abstract,
             'hide_entry_image': not instance.display_thumbnails,
-            'entries': blog.get_entries()[:instance.number_of_entries]
+            'paginate_entries': instance.paginate_entries,
+            'page_param_name': 'blog_promo_page'
         })
         return context
 
-    def get_form(self, request, obj=None, **kwargs):
-        formCls = super(BlogPromotionPlugin, self).get_form(
-            request, obj, **kwargs)
-        plugin_page = getattr(request, 'current_page', None)
-        blog_field = formCls.base_fields.get('blog')
-        if plugin_page and blog_field:
-            blog_field.queryset = blog_field.queryset.filter(
-                site=plugin_page.site)
-        return formCls
+    def render_change_form(self, request, context, *args, **kwargs):
+        res = super(BlogPromotionPlugin, self).render_change_form(
+            request, context, *args, **kwargs)
+        if 'media' in context:
+            context['media'] = self._upgrade_jquery(context['media'])
+        return res
+
 
 plugin_pool.register_plugin(BlogPromotionPlugin)

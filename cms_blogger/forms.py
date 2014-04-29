@@ -24,8 +24,9 @@ from cms_layouts.slot_finder import (
 from django_select2.fields import (
     AutoModelSelect2MultipleField, AutoModelSelect2TagField)
 
-from .models import Blog, BlogEntryPage, BlogCategory, Author
-from .widgets import TagItWidget, ButtonWidget, DateTimeWidget, PosterImage
+from .models import Blog, BlogEntryPage, BlogCategory, Author, BlogPromotion
+from .widgets import (
+    TagItWidget, ButtonWidget, DateTimeWidget, PosterImage, SpinnerWidget)
 from .utils import user_display_name
 
 
@@ -154,8 +155,9 @@ class BlogForm(forms.ModelForm):
     def _init_categories_field(self, blog):
         categories_field = self.fields.get('categories', None)
         if blog and blog.pk and not categories_field.initial:
-            categories_field.initial = ', '.join(
-                blog.categories.values_list('name', flat=True))
+            names = blog.categories.order_by('name').values_list(
+                'name', flat=True)
+            categories_field.initial = ', '.join(names)
 
     def clean_categories(self):
         categories = self.cleaned_data.get('categories', '')
@@ -164,6 +166,13 @@ class BlogForm(forms.ModelForm):
 
         categories_names = [name.strip().lower()
                             for name in categories.split(',')]
+        invalid = filter(lambda n: len(n) < 3 or len(n) > 30,
+                         categories_names)
+        if invalid:
+            invalid_names = ', '.join(invalid)
+            raise ValidationError(
+                "Following categories have invalid length: %s. Category names"
+                " must have between 3 and 30 characters." % invalid_names)
         return categories_names
 
     def clean_in_navigation(self):
@@ -419,8 +428,9 @@ class BlogEntryPageChangeForm(forms.ModelForm):
     def _init_categ_field(self, entry):
         categories_field = self.base_fields.get('categories')
         if categories_field and entry.blog:
-            categories_field.queryset = entry.blog.categories.all()
-            categories_field.initial = entry.categories.all()
+            categories_field.queryset = entry.blog.categories.order_by('name')
+            categories_field.initial = entry.categories.filter(
+                blog=entry.blog)
 
     def _init_publish_button(self):
         pub_button = self.fields['publish'].widget
@@ -493,9 +503,8 @@ class BlogEntryPageChangeForm(forms.ModelForm):
         submitted_categories = self.cleaned_data.get('categories', [])
         blog = saved_entry.blog
         saved_entry.categories.clear()
-        if blog:
-            saved_entry.categories = blog.categories.filter(
-                pk__in=submitted_categories)
+        if blog and submitted_categories:
+            saved_entry.categories = submitted_categories.filter(blog=blog)
 
     def save(self, commit=True):
         saved_instance = super(BlogEntryPageChangeForm, self).save(
@@ -511,3 +520,49 @@ class BlogEntryPageChangeForm(forms.ModelForm):
                 self.save_m2m = _extra_save_m2m
                 setattr(self.save_m2m, '_save_categories_attached', True)
         return saved_instance
+
+
+class BlogsCategoriesField(AutoModelSelect2MultipleField):
+    search_fields = ['name__icontains', ]
+    queryset = BlogCategory.objects
+    empty_values = [None, '', 0]
+
+    def __init__(self, *args, **kwargs):
+        # this is set in the get_form of the cms_plugins.BlogPromotionPlugin
+        self.current_site = None
+        super(BlogsCategoriesField, self).__init__(*args, **kwargs)
+
+    def get_queryset(self):
+        if not self.current_site:
+            # be mean and don't show any categoriess
+            return BlogCategory.objects.none()
+        qs = super(BlogsCategoriesField, self).get_queryset()
+        return qs.filter(blog__site=self.current_site)
+
+
+class BlogPromotionForm(forms.ModelForm):
+    requires_request = True
+    categories = BlogsCategoriesField()
+    number_of_entries = forms.CharField(
+        widget=SpinnerWidget(attrs={'spinner': '{min: 3, max: 10,}'}))
+
+    def __init__(self, *args, **kwargs):
+        request = kwargs.pop('request', None)
+        plugin_page = getattr(request, 'current_page', None)
+        categories_field = self.base_fields.get('categories')
+        if plugin_page and categories_field:
+            categories_field.current_site = plugin_page.site
+        super(BlogPromotionForm, self).__init__(*args, **kwargs)
+
+    def clean_number_of_entries(self):
+        no_entries = self.cleaned_data.get('number_of_entries', None)
+        try:
+            no_entries = int(no_entries)
+        except:
+            no_entries = None
+        if not no_entries or no_entries < 3 or no_entries > 10:
+            raise ValidationError('Choose a number from 3 to 10.')
+        return no_entries
+
+    class Meta:
+        model = BlogPromotion

@@ -1,11 +1,11 @@
 <div class='blog-header'>
-    {% if blog.title and not hide_blog_title %}
+    {% if blog.title %}
     <h1 id='blog-title' ><a href="{{PROXY_REWRITE_RULE}}{{blog.get_absolute_url}}" class="main_color_text">{{blog.title}}</a></h1>
     {% endif %}
-    {% if blog.tagline and not hide_blog_tagline %}
+    {% if blog.tagline %}
     <h2 id='blog-tagline'><a href="{{PROXY_REWRITE_RULE}}{{blog.get_absolute_url}}">{{blog.tagline}}</a></h2>
     {% endif %}
-    {% if blog.attached_image and not hide_blog_image %}
+    {% if blog.attached_image %}
     <img id='blog-banding-image' src='{{blog.attached_image.file.url}}'></img>
     {% endif %}
 </div>
