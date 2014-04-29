@@ -112,11 +112,14 @@ def category_page(request, blog_slug, slug):
 
 
 def entry_or_bio_page(request, blog_slug, slug):
+    Qblog = blog_slug and Q(blog__slug=blog_slug) or Q(blog__site=Site.objects.get_current())
     entry_qs = get_entries_queryset_for_request(request)
+
     try:
-        entry = entry_qs.get(
-            slug=slug, blog__slug=blog_slug,
-            blog__entries_slugs_with_date=False)
+        entry = entry_qs.get( Q(slug=slug) & Qblog &
+            Q(blog__entries_slugs_with_date=False))
     except BlogEntryPage.DoesNotExist:
+        raise Http404
+    except BlogEntryPage.MultipleObjectsReturned:
         raise Http404
     return entry.render_to_response(request)
