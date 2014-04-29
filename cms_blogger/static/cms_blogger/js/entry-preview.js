@@ -9,7 +9,7 @@ function showEntryPreviewPopup(triggeringLink, admin_static_url) {
                 <!DOCTYPE html>\
                 <html><head>\
                     <style>\
-                        html {
+                        html {\
                         width: 100%; height: 100%;\
                         background: url(\"' + admin_static_url + 'img/spinner.gif\") center center no-repeat;}\
                     </style>\
