@@ -2,6 +2,20 @@
 
 @mixin blogPagination($ns){
     #{$ns}{
+        .right-rail{
+            .pagination{
+                font-size: 16px;
+                td{
+                    width: 30%;
+                    &.prev{
+                        width: 35%;
+                    }
+                    &.next{
+                        width: 35%;
+                    }
+                }
+            }
+        }
         .pagination{
             border-top:1px solid $entry-border-color;
             margin:0;
