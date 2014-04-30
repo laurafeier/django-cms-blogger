@@ -423,9 +423,9 @@ class BlogEntryPageAdmin(AdminHelper, PlaceholderAdmin):
 
     def preview(self, request, entry_id):
         entry = get_object_or_404(self.model, id=entry_id)
-        if 'body' in request.GET:
+        if 'body' in request.POST:
             entry.content = get_mock_placeholder(
-                get_language(), request.GET.get('body') or 'Sample Content')
+                get_language(), request.POST.get('body') or 'Sample Content')
         return entry.render_to_response(request)
 
     def get_changelist_form(self, request, **kwargs):
