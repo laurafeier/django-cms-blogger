@@ -125,16 +125,16 @@ class BlogAdmin(AdminHelper):
             'fields': [('in_navigation', 'location_in_navigation'), ],
             'classes': ('extrapretty',),
         }),
-        ('Social media and commentig integration', {
+        ('Social media and commenting integration', {
             'fields': ['enable_facebook', 'enable_twitter',
                        'email_account_link'],
             'classes': ('collapse', 'extrapretty', )
         }),
-        ('Disqus commentig integration', {
+        ('Disqus commenting integration', {
             'fields': ['enable_disqus', 'disqus_shortname',
                        'disable_disqus_for_mobile'],
             'classes': ('wide', 'extrapretty', 'collapse'),
-            'description': _('Blog Disqus commentig Description')
+            'description': _('Blog Disqus commenting Description')
         }),
     )
     prepopulated_fields = {"slug": ("title",)}
