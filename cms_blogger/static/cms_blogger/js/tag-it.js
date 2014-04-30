@@ -28,6 +28,7 @@
 
     $.widget('ui.tagit', {
         options: {
+            maxLength         : 30,
             allowDuplicates   : false,
             caseSensitive     : true,
             fieldName         : 'tags',
@@ -448,7 +449,9 @@
             if (value === '') {
                 return false;
             }
-
+            if (value.length > this.options.maxLength) {
+                return false;
+            }
             if (!this.options.allowDuplicates && !this._isNew(value)) {
                 var existingTag = this._findTagByLabel(value);
                 if (this._trigger('onTagExists', null, {

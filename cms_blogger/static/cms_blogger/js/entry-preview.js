@@ -1,15 +1,27 @@
+function showEntryPreviewPopup(triggeringLink, admin_static_url) {
+    var win = window.open('', 'entry-preview', 'height=800,width=1024,resizable=yes,scrollbars=yes');
+    if(win) {
+        html = '';
+        html += '<div class="loading"></div>';
+        html += '<style>';
+        html += '.loading {';
+        html += 'width: 100%; height: 100%;';
+        html += 'background: url(\"' + admin_static_url + 'img/spinner.gif\") center center no-repeat;}';
+        html += '</style>';
+        win.document.open();
+        win.document.write(html);
+        win.document.close();
+    }
 
-
-function showEntryPreviewPopup(triggeringLink) {
-    var name = 'entry-preview';
-    href = triggeringLink.href
-    var params = {
-        _popup:1,
-        body: tinyMCE.activeEditor.getContent() };
-    href += (href.indexOf('?') == -1) ?  '?': '&';
-    href += jQuery.param(params);
-    var win = window.open(
-        href, name, 'height=800,width=1024,resizable=yes,scrollbars=yes');
-    win.focus();
-    return false;
+    $.ajax({
+        type: "POST",
+        datatype: "text",
+        url: triggeringLink.href,
+        data: { "body": tinyMCE.activeEditor.getContent() },
+        success: function(data) {
+            win.document.open();
+            win.document.write(data);
+            win.document.close();
+        }
+    });
 }
