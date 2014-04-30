@@ -124,20 +124,13 @@ class Migration(SchemaMigration):
         db.create_table('cmsplugin_blogpromotion', (
             ('cmsplugin_ptr', self.gf('django.db.models.fields.related.OneToOneField')(to=orm['cms.CMSPlugin'], unique=True, primary_key=True)),
             ('title', self.gf('django.db.models.fields.CharField')(max_length=100)),
+            ('categories', self.gf('django.db.models.fields.CharField')(max_length=619)),
             ('display_abstract', self.gf('django.db.models.fields.BooleanField')(default=True)),
             ('display_thumbnails', self.gf('django.db.models.fields.BooleanField')(default=True)),
             ('paginate_entries', self.gf('django.db.models.fields.BooleanField')(default=True)),
             ('number_of_entries', self.gf('django.db.models.fields.PositiveIntegerField')(default=10)),
         ))
         db.send_create_signal('cms_blogger', ['BlogPromotion'])
-
-        # Adding M2M table for field categories on 'BlogPromotion'
-        db.create_table('cms_blogger_blogpromotion_categories', (
-            ('id', models.AutoField(verbose_name='ID', primary_key=True, auto_created=True)),
-            ('blogpromotion', models.ForeignKey(orm['cms_blogger.blogpromotion'], null=False)),
-            ('blogcategory', models.ForeignKey(orm['cms_blogger.blogcategory'], null=False))
-        ))
-        db.create_unique('cms_blogger_blogpromotion_categories', ['blogpromotion_id', 'blogcategory_id'])
 
 
     def backwards(self, orm):
@@ -180,9 +173,6 @@ class Migration(SchemaMigration):
         # Deleting model 'BlogPromotion'
         db.delete_table('cmsplugin_blogpromotion')
 
-        # Removing M2M table for field categories on 'BlogPromotion'
-        db.delete_table('cms_blogger_blogpromotion_categories')
-
 
     models = {
         'auth.group': {
@@ -217,7 +207,7 @@ class Migration(SchemaMigration):
         'cms.cmsplugin': {
             'Meta': {'object_name': 'CMSPlugin'},
             'changed_date': ('django.db.models.fields.DateTimeField', [], {'auto_now': 'True', 'blank': 'True'}),
-            'creation_date': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime(2014, 4, 29, 0, 0)'}),
+            'creation_date': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime(2014, 4, 30, 0, 0)'}),
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'language': ('django.db.models.fields.CharField', [], {'max_length': '15', 'db_index': 'True'}),
             'level': ('django.db.models.fields.PositiveIntegerField', [], {'db_index': 'True'}),
@@ -336,7 +326,7 @@ class Migration(SchemaMigration):
         },
         'cms_blogger.blogpromotion': {
             'Meta': {'object_name': 'BlogPromotion', 'db_table': "'cmsplugin_blogpromotion'", '_ormbases': ['cms.CMSPlugin']},
-            'categories': ('django.db.models.fields.related.ManyToManyField', [], {'to': "orm['cms_blogger.BlogCategory']", 'symmetrical': 'False'}),
+            'categories': ('django.db.models.fields.CharField', [], {'max_length': '619'}),
             'cmsplugin_ptr': ('django.db.models.fields.related.OneToOneField', [], {'to': "orm['cms.CMSPlugin']", 'unique': 'True', 'primary_key': 'True'}),
             'display_abstract': ('django.db.models.fields.BooleanField', [], {'default': 'True'}),
             'display_thumbnails': ('django.db.models.fields.BooleanField', [], {'default': 'True'}),

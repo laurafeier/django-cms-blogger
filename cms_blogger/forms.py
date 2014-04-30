@@ -24,7 +24,9 @@ from cms_layouts.slot_finder import (
 from django_select2.fields import (
     AutoModelSelect2MultipleField, AutoModelSelect2TagField)
 
-from .models import Blog, BlogEntryPage, BlogCategory, Author, BlogPromotion
+from .models import (
+    Blog, BlogEntryPage, BlogCategory, Author, BlogPromotion,
+    MAX_CATEGORIES_IN_PLUGIN)
 from .widgets import (
     TagItWidget, ButtonWidget, DateTimeWidget, PosterImage, SpinnerWidget)
 from .utils import user_display_name
@@ -527,7 +529,6 @@ class BlogsCategoriesField(AutoModelSelect2MultipleField):
     empty_values = [None, '', 0]
 
     def __init__(self, *args, **kwargs):
-        # this is set in the get_form of the cms_plugins.BlogPromotionPlugin
         self.current_site = None
         super(BlogsCategoriesField, self).__init__(*args, **kwargs)
 
@@ -536,7 +537,10 @@ class BlogsCategoriesField(AutoModelSelect2MultipleField):
             # be mean and don't show any categoriess
             return BlogCategory.objects.none()
         qs = super(BlogsCategoriesField, self).get_queryset()
-        return qs.filter(blog__site=self.current_site)
+        # since we only want the names to appear exclude duplicates
+        names_with_ids = dict(
+            qs.filter(blog__site=self.current_site).values_list('name', 'pk'))
+        return BlogCategory.objects.filter(id__in=names_with_ids.values())
 
 
 class BlogPromotionForm(forms.ModelForm):
@@ -551,7 +555,29 @@ class BlogPromotionForm(forms.ModelForm):
         categories_field = self.base_fields.get('categories')
         if plugin_page and categories_field:
             categories_field.current_site = plugin_page.site
+
         super(BlogPromotionForm, self).__init__(*args, **kwargs)
+        self._init_categories()
+        self._init_number_of_entries_field()
+
+    def _init_categories(self):
+        if (self.instance and self.instance.categories and
+                not self.initial.get('initial')):
+            names = self.instance.categories.split(',')
+            qs = self.fields['categories'].get_queryset()
+            self.initial['categories'] = qs.filter(name__in=names)
+
+    def _init_number_of_entries_field(self):
+        if not self.initial.get('number_of_entries'):
+            self.initial['number_of_entries'] = "%d" % (
+                self.instance.number_of_entries, )
+
+    def clean_categories(self):
+        categories = self.cleaned_data.get('categories')
+        if len(categories) > MAX_CATEGORIES_IN_PLUGIN:
+            raise ValidationError(
+                'You can add only %d categories.' % MAX_CATEGORIES_IN_PLUGIN)
+        return ','.join(categories.values_list('name', flat=True))
 
     def clean_number_of_entries(self):
         no_entries = self.cleaned_data.get('number_of_entries', None)

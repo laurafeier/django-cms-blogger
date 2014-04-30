@@ -32,6 +32,8 @@ import datetime
 
 
 FILENAME_LENGTH = 100
+CATEGORY_NAME_LENGTH = 30
+MAX_CATEGORIES_IN_PLUGIN = 20
 
 
 def getCMSContentModel(**kwargs):
@@ -554,7 +556,8 @@ class BlogEntryPage(
 @blog_page
 class BlogCategory(models.Model, BlogRelatedPage):
     blog_related_name = 'categories'
-    name = models.CharField(_('name'), max_length=30, db_index=True)
+    name = models.CharField(_('name'),
+        max_length=CATEGORY_NAME_LENGTH, db_index=True)
     slug = models.SlugField(_('slug'), max_length=30)
     entries = models.ManyToManyField(
         BlogEntryPage, related_name='categories')
@@ -594,7 +597,12 @@ class BlogCategory(models.Model, BlogRelatedPage):
 class BlogPromotion(CMSPlugin):
 
     title = models.CharField(_('title'), max_length=100)
-    categories = models.ManyToManyField(BlogCategory)
+    # allow maximum 20 categories and compute max chars taking commas into
+    #   consideration
+    categories = models.CharField(BlogCategory,
+        max_length=(
+            CATEGORY_NAME_LENGTH * MAX_CATEGORIES_IN_PLUGIN +
+            MAX_CATEGORIES_IN_PLUGIN - 1))
     display_abstract = models.BooleanField(default=True)
     display_thumbnails = models.BooleanField(default=True)
     paginate_entries = models.BooleanField(default=True)
@@ -603,7 +611,7 @@ class BlogPromotion(CMSPlugin):
 
     def get_entries(self):
         qs = BlogEntryPage.objects.published().filter(
-            categories__in=self.categories.all(),
+            categories__name__in=self.categories.split(','),
             blog__site=Site.objects.get_current()
         ).distinct().order_by('-publication_date', 'slug')
         return qs
