@@ -1,6 +1,5 @@
 {% spaceless %}
     {% if blog.enable_facebook or blog.enable_twitter or blog.email_account_link %}
-    {% include 'cms_blogger/track_social.html' %}
     <div class="social">
     {% if blog.enable_facebook %}
         <a href="https://www.facebook.com/sharer/sharer.php?s=100&amp;p[url]={{entry.get_absolute_url}}&amp;p[title]={{entry.title}}{% if entry.poster_image %}&amp;p[images][0]={{entry.poster_image.url}}{% endif %}{% if entry.short_description %}&amp;p[summary]={{entry.short_description}}{% endif %}" class="facebook social" title="Share on Facebook" target="_blank" onclick="facebook_share();" >
