@@ -468,15 +468,7 @@ class BlogEntryPageChangeForm(forms.ModelForm):
         return body
 
     def clean_title(self):
-        title = self.cleaned_data.get('title').strip()
-        slug = slugify(title)
-        entries_with_slug = BlogEntryPage.objects.filter(
-            blog=self.instance.blog, draft_id=None, slug=slug)
-        if entries_with_slug.exclude(pk=self.instance.pk).exists():
-            raise ValidationError(
-                "Entry with the same slug already exists. "
-                "Choose a different title.")
-        return title
+        return self.cleaned_data.get('title').strip()
 
     def _set_publication_date(self):
         publish_toggle = bool(self.data.get('_pub_pressed'))
