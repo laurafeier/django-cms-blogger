@@ -184,7 +184,13 @@ class BlogForm(forms.ModelForm):
         return in_navigation
 
     def clean_slug(self):
-        return slugify(self.cleaned_data.get('slug', ''))
+        slug = slugify(self.cleaned_data.get('slug', '').strip())
+        if not slug:
+            raise ValidationError('Slug required.')
+        if Blog.objects.exclude(pk=self.instance.pk).filter(
+                site=self.instance.site, slug=slug).exists():
+            raise ValidationError("Blog with this slug already exists.")
+        return slug
 
     def clean_disqus_shortname(self):
         disqus_enabled = self.cleaned_data.get('enable_disqus', None)
