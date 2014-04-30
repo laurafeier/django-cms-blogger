@@ -2,10 +2,37 @@
 
 @mixin blogEntry($ns, $container){
     #{$ns}{
+        .clearfix:after{
+            content: "";
+            display: table;
+            clear: both;
+        }
+        .box{
+            padding: 15px;
+        }
         .last{
             .#{$container} > .right-col{
                 border:0;
                 padding-bottom: 0;
+            }
+        }
+
+        .right-rail{
+            .#{$container}{
+                & > .right-col{
+                    & > .left-col{
+                        display: block;
+                        padding-right:0;
+                    }
+                    & > .right-col{
+                        float: none;
+                        width: auto;
+                        padding-left: 0;
+                        .entry-image{
+                            margin-bottom: 10px;
+                        }
+                    }
+                }
             }
         }
         .#{$container}{
@@ -14,6 +41,10 @@
             margin-bottom: 25px;
             color:$entry-text-color;
             background: #fff;
+            img{
+                width: 100%;
+            }
+
             & > .left-col{
                 float:left;
                 width: 50px;
@@ -117,14 +148,14 @@
             }
 
             .subtitle{
-                margin:0;
+                margin:0 0 20px 0;
                 color:$entry-subtitle-color;
                 .author{
                     color:$entry-text-color;
                 }
             }
             .entry-summary{
-                margin:20px 0 30px 0;
+                margin:0 0 30px 0;
                 text-align: justify;
             }
 

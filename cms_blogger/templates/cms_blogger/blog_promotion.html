@@ -1,12 +1,19 @@
-{% load digg_pagination %}
+{% load digg_pagination sekizai_tags %}
+{% addtoblock "css" %}
 <link rel="stylesheet" type="text/css" href="{{STATIC_URL}}cms_blogger/css/blogger.css">
+{% endaddtoblock %}
+{% addtoblock "js" %}
 <script type="text/javascript" src="{{STATIC_URL}}cms_blogger/js/blog-targetting.js"></script>
-<div class='blog-promotion-header'>
-    {% if plugin.title %}
-    <h1 id='blog-promotion-title' >{{plugin.title}}</h1>
+<script type="text/javascript" src="{{STATIC_URL}}cms_blogger/js/blogger-frontend.js"></script>
+{% endaddtoblock %}
+<div class="blog-plomotion-plugin clearfix box">
+    <div class='blog-promotion-header'>
+        {% if plugin.title %}
+        <h1 id='blog-promotion-title' class="main_color_text">{{plugin.title}}</h1>
+        {% endif %}
+    </div>
+    {% include 'cms_blogger/entries_list.html' %}
+    {% if paginate_entries %}
+    {% paginator entries 2 %}
     {% endif %}
 </div>
-{% include 'cms_blogger/entries_list.html' %}
-{% if paginate_entries %}
-{% paginator entries 2 %}
-{% endif %}
