@@ -25,7 +25,10 @@ class BloggerSitemap(Sitemap):
         bio_pages = BioPage.objects.filter(blog_current_site)
         entry_pages = BlogEntryPage.objects.filter(blog_current_site)
         blog_categories = BlogCategory.objects.filter(blog_current_site)
-        chained = itertools.chain(blogs, bio_pages, entry_pages, blog_categories)
+        chained = itertools.chain(
+            blogs, bio_pages,
+            entry_pages, blog_categories,
+        )
         return list(chained)
 
     def lastmod(self, page):
