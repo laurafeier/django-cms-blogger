@@ -5,10 +5,12 @@ from django.core import paginator
 from django.db.models import Q
 from cms_blogger.models import (
     BlogEntryPage,
+    BlogCategory,
     BioPage,
     Blog,
 )
 import itertools
+import datetime
 
 
 class BloggerSitemap(Sitemap):
@@ -22,11 +24,9 @@ class BloggerSitemap(Sitemap):
         blogs = Blog.objects.filter(site=current_site)
         bio_pages = BioPage.objects.filter(blog_current_site)
         entry_pages = BlogEntryPage.objects.filter(blog_current_site)
-        chained = itertools.chain(blogs, bio_pages, entry_pages)
+        blog_categories = BlogCategory.objects.filter(blog_current_site)
+        chained = itertools.chain(blogs, bio_pages, entry_pages, blog_categories)
         return list(chained)
 
     def lastmod(self, page):
-        import datetime
         return datetime.datetime.now() + datetime.timedelta(days=6)
-
-
