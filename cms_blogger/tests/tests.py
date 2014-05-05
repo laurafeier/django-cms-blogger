@@ -473,8 +473,10 @@ class TestSitemap(TestCase):
             title='entry', slug='entry', blog=blog
         )
         category = BlogCategory.objects.create(
-            name='category', slug='category', blog=blog, blog_entry=entry,
+            name='category', slug='category', blog=blog,
         )
+        category.entries.add(entry)
+        category.save()
         response = self.client.get(self.url)
         locations = self.sitemap_locations(response.content)
         self.assert_is_not_empty(locations)
@@ -486,21 +488,18 @@ class TestSitemap(TestCase):
 
     def test_entries_same_categories(self):
         blog = Blog.objects.create(title='test_blog', slug='test_blog')
-        category = BlogCategory.objects.create(
-            name='category', slug='category',
-            blog=blog,
-        )
         entry_one = BlogEntryPage.objects.create(
             title='one', slug='one', blog=blog
         )
         entry_two = BlogEntryPage.objects.create(
             title='two', slug='two', blog=blog
         )
-        entry_one.categories = blog.categories.filter(pk=category.pk)
-        entry_one.save()
-        # entry_two.categories.add(category)
-        entry_two.categories = blog.categories.filter(pk=category.pk)
-        entry_two.save()
+        category = BlogCategory.objects.create(
+            name='category', slug='category', blog=blog,
+        )
+        category.entries.add(entry_one)
+        category.entries.add(entry_two)
+        category.save()
         response = self.client.get(self.url)
         locations = self.sitemap_locations(response.content)
         self.assert_is_not_empty(locations)
@@ -519,16 +518,19 @@ class TestSitemap(TestCase):
             title='two', slug='two', blog=blog
         )
         category_one = BlogCategory.objects.create(
-            name='categoryone', slug='categoryone',
-            blog=blog, blog_entry=entry_one,
+            name='categoryone', slug='categoryone', blog=blog, 
         )
         category_two = BlogCategory.objects.create(
-            name='categorytwo', slug='categorytwo',
-            blog=blog, blog_entry=entry_two,
+            name='categorytwo', slug='categorytwo', blog=blog, 
         )
+        category_one.entries.add(entry_two)
+        category_one.save()
+        category_two.entries.add(entry_two)
+        category_two.save()
         response = self.client.get(self.url)
         locations = self.sitemap_locations(response.content)
         self.assert_is_not_empty(locations)
+        self.assertEqual(len(locations), 5)
         self.assert_blog_landingpage(blog, locations[0])
         self.assert_blogentry_location(entry_one, locations[1])
         self.assert_blogentry_location(entry_two, locations[2])
