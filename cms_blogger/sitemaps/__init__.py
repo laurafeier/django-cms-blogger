@@ -23,7 +23,7 @@ class BloggerSitemap(Sitemap):
         blog_current_site = Q(blog__site=current_site)
         blogs = Blog.objects.filter(site=current_site)
         bio_pages = BioPage.objects.filter(blog_current_site)
-        entry_pages = BlogEntryPage.objects.filter(blog_current_site)
+        entry_pages = BlogEntryPage.objects.published().filter(blog_current_site)
         blog_categories = BlogCategory.objects.filter(blog_current_site)
         chained = itertools.chain(
             blogs, bio_pages,
@@ -31,5 +31,13 @@ class BloggerSitemap(Sitemap):
         )
         return list(chained)
 
-    def lastmod(self, page):
-        return datetime.datetime.now() + datetime.timedelta(days=6)
+    def lastmod(self, blog_related_object):
+        if hasattr(blog_related_object, 'modified_at'):
+            return blog_related_object.modified_at
+        elif hasattr(blog_related_object, 'get_entries'):
+            entries = blog_related_object.get_entries()
+            if entries.exists():
+                return entries[0].modified_at
+            else:
+                return blog_related_object.blog.modified_at
+        return blog_related_object.blog.modified_at

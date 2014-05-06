@@ -156,6 +156,8 @@ class AbstractBlog(models.Model):
 
     allowed_users = models.ManyToManyField(User, verbose_name=_("Add Users"))
 
+    modified_at = models.DateTimeField(auto_now=True, db_index=True)
+
     class Meta:
         unique_together = (("slug", "site"),)
         abstract = True
@@ -562,6 +564,7 @@ class BlogCategory(models.Model, BlogRelatedPage):
     slug = models.SlugField(_('slug'), max_length=30)
     entries = models.ManyToManyField(
         BlogEntryPage, related_name='categories')
+    modified_at = models.DateTimeField(auto_now=True, db_index=True)    
 
     @models.permalink
     def get_absolute_url(self):
@@ -634,3 +637,17 @@ def mark_draft(instance, **kwargs):
         #   programmatically will behave in the same way
         if instance.draft_id and not instance.is_draft:
             entry_as_queryset.update(draft_id=None)
+
+
+@receiver(signals.pre_save, sender=BlogCategory)
+def category_update(instance, **kwargs):
+    current_time = timezone.now()
+    instance.blog.modified_at = current_time
+    instance.blog.save()
+
+
+@receiver(signals.pre_save, sender=BlogEntryPage)
+def entry_update(instance, **kwargs):
+    current_time = timezone.now()
+    instance.blog.modified_at = current_time
+    instance.blog.save()

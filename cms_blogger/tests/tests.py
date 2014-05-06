@@ -376,6 +376,7 @@ class TestBlogPageViews(TestCase):
 class TestSitemap(TestCase):
     url = reverse('blogger-sitemap')
     location_tag = '{http://www.sitemaps.org/schemas/sitemap/0.9}loc'
+    lastmod_tag = '{http://www.sitemaps.org/schemas/sitemap/0.9}lastmod'
 
     def assert_status_ok(self, url):
         response = self.client.get(url)
@@ -414,10 +415,39 @@ class TestSitemap(TestCase):
         locations = map(lambda node: node.text, location_iterator)
         return locations
 
+    def sitemap_lastmods(self, xml_string):
+        xml_tree = xml.etree.ElementTree.fromstring(xml_string)
+        lastmod_iterator = xml_tree.iter(self.lastmod_tag)
+        lastmods = map(lambda node: node.text, lastmod_iterator)
+        return lastmods
+
     def url_path(self, url):
         url_parts = urlparse.urlparse(url)
         path = url_parts.path
         return path
+
+    def make_entry(self, blog, suffix, is_published=True):
+        params = {
+            'title': 'title_{suffix}'.format(suffix=suffix),
+            'slug': 'slug_{suffix}'.format(suffix=suffix),
+            'short_description': 'description_{suffix}'.format(suffix=suffix),
+            'is_published': is_published,
+            'blog': blog,
+        }
+        entry = BlogEntryPage.objects.create(**params)
+        return entry
+
+    def make_category(self, blog, suffix, *entries):
+        params = {
+            'name': 'category_{suffix}'.format(suffix=suffix),
+            'slug': 'slug_{suffix}'.format(suffix=suffix),
+            'blog': blog,
+        }
+        category = BlogCategory.objects.create(**params)
+        for entry in entries:
+            category.entries.add(entry)
+        category.save()
+        return category
         
     def test_baseview(self):
         self.assert_status_ok(self.url)
@@ -447,7 +477,7 @@ class TestSitemap(TestCase):
 
     def test_one_blog_one_entry(self):
         blog = Blog.objects.create(title='test_blog', slug='test_blog')
-        entry = BlogEntryPage.objects.create(title='entry', slug='entry', blog=blog)
+        entry = self.make_entry(blog, suffix='single')
         response = self.client.get(self.url)
         locations = self.sitemap_locations(response.content)
         self.assert_is_not_empty(locations)
@@ -457,8 +487,8 @@ class TestSitemap(TestCase):
 
     def test_one_blog_many_entries(self):
         blog = Blog.objects.create(title='test_blog', slug='test_blog')
-        one = BlogEntryPage.objects.create(title='one', slug='one', blog=blog)
-        two = BlogEntryPage.objects.create(title='two', slug='two', blog=blog)
+        one = self.make_entry(blog, suffix='one')
+        two = self.make_entry(blog, suffix='two')
         response = self.client.get(self.url)
         locations = self.sitemap_locations(response.content)
         self.assert_is_not_empty(locations)
@@ -469,14 +499,8 @@ class TestSitemap(TestCase):
 
     def test_one_category(self):
         blog = Blog.objects.create(title='test_blog', slug='test_blog')
-        entry = BlogEntryPage.objects.create(
-            title='entry', slug='entry', blog=blog
-        )
-        category = BlogCategory.objects.create(
-            name='category', slug='category', blog=blog,
-        )
-        category.entries.add(entry)
-        category.save()
+        entry = self.make_entry(blog, suffix='single')
+        category = self.make_category(blog, 'category', entry)
         response = self.client.get(self.url)
         locations = self.sitemap_locations(response.content)
         self.assert_is_not_empty(locations)
@@ -488,18 +512,9 @@ class TestSitemap(TestCase):
 
     def test_entries_same_categories(self):
         blog = Blog.objects.create(title='test_blog', slug='test_blog')
-        entry_one = BlogEntryPage.objects.create(
-            title='one', slug='one', blog=blog
-        )
-        entry_two = BlogEntryPage.objects.create(
-            title='two', slug='two', blog=blog
-        )
-        category = BlogCategory.objects.create(
-            name='category', slug='category', blog=blog,
-        )
-        category.entries.add(entry_one)
-        category.entries.add(entry_two)
-        category.save()
+        entry_one = self.make_entry(blog=blog, suffix='one')
+        entry_two = self.make_entry(blog=blog, suffix='two')
+        category = self.make_category(blog, 'category', entry_one, entry_two)
         response = self.client.get(self.url)
         locations = self.sitemap_locations(response.content)
         self.assert_is_not_empty(locations)
@@ -511,22 +526,10 @@ class TestSitemap(TestCase):
 
     def test_entries_different_categories(self):
         blog = Blog.objects.create(title='test_blog', slug='test_blog')
-        entry_one = BlogEntryPage.objects.create(
-            title='one', slug='one', blog=blog
-        )
-        entry_two = BlogEntryPage.objects.create(
-            title='two', slug='two', blog=blog
-        )
-        category_one = BlogCategory.objects.create(
-            name='categoryone', slug='categoryone', blog=blog, 
-        )
-        category_two = BlogCategory.objects.create(
-            name='categorytwo', slug='categorytwo', blog=blog, 
-        )
-        category_one.entries.add(entry_two)
-        category_one.save()
-        category_two.entries.add(entry_two)
-        category_two.save()
+        entry_one = self.make_entry(blog=blog, suffix='one')
+        entry_two = self.make_entry(blog=blog, suffix='two')
+        category_one = self.make_category(blog, 'category_one', entry_two)
+        category_two = self.make_category(blog, 'category_two', entry_two)
         response = self.client.get(self.url)
         locations = self.sitemap_locations(response.content)
         self.assert_is_not_empty(locations)
@@ -536,3 +539,14 @@ class TestSitemap(TestCase):
         self.assert_blogentry_location(entry_two, locations[2])
         self.assert_blogcategory_location(category_one, locations[3])
         self.assert_blogcategory_location(category_two, locations[4])
+
+    def test_lastmod(self):
+        blog = Blog.objects.create(title='test_blog', slug='test_blog')
+        entry = self.make_entry(blog, suffix='single')
+        category = self.make_category(blog, 'category', entry)
+        response = self.client.get(self.url)
+        locations = self.sitemap_locations(response.content)
+        lastmods = self.sitemap_lastmods(response.content)
+        self.assertEqual(len(locations), len(lastmods))
+        for lastmod in lastmods:
+            self.assertIsNot(lastmod, None)
