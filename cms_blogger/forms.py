@@ -423,7 +423,8 @@ class BlogEntryPageChangeForm(forms.ModelForm):
         self._init_poster_image_widget()
         self._init_publish_button()
         self._init_authors_field(request)
-        self.fields['body'].initial = self.instance.content_body
+        if not 'body' in self.initial:
+            self.initial['body'] = self.instance.content_body
         # prepare for save
         self.instance.draft_id = None
 
@@ -473,6 +474,7 @@ class BlogEntryPageChangeForm(forms.ModelForm):
         return self.cleaned_data.get('title').strip()
 
     def _set_publication_date(self):
+        was_published = self.instance.is_published
         publish_toggle = bool(self.data.get('_pub_pressed'))
         if publish_toggle:
             self.instance.is_published = not self.instance.is_published
@@ -489,7 +491,7 @@ class BlogEntryPageChangeForm(forms.ModelForm):
             return
 
         start_date = self.cleaned_data.get('start_publication')
-        if start_date != self.instance.start_publication:
+        if start_date != self.instance.start_publication or not was_published:
             self.instance.publication_date = start_date or now
 
     def clean(self):

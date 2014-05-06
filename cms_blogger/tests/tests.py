@@ -3,12 +3,15 @@ from django.contrib.auth.models import User, Permission
 from django.contrib.sites.models import Site
 from django.contrib.admin.util import flatten_fieldsets
 from django.core.urlresolvers import reverse
+from django.template import Template
+from dateutil import tz, parser
 
 from cms_blogger.models import *
 from cms_blogger import admin, forms
 from cms.api import create_page, add_plugin
 
 from cms_layouts.models import Layout
+from cms_layouts.layout_response import LayoutResponse
 from cms_layouts.slot_finder import get_fixed_section_slots
 
 
@@ -295,6 +298,14 @@ class TestChangeLists(TestCase):
 
 class TestBlogEntryModel(TestCase):
 
+    def setUp(self):
+        self.superuser = User.objects.create_superuser(
+            'admin', 'admin@cms_blogger.com', 'secret')
+        self.client.login(username='admin', password='secret')
+
+    def tearDown(self):
+        self.client.logout()
+
     def _make_blog(self):
         data = {'title': 'one title', 'slug': 'one-title'}
         return Blog.objects.create(**data)
@@ -334,19 +345,100 @@ class TestBlogEntryModel(TestCase):
         self.assertEquals(entries["3"].next_post(), None)
 
     def test_draft(self):
-        pass
+        blog = self._make_blog()
+        draft_entry = BlogEntryPage.objects.create(blog=blog)
+        self.assertTrue(draft_entry.is_draft)
+        draft_entry.title = 'Sample title'
+        draft_entry.save()
+        self.assertTrue(draft_entry.is_draft)
+        draft_entry.short_description = 'desc'
+        draft_entry.save()
+        self.assertFalse(draft_entry.is_draft)
 
     def test_publication_date_changes(self):
-        pass
+        blog = self._make_blog()
+        entry = BlogEntryPage.objects.create(**{
+            'title': 'entry', 'blog': blog,
+            'short_description': 'desc'})
+        self.assertEquals(entry.slug, 'entry')
+        self.assertFalse(entry.is_draft)
+        default_pub_date = entry.publication_date
+
+        url = reverse('admin:cms_blogger_blogentrypage_change',
+                      args=(entry.pk, ))
+        response = self.client.get(url)
+
+        data = response.context_data['adminform'].form.initial
+        data['_pub_pressed'] = True
+        response = self.client.post(url, data)
+        # should reset
+        entry = BlogEntryPage.objects.get(id=entry.id)
+        self.assertNotEquals(default_pub_date, entry.publication_date)
+        self.assertTrue(entry.is_published)
+        # unpublish
+        response = self.client.post(url, data)
+        entry = BlogEntryPage.objects.get(id=entry.id)
+        self.assertFalse(entry.is_published)
+        # publish with start date
+        data['start_publication'] = '05/06/2014 11:51 AM +03:00'
+        start_date = parser.parse(
+            data['start_publication']).astimezone(tz.tzutc())
+        response = self.client.post(url, data)
+        entry = BlogEntryPage.objects.get(id=entry.id)
+        self.assertEquals(start_date, entry.publication_date)
+        self.assertTrue(entry.is_published)
 
     def test_admin_publish_actions(self):
-        pass
+        blog = self._make_blog()
+        for i in range(4):
+            BlogEntryPage.objects.create(**{
+                'title': 'entry', 'blog': blog,
+                'short_description': 'desc'})
+        self.assertEquals(len(blog.get_entries()), 0)
+        entries_ids = BlogEntryPage.objects.values_list('id', flat=True)
+        url = reverse('admin:cms_blogger_blogentrypage_changelist')
+        response = self.client.post(url, {
+            '_selected_action': entries_ids,
+            'action': 'make_published',
+            'post': 'yes', })
+        self.assertEquals(blog.get_entries().count(), len(entries_ids))
+
+        response = self.client.post(url, {
+            '_selected_action': entries_ids,
+            'action': 'make_unpublished',
+            'post': 'yes', })
+        self.assertEquals(blog.get_entries().count(), 0)
 
     def test_poster_image_deletion(self):
         pass
 
     def test_title_rendering(self):
-        pass
+        blog = self._make_blog()
+        page_for_layouts = create_page(
+            'master', 'page_template.html', language='en', published=True)
+        blog_layout = Layout.objects.create(**{
+            'from_page': page_for_layouts,
+            'content_object': blog,
+            'layout_type': Blog.ALL })
+        entry = BlogEntryPage.objects.create(**{
+            'title': 'Hello', 'blog': blog, 'is_published': True,
+            'short_description': 'I am a blog entry',
+            'meta_keywords': "article,blog,keyword",})
+        # make request to get all the cms midlleware data
+        resp = self.client.get(page_for_layouts.get_absolute_url())
+        # request with all middleware data
+        request = resp.context['request']
+        # build a layout response to use its context for another template
+        resp = LayoutResponse(entry, entry.get_layout(), request)
+        # we dont need the http response but we need the context that holds
+        # the title
+        resp.make_response()
+        self.assertEquals(Template(
+            "{% load cms_tags %}"
+            "{% page_attribute title %} "
+            "{% page_attribute meta_description %} "
+            "{% page_attribute meta_keywords %}").render(resp.context),
+            "Hello I am a blog entry article,blog,keyword")
 
 
 class TestNavigationMenu(TestCase):
