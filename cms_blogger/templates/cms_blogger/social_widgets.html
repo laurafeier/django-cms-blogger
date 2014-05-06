@@ -2,19 +2,19 @@
     {% if blog.enable_facebook or blog.enable_twitter or blog.email_account_link %}
     <div class="social">
     {% if blog.enable_facebook %}
-        <a href="https://www.facebook.com/sharer/sharer.php?s=100&amp;p[url]={{entry.get_absolute_url}}&amp;p[title]={{entry.title}}{% if entry.poster_image %}&amp;p[images][0]={{entry.poster_image.url}}{% endif %}{% if entry.short_description %}&amp;p[summary]={{entry.short_description}}{% endif %}" class="facebook social" title="Share on Facebook" target="_blank" onclick="facebook_share();" >
+        <a href="javascript:void(0)" data-href="https://www.facebook.com/sharer/sharer.php?s=100&amp;p[url]={{PROXY_REWRITE_RULE}}{{entry.get_absolute_url}}&amp;p[title]={{entry.title}}{% if entry.poster_image %}&amp;p[images][0]={{entry.poster_image.url}}{% endif %}{% if entry.short_description %}&amp;p[summary]={{entry.short_description}}{% endif %}" class="facebook social" title="Share on Facebook" target="_blank" >
             <img src="{{STATIC_URL}}cms_blogger/img/facebook.png" alt="Share on Facebook" />
         </a>
     {% endif %}
 
-    {% if blog.enable_twitter%}
-        <a href="https://twitter.com/intent/tweet?url={{entry.get_absolute_url}}&amp;text={{entry.title}}%0a" class="twitter social" title="Tweet this post" target="_blank" onclick="twitter_share();">
+    {% if blog.enable_twitter %}
+        <a href="javascript:void(0)" data-href="https://twitter.com/intent/tweet?url={{PROXY_REWRITE_RULE}}{{entry.get_absolute_url}}&amp;text={{entry.title}}%0a" class="twitter social" title="Tweet this post" target="_blank" >
             <img src="{{STATIC_URL}}cms_blogger/img/twitter.png" alt="Tweet this post" />
         </a>
     {% endif %}
 
-    {% if blog.email_account_link%}
-        <a href="mailto:?subject={{entry.title}}&amp;body={{entry.get_absolute_url}}" class="email social" title="Share by Email" onclick="email_share();">
+    {% if blog.email_account_link %}
+        <a href="mailto:?subject={{entry.title}}&amp;body={{PROXY_REWRITE_RULE}}{{entry.get_absolute_url}}" class="email social" title="Share by Email" >
             <img src="{{STATIC_URL}}cms_blogger/img/email.png" alt="Share by Email" />
         </a>
     {% endif %}
