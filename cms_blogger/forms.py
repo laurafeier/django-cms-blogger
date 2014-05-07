@@ -350,7 +350,8 @@ class AuthorsField(AutoModelSelect2TagField):
         #   ensure it uses the 'write' db for reads also
         author_mgr = Author.objects.db_manager(router.db_for_write(Author))
         user_mgr = User.objects.db_manager(router.db_for_write(User))
-        users_used = author_mgr.values_list('user', flat=True)
+        users_used = author_mgr.filter(
+            user__isnull=False).values_list('user', flat=True)
         candidates_for_author = user_mgr.exclude(id__in=users_used)
         for user in candidates_for_author:
             author_mgr.get_or_create(name='', user=user)
@@ -509,19 +510,35 @@ class BlogEntryPageChangeForm(forms.ModelForm):
         if blog and submitted_categories:
             saved_entry.categories = submitted_categories.filter(blog=blog)
 
+    def _remove_unused_authors(self, saved_entry):
+        submitted = [ath.pk for ath in self.cleaned_data.get('authors', [])]
+        # exclude sumbitted authors + authors generated from users
+        check_for_complete_removal = saved_entry.authors.exclude(
+            id__in=submitted).filter(user__isnull=True)
+        rest_of_entries = BlogEntryPage.objects.exclude(pk=saved_entry.pk)
+        for author in check_for_complete_removal:
+            entries_for_author = rest_of_entries.filter(authors=author.pk)
+            if not entries_for_author.exists():
+                author.delete()
+
     def save(self, commit=True):
         saved_instance = super(BlogEntryPageChangeForm, self).save(
             commit=commit)
-        if commit:
+
+        def custom_save_related():
             self._save_categories(saved_instance)
+            self._remove_unused_authors(saved_instance)
+
+        if commit:
+            custom_save_related()
         else:
             original_save_m2m = self.save_m2m
-            if not hasattr(original_save_m2m, '_save_categories_attached'):
+            if not hasattr(original_save_m2m, '_custom_save_rel_attached'):
                 def _extra_save_m2m():
-                    self._save_categories(saved_instance)
+                    custom_save_related()
                     original_save_m2m()
                 self.save_m2m = _extra_save_m2m
-                setattr(self.save_m2m, '_save_categories_attached', True)
+                setattr(self.save_m2m, '_custom_save_rel_attached', True)
         return saved_instance
 
 

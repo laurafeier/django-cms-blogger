@@ -515,14 +515,89 @@ class TestNavigationMenu(BaseMenuTest):
 
 class TestAuthorModel(TestCase):
 
-    def test_creation(self):
-        pass
+    def setUp(self):
+        self.superuser = User.objects.create_superuser(
+            'admin', 'admin@cms_blogger.com', 'secret')
+        self.client.login(username='admin', password='secret')
+        self.blog = Blog.objects.create(**{
+            'title': 'one title', 'slug': 'one-title'})
+        self.entry = BlogEntryPage.objects.create(**{
+            'title': 'first entry', 'blog': self.blog,
+            'short_description': 'short_description'})
+        self.entry_url = reverse('admin:cms_blogger_blogentrypage_change',
+            args=(self.entry.pk, ))
 
-    def test_deletion(self):
-        pass
+    def tearDown(self):
+        self.client.logout()
+
+    def test_creation(self):
+        response = self.client.get(self.entry_url)
+        self.assertEquals(self.entry.authors.count(), 0)
+        superuser_author = Author.objects.all()[0]
+        initial = response.context_data['adminform'].form.initial
+        initial['authors'] = [superuser_author.pk]
+        self.client.post(self.entry_url, initial)
+        self.assertEquals(self.entry.authors.count(), 1)
+        initial['authors'] = [superuser_author.pk, 'new_author']
+        self.client.post(self.entry_url, initial)
+        self.assertEquals(Author.objects.count(), 2)
+        self.assertEquals(self.entry.authors.count(), 2)
+
+    def test_user_deletion(self):
+        new_user = User.objects.create_superuser(
+            'new_user', 'admin2@cms_blogger.com', 'secret')
+        response = self.client.get(self.entry_url)
+        self.assertEquals(Author.objects.count(), 2)
+        new_user.delete()
+        self.assertEquals(Author.objects.count(), 2)
+        Author.objects.get(name='admin2@cms_blogger.com')
 
     def test_form_initialization(self):
-        pass
+        self.assertEquals(Author.objects.count(), 0)
+        self.client.get(self.entry_url)
+        self.assertEquals(Author.objects.count(), 1)
+
+    def test_unused_authors_removal(self):
+        User.objects.create_superuser(
+            'new_user', 'admin2@cms_blogger.com', 'secret')
+        Author.objects.create(name='custom author')
+        # generate authors
+        response = self.client.get(self.entry_url)
+        self.assertEquals(Author.objects.count(), 3)
+        superuser_author = Author.objects.get(user=self.superuser.id)
+
+        new_entry = BlogEntryPage.objects.create(**{
+            'title': 'new entry', 'blog': self.blog,
+            'short_description': 'short_description'})
+        # add authors
+        new_entry.authors.add(*Author.objects.all())
+        self.entry.authors.add(*Author.objects.all())
+
+        # set only a default author so that requred validation error
+        #   is not raised
+        response = self.client.get(self.entry_url)
+        initial = response.context_data['adminform'].form.initial
+        initial['authors'] = [superuser_author.pk]
+        self.assertEquals(self.entry.authors.count(), 3)
+        self.client.post(self.entry_url, initial)
+        self.assertEquals(self.entry.authors.count(), 1)
+
+        # no authors should get deleted since all are in use by the other entry
+        self.assertEquals(Author.objects.count(), 3)
+
+        # set the default author for the other entry
+        new_entry_url = reverse('admin:cms_blogger_blogentrypage_change',
+            args=(new_entry.pk, ))
+        response = self.client.get(new_entry_url)
+        self.assertEquals(new_entry.authors.count(), 3)
+        initial = response.context_data['adminform'].form.initial
+        initial['authors'] = [superuser_author.pk]
+        self.client.post(new_entry_url, initial)
+        self.assertEquals(new_entry.authors.count(), 1)
+
+        # only custom author should get deleted since it's not in use and the
+        #   authors generated from users should never get deleted
+        self.assertEquals(Author.objects.count(), 2)
 
 
 class TestBlogPageViews(TestCase):

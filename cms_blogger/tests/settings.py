@@ -34,6 +34,7 @@ INSTALLED_APPS = [
     'cms.test_utils.project.pluginapp.plugins.extra_context',
     'cms.test_utils.project.fakemlng',
     'cms.test_utils.project.fileapp',
+    'reversion',
 
     'django_select2',
     'cms_layouts',
