@@ -15,6 +15,27 @@ INSTALLED_APPS = [
     'sekizai',
     'filer',
     'cms.plugins.text',
+    # all test apps for cms; these are required only for tests since
+    #   we're using cms test utils
+    'cms.plugins.picture',
+    'cms.plugins.file',
+    'cms.plugins.flash',
+    'cms.plugins.link',
+    'cms.plugins.snippet',
+    'cms.plugins.googlemap',
+    'cms.plugins.teaser',
+    'cms.plugins.video',
+    'cms.plugins.twitter',
+    'cms.plugins.inherit',
+    'cms.test_utils.project.sampleapp',
+    'cms.test_utils.project.placeholderapp',
+    'cms.test_utils.project.pluginapp',
+    'cms.test_utils.project.pluginapp.plugins.manytomany_rel',
+    'cms.test_utils.project.pluginapp.plugins.extra_context',
+    'cms.test_utils.project.fakemlng',
+    'cms.test_utils.project.fileapp',
+    'reversion',
+
     'django_select2',
     'cms_layouts',
     'cms_blogger',
@@ -73,3 +94,4 @@ CACHE_BACKEND = 'locmem:///'
 CMS_PLUGIN_PROCESSORS = ('cms_layouts.context_processor.add_extra_html', )
 SOUTH_TESTS_MIGRATE = False
 BLOGGER_ALLOWED_SITES_FOR_USER =  'cms_blogger.tests.utils.get_allowed_sites'
+USE_TZ = True

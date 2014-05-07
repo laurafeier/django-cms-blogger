@@ -3,7 +3,27 @@
 
         this.init = function(){
             normalizeSocialURLs();
-        }
+        };
+
+        var social = {
+            facebook_share : function(){
+                if(typeof _gaq !== 'undefined'){
+                    _gaq.push(['_trackSocial', 'facebook', 'send']);
+                }
+            },
+
+            twitter_share : function(){
+                if(typeof _gaq !== 'undefined'){
+                    _gaq.push(['_trackSocial', 'twitter', 'tweet']);
+                }
+            },
+
+            email_share : function(){
+                if(typeof _gaq !== 'undefined'){
+                    _gaq.push(['_trackSocial', 'email', 'send']);
+                }
+            }
+        };
 
         function getHost(){
             return window.location.host;
@@ -40,7 +60,7 @@
 
             widgets.each(function(){
                 var shreLink, url, prefix,
-                    href = $(this).attr("href"),
+                    href = $(this).data("href") || $(this).attr("href"),
                     params = tokenizeParams(href);
 
                 for(var p in params) {
@@ -53,25 +73,48 @@
                 }
 
                 href = href.split("?")[0] + "?" + flattenParams(params);
-                $(this).attr("href", href);
-                showPopup($(this));
+                if($(this).data("href")){
+                    $(this).data("href", href);
+                }else{
+                    $(this).attr("href", href);
+                }
+                $(this).off('click');
+                addClickHandlers($(this));
             });
         }
 
 
-        function showPopup(elem){
-            if(elem.attr('href').indexOf('mailto:') === -1){
-                elem.off('click').on('click', function(e){
-                    var win = window.open(
-                        $(this).attr('href'), 'ShareBlogPost', 'height=800,width=960,resizable=yes,scrollbars=yes');
-                    win.focus();
-                    e.preventDefault();
-                });
+        function addClickHandlers(elem){
+            function openWindow(elem){
+                var win = window.open(
+                    elem.data('href'),
+                    'ShareBlogPost', 'height=800,width=960,resizable=yes,scrollbars=yes');
+                win.focus();
             }
+
+            elem.on('click', function(e){
+                if($(this).hasClass('email')){
+                    //set timeout to make sure request doesn't get canceled by the browser
+                    setTimeout(social.email_share, 500);
+                }
+
+                if($(this).hasClass('facebook')){
+                    social.facebook_share();
+                    openWindow($(this));
+                    e.preventDefault();
+                }
+
+                if($(this).hasClass('twitter')){
+                    social.twitter_share();
+                    openWindow($(this));
+                    e.preventDefault();
+                }
+            });
         }
 
         return this;
     }
 
     var blogger = (new Blogger()).init();
+
 })(jQuery);

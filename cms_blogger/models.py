@@ -639,6 +639,37 @@ def mark_draft(instance, **kwargs):
             entry_as_queryset.update(draft_id=None)
 
 
+@receiver(signals.pre_delete, sender=User)
+def fetch_author_to_update_name_for(instance, **kwargs):
+    author = None
+    try:
+        author = Author.objects.get(user=instance)
+    except Author.DoesNotExist, e:
+        pass
+    except Author.MultipleObjectsReturned, e:
+        authors = Author.objects.filter(user=instance).order_by(slug)
+        author = authors[0]
+        for to_merge_author in author[1:]:
+            author.blog_entries.add(*to_merge_author.entries.all())
+    except Exception, e:
+        raise
+    finally:
+        if author:
+            setattr(instance, '_author_to_update', author.pk)
+
+
+@receiver(signals.post_delete, sender=User)
+def update_author_name(instance, **kwargs):
+    if hasattr(instance, '_author_to_update'):
+        try:
+            author_pk = getattr(instance, '_author_to_update')
+            author = Author.objects.get(id=author_pk)
+            author.name = user_display_name(instance)
+            author.save()
+        except:
+            pass
+
+
 @receiver(signals.pre_save, sender=BlogCategory)
 def category_update(instance, **kwargs):
     current_time = timezone.now()

@@ -97,14 +97,16 @@ class BlogNavigationExtender(Modifier):
                 blog_nav_node = _make_navigation_node(
                     root_blog_node, None, proxy_prefix, node_visible)
                 # figure out the position to insert root blog node
-                try:
-                    visible_page_node = visible_roots[root_blog_node.position]
-                    position_in_nodes = nodes.index(visible_page_node)
-                except IndexError:
-                    # get position for last visible root node
-                    position_in_nodes = nodes.index(
-                        visible_roots[len(visible_roots) - 1])
-
+                if visible_roots:
+                    try:
+                        page_root = visible_roots[root_blog_node.position]
+                        position_in_nodes = nodes.index(page_root)
+                    except IndexError:
+                        # get position for last visible root node
+                        position_in_nodes = nodes.index(
+                            visible_roots[len(visible_roots) - 1])
+                else:
+                    position_in_nodes = root_blog_node.position
                 nodes.insert(position_in_nodes, blog_nav_node)
                 new_nodes.append(blog_nav_node)
 
