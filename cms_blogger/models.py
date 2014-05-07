@@ -126,14 +126,16 @@ def contribute_with_title(cls):
 
         cls.add_to_class('get_%s' % attr, get_title_obj_attribute)
     return cls
-
+    
 
 def blog_page(cls):
     # adds a blog foreign key(with a related name if specified) to a model
     # blog foreign key is required by all blog related pages.
     blog = models.ForeignKey(
         Blog, related_name=getattr(cls, 'blog_related_name', None))
+    modified_at = models.DateTimeField(auto_now=True, db_index=True)    
     cls.add_to_class('blog', blog)
+    cls.add_to_class('modified_at', modified_at)
     cls = contribute_with_title(cls)
     return cls
 
@@ -397,7 +399,6 @@ class BlogEntryPage(
         _('publication date'),
         db_index=True, default=timezone.now,
         help_text=_("Used to build the entry's URL."))
-    modified_at = models.DateTimeField(auto_now=True, db_index=True)
 
     poster_image = models.ImageField(
         _("Thumbnail Image"), upload_to=upload_entry_image, blank=True,
@@ -564,7 +565,6 @@ class BlogCategory(models.Model, BlogRelatedPage):
     slug = models.SlugField(_('slug'), max_length=30)
     entries = models.ManyToManyField(
         BlogEntryPage, related_name='categories')
-    modified_at = models.DateTimeField(auto_now=True, db_index=True)    
 
     @models.permalink
     def get_absolute_url(self):

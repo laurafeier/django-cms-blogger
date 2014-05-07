@@ -64,6 +64,7 @@ class Migration(SchemaMigration):
             ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
             ('author', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['cms_blogger.Author'])),
             ('blog', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['cms_blogger.Blog'])),
+            ('modified_at', self.gf('django.db.models.fields.DateTimeField')(auto_now=True, db_index=True, blank=True)),
         ))
         db.send_create_signal('cms_blogger', ['BioPage'])
 
@@ -74,7 +75,6 @@ class Migration(SchemaMigration):
             ('title', self.gf('django.db.models.fields.CharField')(max_length=120)),
             ('slug', self.gf('django.db.models.fields.SlugField')(max_length=255)),
             ('publication_date', self.gf('django.db.models.fields.DateTimeField')(default=datetime.datetime.now, db_index=True)),
-            ('modified_at', self.gf('django.db.models.fields.DateTimeField')(auto_now=True, db_index=True, blank=True)),
             ('poster_image', self.gf('django.db.models.fields.files.ImageField')(max_length=100, blank=True)),
             ('caption', self.gf('django.db.models.fields.CharField')(max_length=70, null=True, blank=True)),
             ('credit', self.gf('django.db.models.fields.CharField')(max_length=35, null=True, blank=True)),
@@ -87,6 +87,7 @@ class Migration(SchemaMigration):
             ('disqus_enabled', self.gf('django.db.models.fields.BooleanField')(default=True)),
             ('draft_id', self.gf('django.db.models.fields.IntegerField')(null=True, blank=True)),
             ('blog', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['cms_blogger.Blog'])),
+            ('modified_at', self.gf('django.db.models.fields.DateTimeField')(auto_now=True, db_index=True, blank=True)),
         ))
         db.send_create_signal('cms_blogger', ['BlogEntryPage'])
 
@@ -106,8 +107,8 @@ class Migration(SchemaMigration):
             ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
             ('name', self.gf('django.db.models.fields.CharField')(max_length=30, db_index=True)),
             ('slug', self.gf('django.db.models.fields.SlugField')(max_length=30)),
-            ('modified_at', self.gf('django.db.models.fields.DateTimeField')(auto_now=True, db_index=True, blank=True)),
             ('blog', self.gf('django.db.models.fields.related.ForeignKey')(related_name='categories', to=orm['cms_blogger.Blog'])),
+            ('modified_at', self.gf('django.db.models.fields.DateTimeField')(auto_now=True, db_index=True, blank=True)),
         ))
         db.send_create_signal('cms_blogger', ['BlogCategory'])
 
@@ -209,7 +210,7 @@ class Migration(SchemaMigration):
         'cms.cmsplugin': {
             'Meta': {'object_name': 'CMSPlugin'},
             'changed_date': ('django.db.models.fields.DateTimeField', [], {'auto_now': 'True', 'blank': 'True'}),
-            'creation_date': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime(2014, 5, 6, 0, 0)'}),
+            'creation_date': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime(2014, 5, 7, 0, 0)'}),
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'language': ('django.db.models.fields.CharField', [], {'max_length': '15', 'db_index': 'True'}),
             'level': ('django.db.models.fields.PositiveIntegerField', [], {'db_index': 'True'}),
@@ -267,7 +268,8 @@ class Migration(SchemaMigration):
             'Meta': {'object_name': 'BioPage'},
             'author': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['cms_blogger.Author']"}),
             'blog': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['cms_blogger.Blog']"}),
-            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'})
+            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'modified_at': ('django.db.models.fields.DateTimeField', [], {'auto_now': 'True', 'db_index': 'True', 'blank': 'True'})
         },
         'cms_blogger.blog': {
             'Meta': {'unique_together': "(('slug', 'site'),)", 'object_name': 'Blog'},
