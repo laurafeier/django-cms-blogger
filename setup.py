@@ -30,6 +30,7 @@ setup(
     include_package_data=True,
     install_requires=DEPENDENCIES,
     dependency_links=DEPENDENCY_LINKS,
+    tests_require=['django-reversion==1.6', 'Sphinx==1.1.3', ],
     setup_requires=['s3sourceuploader', ],
     classifiers=[]
 )

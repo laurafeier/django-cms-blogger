@@ -9,6 +9,7 @@ from dateutil import tz, parser
 from cms_blogger.models import *
 from cms_blogger import admin, forms
 from cms.api import create_page, add_plugin
+from cms.tests.menu import BaseMenuTest
 
 from cms_layouts.models import Layout
 from cms_layouts.layout_response import LayoutResponse
@@ -302,18 +303,15 @@ class TestBlogEntryModel(TestCase):
         self.superuser = User.objects.create_superuser(
             'admin', 'admin@cms_blogger.com', 'secret')
         self.client.login(username='admin', password='secret')
+        self.blog = Blog.objects.create(**{
+            'title': 'one title', 'slug': 'one-title'})
 
     def tearDown(self):
         self.client.logout()
 
-    def _make_blog(self):
-        data = {'title': 'one title', 'slug': 'one-title'}
-        return Blog.objects.create(**data)
-
     def test_content_deletion(self):
-        blog = self._make_blog()
         entry = BlogEntryPage.objects.create(**{
-            'title': 'first entry', 'blog': blog,
+            'title': 'first entry', 'blog': self.blog,
             'short_description': 'desc'})
         entry.content_body = 'custom text'
         entry.save()
@@ -323,17 +321,16 @@ class TestBlogEntryModel(TestCase):
         self.assertEquals(CMSPlugin.objects.count(), 1)
         self.assertEquals(entry.get_content_plugin().body, 'custom text')
 
-        blog_id = blog.pk
+        blog_id = self.blog.pk
         entry.delete()
         self.assertEquals(Placeholder.objects.count(), 0)
         self.assertEquals(CMSPlugin.objects.count(), 0)
-        self.assertTrue(Blog.objects.filter(pk=blog.pk).exists())
+        self.assertTrue(Blog.objects.filter(pk=self.blog.pk).exists())
 
     def test_next_prev_post(self):
-        blog = self._make_blog()
         for i in range(4):
             BlogEntryPage.objects.create(**{
-                'title': '%s' % i, 'blog': blog,
+                'title': '%s' % i, 'blog': self.blog,
                 'short_description': 'desc', 'is_published': True})
         entries = {e.title: e for e in BlogEntryPage.objects.all()}
 
@@ -345,8 +342,7 @@ class TestBlogEntryModel(TestCase):
         self.assertEquals(entries["3"].next_post(), None)
 
     def test_draft(self):
-        blog = self._make_blog()
-        draft_entry = BlogEntryPage.objects.create(blog=blog)
+        draft_entry = BlogEntryPage.objects.create(blog=self.blog)
         self.assertTrue(draft_entry.is_draft)
         draft_entry.title = 'Sample title'
         draft_entry.save()
@@ -356,9 +352,8 @@ class TestBlogEntryModel(TestCase):
         self.assertFalse(draft_entry.is_draft)
 
     def test_publication_date_changes(self):
-        blog = self._make_blog()
         entry = BlogEntryPage.objects.create(**{
-            'title': 'entry', 'blog': blog,
+            'title': 'entry', 'blog': self.blog,
             'short_description': 'desc'})
         self.assertEquals(entry.slug, 'entry')
         self.assertFalse(entry.is_draft)
@@ -389,39 +384,37 @@ class TestBlogEntryModel(TestCase):
         self.assertTrue(entry.is_published)
 
     def test_admin_publish_actions(self):
-        blog = self._make_blog()
         for i in range(4):
             BlogEntryPage.objects.create(**{
-                'title': 'entry', 'blog': blog,
+                'title': 'entry', 'blog': self.blog,
                 'short_description': 'desc'})
-        self.assertEquals(len(blog.get_entries()), 0)
+        self.assertEquals(len(self.blog.get_entries()), 0)
         entries_ids = BlogEntryPage.objects.values_list('id', flat=True)
         url = reverse('admin:cms_blogger_blogentrypage_changelist')
         response = self.client.post(url, {
             '_selected_action': entries_ids,
             'action': 'make_published',
             'post': 'yes', })
-        self.assertEquals(blog.get_entries().count(), len(entries_ids))
+        self.assertEquals(self.blog.get_entries().count(), len(entries_ids))
 
         response = self.client.post(url, {
             '_selected_action': entries_ids,
             'action': 'make_unpublished',
             'post': 'yes', })
-        self.assertEquals(blog.get_entries().count(), 0)
+        self.assertEquals(self.blog.get_entries().count(), 0)
 
     def test_poster_image_deletion(self):
         pass
 
     def test_title_rendering(self):
-        blog = self._make_blog()
         page_for_layouts = create_page(
             'master', 'page_template.html', language='en', published=True)
         blog_layout = Layout.objects.create(**{
             'from_page': page_for_layouts,
-            'content_object': blog,
+            'content_object': self.blog,
             'layout_type': Blog.ALL })
         entry = BlogEntryPage.objects.create(**{
-            'title': 'Hello', 'blog': blog, 'is_published': True,
+            'title': 'Hello', 'blog': self.blog, 'is_published': True,
             'short_description': 'I am a blog entry',
             'meta_keywords': "article,blog,keyword",})
         # make request to get all the cms midlleware data
@@ -441,11 +434,84 @@ class TestBlogEntryModel(TestCase):
             "Hello I am a blog entry article,blog,keyword")
 
 
-class TestNavigationMenu(TestCase):
+class TestNavigationMenu(BaseMenuTest):
 
-    def test_blog_nodes_shown(self):
-        pass
+    def setUp(self):
+        super(TestNavigationMenu, self).setUp()
+        self.blog1 = Blog.objects.create(**{
+            'in_navigation': True, 'title': '1', 'slug': '1'})
+        self.blog2 = Blog.objects.create(**{
+            'in_navigation': True, 'title': '2', 'slug': '2'})
 
+    def _menu_nodes(self):
+        context = self.get_context()
+        tpl = Template(
+            "{% load menu_tags %}"
+            "{% show_menu 0 1 1 100 'admin/cms_blogger/blog/menu_nodes.html' %}")
+        tpl.render(context)
+        return context['children']
+
+    def test_blog_not_in_navigation(self):
+        self.assertEquals(len(self._menu_nodes()), 0)
+        node1 = BlogNavigationNode.objects.create(position=0, text='1')
+        self.blog1.navigation_node = node1
+        self.blog1.in_navigation = False
+        self.blog1.save()
+        self.assertEquals(len(self._menu_nodes()), 0)
+
+    def test_blog_root_nodes_in_nav(self):
+        self.assertEquals(len(self._menu_nodes()), 0)
+        node1 = BlogNavigationNode.objects.create(position=0, text='1')
+        self.blog1.navigation_node = node1
+        self.blog1.save()
+        self.assertEquals(len(self._menu_nodes()), 1)
+        # add another before the first one
+        node2 = BlogNavigationNode.objects.create(position=0, text='2')
+        self.blog2.navigation_node = node2
+        self.blog2.save()
+        nodes_texts = [n.title for n in self._menu_nodes()]
+        self.assertEquals(len(nodes_texts), 2)
+        self.assertEquals(nodes_texts[0], '2')
+        self.assertEquals(nodes_texts[1], '1')
+        # move node2 after node1
+        node2.position = 1
+        node2.save()
+        nodes_texts = [n.title for n in self._menu_nodes()]
+        self.assertEquals(len(nodes_texts), 2)
+        self.assertEquals(nodes_texts[0], '1')
+        self.assertEquals(nodes_texts[1], '2')
+        # empty menu
+        self.blog1.delete()
+        self.blog2.delete()
+        self.assertEquals(len(self._menu_nodes()), 0)
+
+    def test_blog_child_nodes_in_nav(self):
+        self.assertEquals(len(self._menu_nodes()), 0)
+        # parent_node_id
+        node = BlogNavigationNode.objects.create(position=0, text='1')
+        self.blog1.navigation_node = node
+        self.blog1.save()
+        self.assertEquals(len(self._menu_nodes()), 1)
+        # add child
+        # blog parent nav node ids have negative numbers in order to
+        #   distinguish them from the page ids
+        child = BlogNavigationNode.objects.create(
+            position=0, text='2', parent_node_id=node.id * -1)
+        self.blog2.navigation_node = child
+        self.blog2.save()
+        nodes_texts = [n.title for n in self._menu_nodes()]
+        self.assertItemsEqual(nodes_texts, ['1'])
+        children = self._menu_nodes()[0].children
+        child_node = children[0]
+        self.assertEquals(child_node.title, '2')
+        self.assertEquals(len(children), 1)
+        # change parent_id to a positive number => no nav node children since
+        #       there are no pages with that id
+        child.parent_node_id = 1
+        child.save()
+        nodes_texts = [n.title for n in self._menu_nodes()]
+        self.assertEquals(len(nodes_texts), 1)
+        self.assertEquals(len(self._menu_nodes()[0].children), 0)
 
 class TestAuthorModel(TestCase):
 
