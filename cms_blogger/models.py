@@ -126,14 +126,16 @@ def contribute_with_title(cls):
 
         cls.add_to_class('get_%s' % attr, get_title_obj_attribute)
     return cls
-
+    
 
 def blog_page(cls):
     # adds a blog foreign key(with a related name if specified) to a model
     # blog foreign key is required by all blog related pages.
     blog = models.ForeignKey(
         Blog, related_name=getattr(cls, 'blog_related_name', None))
+    modified_at = models.DateTimeField(auto_now=True, db_index=True)    
     cls.add_to_class('blog', blog)
+    cls.add_to_class('modified_at', modified_at)
     cls = contribute_with_title(cls)
     return cls
 
@@ -155,6 +157,8 @@ class AbstractBlog(models.Model):
     layouts = GenericRelation(Layout)
 
     allowed_users = models.ManyToManyField(User, verbose_name=_("Add Users"))
+
+    modified_at = models.DateTimeField(auto_now=True, db_index=True)
 
     class Meta:
         unique_together = (("slug", "site"),)
@@ -395,7 +399,6 @@ class BlogEntryPage(
         _('publication date'),
         db_index=True, default=timezone.now,
         help_text=_("Used to build the entry's URL."))
-    modified_at = models.DateTimeField(auto_now=True, db_index=True)
 
     poster_image = models.ImageField(
         _("Thumbnail Image"), upload_to=upload_entry_image, blank=True,
@@ -486,7 +489,8 @@ class BlogEntryPage(
                 'year': self.publication_date.year,
                 'month': self.publication_date.strftime('%m'),
                 'day': self.publication_date.strftime('%d'),
-                'entry_slug': self.slug})
+                'entry_slug': self.slug}
+            )
         return ('cms_blogger.views.entry_or_bio_page', (), {
             'blog_slug': self.blog.slug,
             'slug': self.slug})
@@ -664,3 +668,31 @@ def update_author_name(instance, **kwargs):
             author.save()
         except:
             pass
+
+
+@receiver(signals.pre_save, sender=BlogCategory)
+def category_update(instance, **kwargs):
+    current_time = timezone.now()
+    instance.blog.modified_at = current_time
+    instance.blog.save()
+
+
+@receiver(signals.pre_save, sender=BlogEntryPage)
+def entry_update(instance, **kwargs):
+    current_time = timezone.now()
+    instance.blog.modified_at = current_time
+    instance.blog.save()
+
+
+@receiver(signals.pre_delete, sender=BlogCategory)
+def category_update(instance, **kwargs):
+    current_time = timezone.now()
+    instance.blog.modified_at = current_time
+    instance.blog.save()
+
+    
+@receiver(signals.pre_delete, sender=BlogEntryPage)
+def entry_update(instance, **kwargs):
+    current_time = timezone.now()
+    instance.blog.modified_at = current_time
+    instance.blog.save()
