@@ -682,3 +682,17 @@ def entry_update(instance, **kwargs):
     current_time = timezone.now()
     instance.blog.modified_at = current_time
     instance.blog.save()
+
+
+@receiver(signals.post_delete, sender=BlogCategory)
+def category_update(instance, **kwargs):
+    current_time = timezone.now()
+    instance.blog.modified_at = current_time
+    instance.blog.save()
+
+    
+@receiver(signals.post_delete, sender=BlogEntryPage)
+def entry_update(instance, **kwargs):
+    current_time = timezone.now()
+    instance.blog.modified_at = current_time
+    instance.blog.save()

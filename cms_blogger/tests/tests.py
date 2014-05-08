@@ -607,9 +607,11 @@ class TestBlogPageViews(TestCase):
 
 
 class TestSitemap(TestCase):
-    url = reverse('blogger-sitemap')
-    location_tag = '{http://www.sitemaps.org/schemas/sitemap/0.9}loc'
-    lastmod_tag = '{http://www.sitemaps.org/schemas/sitemap/0.9}lastmod'
+
+    def setUp(self):
+        self.url = reverse('blogger-sitemap')
+        self.location_tag = '{http://www.sitemaps.org/schemas/sitemap/0.9}loc'
+        self.lastmod_tag = '{http://www.sitemaps.org/schemas/sitemap/0.9}lastmod'
 
     def assert_status_ok(self, url):
         response = self.client.get(url)
