@@ -423,6 +423,7 @@ class BlogEntryPageChangeForm(forms.ModelForm):
         self._init_preview_buttons()
         self._init_poster_image_widget()
         self._init_publish_button()
+        self._init_save_button()
         self._init_authors_field(request)
         if not 'body' in self.initial:
             self.initial['body'] = self.instance.content_body
@@ -450,6 +451,13 @@ class BlogEntryPageChangeForm(forms.ModelForm):
             pub_button.text = 'Unpublish'
         else:
             pub_button.text = 'Publish Now'
+
+    def _init_save_button(self):
+        pub_button = self.fields['save_button'].widget
+        if self.instance.is_published:
+            pub_button.text = 'Update'
+        else:
+            pub_button.text = 'Save and continue'
 
     def _init_preview_buttons(self):
         preview1 = self.fields['preview_on_top'].widget
