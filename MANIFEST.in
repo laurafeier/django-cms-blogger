@@ -2,3 +2,5 @@ include README.md
 recursive-include cms_blogger/fixtures *
 recursive-include cms_blogger/static *
 recursive-include cms_blogger/templates *.html
+recursive-include cms_blogger/locale *
+
