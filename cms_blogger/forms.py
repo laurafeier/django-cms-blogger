@@ -430,6 +430,7 @@ class BlogEntryPageChangeForm(forms.ModelForm):
         self.instance.draft_id = None
 
     def _init_authors_field(self, request):
+        self.fields['authors'].widget.options['tokenSeparators'] = [',']
         self.fields['authors'].make_authors()
         if (request and not self.initial.get('authors', None)
                 and self.instance.authors.count() == 0):
