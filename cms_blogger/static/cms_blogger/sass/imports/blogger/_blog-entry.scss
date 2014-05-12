@@ -71,11 +71,11 @@
             }
             & > .right-col{
                 text-align: left;
-                padding-bottom:25px;
+                padding-bottom:15px;
                 margin-left: $left-col-width !important;
                 margin-bottom: 0;
                 .entry-image{
-                    margin-top: 15px;
+                    margin-top: 20px;
                 }
 
                 @if $container == "blog-entry"{
@@ -148,7 +148,7 @@
             }
 
             .subtitle{
-                margin:0 0 20px 0;
+                margin:0;
                 color:$entry-subtitle-color;
                 .author{
                     color:$entry-text-color;
