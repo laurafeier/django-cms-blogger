@@ -352,13 +352,18 @@ def validate_image_size(upload, request):
             "Only {0} bytes uploaded".format(len(upload)))
 
 
+
 class BlogEntryPageAdmin(AdminHelper, PlaceholderAdmin):
     list_editable = ('is_published', )
     custom_changelist_class = BlogEntryChangeList
     list_display = ('__str__', 'slug', 'blog', 'is_published',
                     'entry_authors')
     search_fields = ('title', 'blog__title')
-    actions = ['make_published', 'make_unpublished']
+
+    # move_entries is enabled by default, removed if user.is_superuser
+    # really bad design/security issue
+    actions = ['make_published', 'make_unpublished', 'move_entries']
+
     add_form_template = 'admin/cms_blogger/blogentrypage/add_form.html'
     add_form = BlogEntryPageAddForm
     change_form = BlogEntryPageChangeForm
@@ -480,6 +485,18 @@ class BlogEntryPageAdmin(AdminHelper, PlaceholderAdmin):
             is_published=True, publication_date=timezone.now())
     make_published.short_description = "Publish entries"
 
+    def move_entries(self, request, queryset):
+        import ipdb; ipdb.set_trace()
+        if request.method == "POST" and request.POST.get('post'):
+            print "ko"
+        return render_to_response(
+            'admin/cms_blogger/blog/move_entries.html', {
+                    "blogentries": queryset, 
+                    "blogs": Blog.objects.filter(~Q(id=queryset[0].blog.id)), #might not be ideal
+                }, context_instance = RequestContext(request))
+
+    move_entries.short_description = "Move entries to another blog"
+
     def make_unpublished(self, request, queryset):
         queryset.filter(is_published=True).update(
             is_published=False, publication_date=timezone.now())
@@ -489,6 +506,11 @@ class BlogEntryPageAdmin(AdminHelper, PlaceholderAdmin):
         return entry.authors_display_name
     entry_authors.allow_tags = True
 
+    def get_actions(self, request):
+        actions = super(BlogEntryPageAdmin, self).get_actions(request) 
+        if not request.user.is_superuser:
+            del actions['move_entries']
+        return actions
 
 admin.site.register(Blog, BlogAdmin)
 admin.site.register(BlogEntryPage, BlogEntryPageAdmin)

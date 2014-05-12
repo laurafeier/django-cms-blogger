@@ -1,0 +1,32 @@
+{% extends "admin/base_site.html" %}
+
+{% block content %}
+
+    The following blog entries will be moved to the destination blog:
+    <ul>
+    {% for blog_entry in blogentries %}
+        <li>
+            <a href="{% url admin:cms_blogger_blogentrypage_change blog_entry.pk %}">
+                {{ blog_entry.title }}
+            </a>
+        </li>
+    {% endfor %}
+    </ul>
+    <form>
+        {% for blog_entry in blogentries %}
+            <input type="hidden" name="moved_blog_entry" value="{{ blog_entry.pk }}" />
+        {% endfor %} 
+        
+        <label for="destination">Destination blog:</label>
+
+        <select name="destination" id="destination">
+        {% for blog in blogs %}    
+            <option value="{{ blog.pk }}">{{ blog.title }}</option>  
+        {% endfor %}
+        </select>
+
+        <input type="hidden" name="post" value="yes" />
+
+        <input type="submit" value="Move" />
+    </form>
+{% endblock %}
