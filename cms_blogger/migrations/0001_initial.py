@@ -21,7 +21,7 @@ class Migration(SchemaMigration):
         # Adding model 'Blog'
         db.create_table('cms_blogger_blog', (
             ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
-            ('title', self.gf('django.db.models.fields.CharField')(max_length=255)),
+            ('title', self.gf('django.db.models.fields.CharField')(max_length=50)),
             ('slug', self.gf('django.db.models.fields.SlugField')(max_length=50)),
             ('site', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['sites.Site'])),
             ('entries_slugs_with_date', self.gf('django.db.models.fields.BooleanField')(default=False)),
@@ -72,7 +72,7 @@ class Migration(SchemaMigration):
         db.create_table('cms_blogger_blogentrypage', (
             ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
             ('content', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['cms.Placeholder'], null=True)),
-            ('title', self.gf('django.db.models.fields.CharField')(max_length=120)),
+            ('title', self.gf('django.db.models.fields.CharField')(max_length=255)),
             ('slug', self.gf('django.db.models.fields.SlugField')(max_length=255)),
             ('publication_date', self.gf('django.db.models.fields.DateTimeField')(default=datetime.datetime.now, db_index=True)),
             ('poster_image', self.gf('django.db.models.fields.files.ImageField')(max_length=100, blank=True)),
@@ -289,7 +289,7 @@ class Migration(SchemaMigration):
             'site': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['sites.Site']"}),
             'slug': ('django.db.models.fields.SlugField', [], {'max_length': '50'}),
             'tagline': ('django.db.models.fields.CharField', [], {'max_length': '60', 'null': 'True', 'blank': 'True'}),
-            'title': ('django.db.models.fields.CharField', [], {'max_length': '255'})
+            'title': ('django.db.models.fields.CharField', [], {'max_length': '50'})
         },
         'cms_blogger.blogcategory': {
             'Meta': {'unique_together': "(('slug', 'blog'),)", 'object_name': 'BlogCategory'},
@@ -320,7 +320,7 @@ class Migration(SchemaMigration):
             'short_description': ('django.db.models.fields.TextField', [], {'max_length': '400'}),
             'slug': ('django.db.models.fields.SlugField', [], {'max_length': '255'}),
             'start_publication': ('django.db.models.fields.DateTimeField', [], {'db_index': 'True', 'null': 'True', 'blank': 'True'}),
-            'title': ('django.db.models.fields.CharField', [], {'max_length': '120'})
+            'title': ('django.db.models.fields.CharField', [], {'max_length': '255'})
         },
         'cms_blogger.blognavigationnode': {
             'Meta': {'object_name': 'BlogNavigationNode'},

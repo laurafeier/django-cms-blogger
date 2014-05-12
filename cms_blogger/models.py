@@ -144,10 +144,10 @@ def blog_page(cls):
 class AbstractBlog(models.Model):
 
     title = models.CharField(
-        _('title'), max_length=255, blank=False, null=False,
+        _('title'), max_length=50, blank=False, null=False,
         help_text=_('Blog Title'))
     slug = models.SlugField(
-        _("slug"), help_text=_('Blog Slug'))
+        _("slug"), max_length=50, help_text=_('Blog Slug'))
     site = models.ForeignKey(
         Site, help_text=_('Blog Site'), verbose_name=_("site"))
     entries_slugs_with_date = models.BooleanField(
@@ -391,7 +391,7 @@ def get_image_storage():
 class BlogEntryPage(
     getCMSContentModel(content_attr='content'), BlogRelatedPage):
     uses_layout_type = Blog.ENTRY_PAGE
-    title = models.CharField(_('title'), max_length=120)
+    title = models.CharField(_('title'), max_length=255)
     slug = models.SlugField(
         _('slug'), max_length=255,
         help_text=_("Used to build the entry's URL."))
