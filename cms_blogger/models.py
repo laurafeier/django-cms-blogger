@@ -126,14 +126,14 @@ def contribute_with_title(cls):
 
         cls.add_to_class('get_%s' % attr, get_title_obj_attribute)
     return cls
-    
+
 
 def blog_page(cls):
     # adds a blog foreign key(with a related name if specified) to a model
     # blog foreign key is required by all blog related pages.
     blog = models.ForeignKey(
         Blog, related_name=getattr(cls, 'blog_related_name', None))
-    modified_at = models.DateTimeField(auto_now=True, db_index=True)    
+    modified_at = models.DateTimeField(auto_now=True, db_index=True)
     cls.add_to_class('blog', blog)
     cls.add_to_class('modified_at', modified_at)
     cls = contribute_with_title(cls)
@@ -598,7 +598,7 @@ class BlogCategory(models.Model, BlogRelatedPage):
         unique_together = (("slug", 'blog'),)
 
 
-class BlogPromotion(CMSPlugin):
+class RiverPlugin(CMSPlugin):
 
     title = models.CharField(_('title'), max_length=100)
     # allow maximum 20 categories and compute max chars taking commas into
@@ -690,7 +690,7 @@ def category_update(instance, **kwargs):
     instance.blog.modified_at = current_time
     instance.blog.save()
 
-    
+
 @receiver(signals.pre_delete, sender=BlogEntryPage)
 def entry_update(instance, **kwargs):
     current_time = timezone.now()

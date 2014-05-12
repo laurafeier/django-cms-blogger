@@ -25,7 +25,7 @@ from django_select2.fields import (
     AutoModelSelect2MultipleField, AutoModelSelect2TagField)
 
 from .models import (
-    Blog, BlogEntryPage, BlogCategory, Author, BlogPromotion,
+    Blog, BlogEntryPage, BlogCategory, Author, RiverPlugin,
     MAX_CATEGORIES_IN_PLUGIN)
 from .widgets import (
     TagItWidget, ButtonWidget, DateTimeWidget, PosterImage, SpinnerWidget)
@@ -571,7 +571,7 @@ class BlogsCategoriesField(AutoModelSelect2MultipleField):
         return BlogCategory.objects.filter(id__in=names_with_ids.values())
 
 
-class BlogPromotionForm(forms.ModelForm):
+class BlogRiverForm(forms.ModelForm):
     requires_request = True
     categories = BlogsCategoriesField()
     number_of_entries = forms.CharField(
@@ -584,7 +584,7 @@ class BlogPromotionForm(forms.ModelForm):
         if plugin_page and categories_field:
             categories_field.current_site = plugin_page.site
 
-        super(BlogPromotionForm, self).__init__(*args, **kwargs)
+        super(BlogRiverForm, self).__init__(*args, **kwargs)
         self._init_categories()
         self._init_number_of_entries_field()
 
@@ -618,4 +618,4 @@ class BlogPromotionForm(forms.ModelForm):
         return no_entries
 
     class Meta:
-        model = BlogPromotion
+        model = RiverPlugin

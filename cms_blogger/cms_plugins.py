@@ -3,18 +3,18 @@ from cms.plugin_pool import plugin_pool
 from django.utils.translation import ugettext_lazy as _
 from django.db import models
 
-from .models import BlogPromotion
+from .models import RiverPlugin
 from .widgets import ToggleWidget
-from .forms import BlogPromotionForm
+from .forms import BlogRiverForm
 from .admin_helper import AdminHelper
 from .utils import paginate_queryset
 
 
-class BlogPromotionPlugin(AdminHelper, CMSPluginBase):
-    model = BlogPromotion
-    name = _("Blog Promotion Plugin")
+class BlogRiverPlugin(AdminHelper, CMSPluginBase):
+    model = RiverPlugin
+    name = _("Blog River Plugin")
     render_template = "cms_blogger/blog_promotion.html"
-    form = BlogPromotionForm
+    form = BlogRiverForm
     change_form_template = "admin/cms_blogger/promotion_plugin_form.html"
     formfield_overrides = {
         models.BooleanField: {'widget': ToggleWidget}
@@ -36,11 +36,11 @@ class BlogPromotionPlugin(AdminHelper, CMSPluginBase):
         return context
 
     def render_change_form(self, request, context, *args, **kwargs):
-        res = super(BlogPromotionPlugin, self).render_change_form(
+        res = super(BlogRiverPlugin, self).render_change_form(
             request, context, *args, **kwargs)
         if 'media' in context:
             context['media'] = self._upgrade_jquery(context['media'])
         return res
 
 
-plugin_pool.register_plugin(BlogPromotionPlugin)
+plugin_pool.register_plugin(BlogRiverPlugin)

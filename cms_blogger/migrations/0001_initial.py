@@ -123,8 +123,8 @@ class Migration(SchemaMigration):
         ))
         db.create_unique('cms_blogger_blogcategory_entries', ['blogcategory_id', 'blogentrypage_id'])
 
-        # Adding model 'BlogPromotion'
-        db.create_table('cmsplugin_blogpromotion', (
+        # Adding model 'RiverPlugin'
+        db.create_table('cmsplugin_riverplugin', (
             ('cmsplugin_ptr', self.gf('django.db.models.fields.related.OneToOneField')(to=orm['cms.CMSPlugin'], unique=True, primary_key=True)),
             ('title', self.gf('django.db.models.fields.CharField')(max_length=100)),
             ('categories', self.gf('django.db.models.fields.CharField')(max_length=619)),
@@ -133,7 +133,7 @@ class Migration(SchemaMigration):
             ('paginate_entries', self.gf('django.db.models.fields.BooleanField')(default=True)),
             ('number_of_entries', self.gf('django.db.models.fields.PositiveIntegerField')(default=10)),
         ))
-        db.send_create_signal('cms_blogger', ['BlogPromotion'])
+        db.send_create_signal('cms_blogger', ['RiverPlugin'])
 
 
     def backwards(self, orm):
@@ -173,8 +173,8 @@ class Migration(SchemaMigration):
         # Removing M2M table for field entries on 'BlogCategory'
         db.delete_table('cms_blogger_blogcategory_entries')
 
-        # Deleting model 'BlogPromotion'
-        db.delete_table('cmsplugin_blogpromotion')
+        # Deleting model 'RiverPlugin'
+        db.delete_table('cmsplugin_riverplugin')
 
 
     models = {
@@ -210,7 +210,7 @@ class Migration(SchemaMigration):
         'cms.cmsplugin': {
             'Meta': {'object_name': 'CMSPlugin'},
             'changed_date': ('django.db.models.fields.DateTimeField', [], {'auto_now': 'True', 'blank': 'True'}),
-            'creation_date': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime(2014, 5, 7, 0, 0)'}),
+            'creation_date': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime(2014, 5, 12, 0, 0)'}),
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'language': ('django.db.models.fields.CharField', [], {'max_length': '15', 'db_index': 'True'}),
             'level': ('django.db.models.fields.PositiveIntegerField', [], {'db_index': 'True'}),
@@ -330,8 +330,8 @@ class Migration(SchemaMigration):
             'position': ('django.db.models.fields.PositiveIntegerField', [], {}),
             'text': ('django.db.models.fields.CharField', [], {'max_length': '15'})
         },
-        'cms_blogger.blogpromotion': {
-            'Meta': {'object_name': 'BlogPromotion', 'db_table': "'cmsplugin_blogpromotion'", '_ormbases': ['cms.CMSPlugin']},
+        'cms_blogger.riverplugin': {
+            'Meta': {'object_name': 'RiverPlugin', 'db_table': "'cmsplugin_riverplugin'", '_ormbases': ['cms.CMSPlugin']},
             'categories': ('django.db.models.fields.CharField', [], {'max_length': '619'}),
             'cmsplugin_ptr': ('django.db.models.fields.related.OneToOneField', [], {'to': "orm['cms.CMSPlugin']", 'unique': 'True', 'primary_key': 'True'}),
             'display_abstract': ('django.db.models.fields.BooleanField', [], {'default': 'True'}),
