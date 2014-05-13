@@ -230,7 +230,7 @@ class Blog(AbstractBlog):
 
     # header metadata
     tagline = models.CharField(
-        _('tagline'), max_length=60, blank=True, null=True,
+        _('tagline'), max_length=70, blank=True, null=True,
         help_text=_('Blog Tagline'))
 
     branding_image = FilerImageField(

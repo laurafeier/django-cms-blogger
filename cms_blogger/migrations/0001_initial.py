@@ -26,7 +26,7 @@ class Migration(SchemaMigration):
             ('site', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['sites.Site'])),
             ('entries_slugs_with_date', self.gf('django.db.models.fields.BooleanField')(default=False)),
             ('modified_at', self.gf('django.db.models.fields.DateTimeField')(auto_now=True, db_index=True, blank=True)),
-            ('tagline', self.gf('django.db.models.fields.CharField')(max_length=60, null=True, blank=True)),
+            ('tagline', self.gf('django.db.models.fields.CharField')(max_length=70, null=True, blank=True)),
             ('branding_image', self.gf('django.db.models.fields.related.ForeignKey')(default=None, to=orm['filer.Image'], null=True, on_delete=models.SET_NULL, blank=True)),
             ('in_navigation', self.gf('django.db.models.fields.BooleanField')(default=False)),
             ('navigation_node', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['cms_blogger.BlogNavigationNode'], null=True, on_delete=models.SET_NULL, blank=True)),
@@ -288,7 +288,7 @@ class Migration(SchemaMigration):
             'navigation_node': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['cms_blogger.BlogNavigationNode']", 'null': 'True', 'on_delete': 'models.SET_NULL', 'blank': 'True'}),
             'site': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['sites.Site']"}),
             'slug': ('django.db.models.fields.SlugField', [], {'max_length': '50'}),
-            'tagline': ('django.db.models.fields.CharField', [], {'max_length': '60', 'null': 'True', 'blank': 'True'}),
+            'tagline': ('django.db.models.fields.CharField', [], {'max_length': '70', 'null': 'True', 'blank': 'True'}),
             'title': ('django.db.models.fields.CharField', [], {'max_length': '50'})
         },
         'cms_blogger.blogcategory': {
