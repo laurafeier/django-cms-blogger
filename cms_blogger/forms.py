@@ -136,7 +136,7 @@ class MultipleUserField(AutoModelSelect2MultipleField):
 class BlogForm(forms.ModelForm):
     categories = forms.CharField(
         widget=TagItWidget(attrs={
-            'tagit': '{allowSpaces: true, tagLimit: 20, '
+            'tagit': '{allowSpaces: true, tagLimit: 25, '
                      'caseSensitive: false}'}),
         help_text=_('Categories help text'))
 

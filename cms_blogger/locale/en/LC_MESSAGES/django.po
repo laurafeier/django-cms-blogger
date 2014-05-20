@@ -81,7 +81,8 @@ msgid "Categories help text"
 msgstr ""
 "Categories help organize blog content. Categories are unique to a blog, and "
 "can only be created in this admin to reduce redundancy. Each category "
-"generates its own page of categorized entries."
+"generates its own page of categorized entries. Recommended: 20 categories or"
+" fewer."
 
 #: forms.py:368
 msgid "Check all the categories to apply to this post. Uncheck to remove."
