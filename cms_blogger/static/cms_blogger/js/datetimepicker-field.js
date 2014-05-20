@@ -39,7 +39,7 @@ function buildDatetimePickerField(picker_field, input_picker_field, initial){
     }
 
     function _setDate(value){
-        if (!value || isNaN(value)){
+        if (!value || (typeof value !== "string" && isNaN(value))){
             // reset sliders first
             picker_field.datetimepicker('setDate', new Date(0,0,0,1,0,0));
             picker_field.datetimepicker('setDate', null);
