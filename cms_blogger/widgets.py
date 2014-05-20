@@ -144,7 +144,11 @@ class DateTimeWidget(forms.widgets.TextInput):
             u"<input type='text' size='30' name='{name}' id='id_{name}' "
             u"class='ui-button ui-corner-all ui-state-focus ui-textfield'/>"
             u"<div id='picker_id_{name}'></div>"
+            u"<input type='hidden' name='_{name}_tzoffset' "
+            u"id='_{name}_tzoffset'/>"
             u"<script type='text/javascript'>"
+            u"var _now = document.getElementById('_{name}_tzoffset');"
+            u"_now.value = /GMT(.*)\s/g.exec(Date())[1];"
             u"buildDatetimePickerField("
             u"'#picker_id_{name}', '#id_{name}', '{initial}');"
             u"</script>"
@@ -154,11 +158,12 @@ class DateTimeWidget(forms.widgets.TextInput):
     def value_from_datadict(self, data, files, name):
         value = super(DateTimeWidget, self).value_from_datadict(
             data, files, name)
+        offset_str = data.get('_{name}_tzoffset'.format(name=name))
         try:
-            date = parser.parse(value).astimezone(tz.tzutc())
+            value_as_date = parser.parse(value + " " + offset_str)
         except:
-            date = None
-        return date
+            return None
+        return value_as_date.astimezone(tz.tzutc())
 
 
 class PosterImage(forms.widgets.CheckboxInput):

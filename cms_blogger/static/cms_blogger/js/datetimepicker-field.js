@@ -53,7 +53,7 @@ function buildDatetimePickerField(picker_field, input_picker_field, initial){
         altField: input_picker_field,
         alwaysSetTime:false,
         altFieldTimeOnly: false,
-        timeFormat: 'hh:mm TT Z',
+        timeFormat: 'hh:mm TT',
         buttons: {'Reset': function(){ _setDate(initial); return false;}}
     });
 
