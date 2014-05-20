@@ -1,3 +1,4 @@
+{%load blogger_filters %}
 <link rel="stylesheet" type="text/css" href="{{STATIC_URL}}cms_blogger/css/blogger.css">
 <script type="text/javascript" src="{{STATIC_URL}}cms_blogger/js/blog-targetting.js"></script>
 <script type="text/javascript">
@@ -15,8 +16,18 @@
 
 <div class='left-col'>
     <div class="date">
-        <div class="month">{{entry.publication_date|date:"M"}}</div>
-        <div class="day">{{entry.publication_date.day}}</div>
+        {% with pub=entry.publication_date|js_date_str %}
+        <div class="month">
+            <script type="text/javascript">
+                document.write(({{ pub }}).toDateString().split(" ")[1]);
+            </script>
+        </div>
+        <div class="day">
+            <script type="text/javascript">
+                document.write(({{ pub }}).toDateString().split(" ")[2]);
+            </script>
+        </div>
+        {% endwith %}
     </div>
     {% include "cms_blogger/social_widgets.html" %}
 </div>
