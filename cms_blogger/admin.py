@@ -352,11 +352,22 @@ def validate_image_size(upload, request):
             "Only {0} bytes uploaded".format(len(upload)))
 
 
+class CurrentSiteBlogFilter(admin.filters.RelatedFieldListFilter):
+
+    def __init__(self, field, request, params, model, model_admin, field_path):
+        super(CurrentSiteBlogFilter, self).__init__(
+            field, request, params, model, model_admin, field_path)
+        working_site = request.session['cms_admin_site']
+        self.lookup_choices = Blog.objects.filter(
+            site=working_site).values_list('pk', 'title')
+
+
 class BlogEntryPageAdmin(AdminHelper, PlaceholderAdmin):
     list_editable = ('is_published', )
     custom_changelist_class = BlogEntryChangeList
-    list_display = ('__str__', 'slug', 'blog', 'is_published',
+    list_display = ('__str__', 'slug', 'blog', 'is_published', 'published_at',
                     'entry_authors')
+    list_filter = (('blog', CurrentSiteBlogFilter), )
     search_fields = ('title', 'blog__title')
     actions = ['make_published', 'make_unpublished']
     add_form_template = 'admin/cms_blogger/blogentrypage/add_form.html'
@@ -488,6 +499,14 @@ class BlogEntryPageAdmin(AdminHelper, PlaceholderAdmin):
     def entry_authors(self, entry):
         return entry.authors_display_name
     entry_authors.allow_tags = True
+
+    def published_at(self, entry):
+        #publication_date
+        return (
+            '<script type="text/javascript">'
+            'document.write((new Date("%s")).toLocaleString());'
+            '</script>' % entry.publication_date)
+    published_at.allow_tags = True
 
 
 admin.site.register(Blog, BlogAdmin)
