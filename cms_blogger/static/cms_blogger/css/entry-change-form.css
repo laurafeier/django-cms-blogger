@@ -924,21 +924,25 @@
   margin-top: 0;
 }
 /* line 64, ../sass/imports/entry_change_form/_callendar.scss */
+.cms_blogger-blogentrypage .ui-datepicker dl dt.ui_tpicker_timezone_label, .cms_blogger-blogentrypage .ui-datepicker dl dt.ui_tpicker_timezone, .cms_blogger-blogentrypage .ui-datepicker dl dd.ui_tpicker_timezone_label, .cms_blogger-blogentrypage .ui-datepicker dl dd.ui_tpicker_timezone {
+  display: none;
+}
+/* line 68, ../sass/imports/entry_change_form/_callendar.scss */
 .cms_blogger-blogentrypage .ui-datepicker dl dd {
   margin-bottom: 13px;
 }
-/* line 68, ../sass/imports/entry_change_form/_callendar.scss */
+/* line 72, ../sass/imports/entry_change_form/_callendar.scss */
 .cms_blogger-blogentrypage .ui-datepicker td {
   border: 0;
 }
-/* line 70, ../sass/imports/entry_change_form/_callendar.scss */
+/* line 74, ../sass/imports/entry_change_form/_callendar.scss */
 .cms_blogger-blogentrypage .ui-datepicker td span {
   background: none;
   color: #333333;
   text-align: center;
   border: 0;
 }
-/* line 76, ../sass/imports/entry_change_form/_callendar.scss */
+/* line 80, ../sass/imports/entry_change_form/_callendar.scss */
 .cms_blogger-blogentrypage .ui-datepicker td a {
   color: #309bc5;
   text-align: center;
@@ -951,62 +955,62 @@
   height: 21px;
   line-height: 21px;
 }
-/* line 87, ../sass/imports/entry_change_form/_callendar.scss */
+/* line 91, ../sass/imports/entry_change_form/_callendar.scss */
 .cms_blogger-blogentrypage .ui-datepicker td a.ui-state-active {
   background: #e7ebec;
   border: 0;
   color: #323232;
 }
-/* line 94, ../sass/imports/entry_change_form/_callendar.scss */
+/* line 98, ../sass/imports/entry_change_form/_callendar.scss */
 .cms_blogger-blogentrypage .ui-datepicker .ui-datepicker-header .ui-corner-all {
   border-radius: 0;
   border-color: #cccccc;
 }
-/* line 100, ../sass/imports/entry_change_form/_callendar.scss */
+/* line 104, ../sass/imports/entry_change_form/_callendar.scss */
 .cms_blogger-blogentrypage .ui-datepicker .ui-datepicker-header .ui-corner-all.ui-datepicker-next, .cms_blogger-blogentrypage .ui-datepicker .ui-datepicker-header .ui-corner-all.ui-datepicker-prev {
   background: #676767;
   cursor: pointer;
 }
-/* line 103, ../sass/imports/entry_change_form/_callendar.scss */
+/* line 107, ../sass/imports/entry_change_form/_callendar.scss */
 .cms_blogger-blogentrypage .ui-datepicker .ui-datepicker-header .ui-corner-all.ui-datepicker-next.ui-state-hover, .cms_blogger-blogentrypage .ui-datepicker .ui-datepicker-header .ui-corner-all.ui-datepicker-prev.ui-state-hover {
   background: #676767;
   border: 0;
 }
-/* line 107, ../sass/imports/entry_change_form/_callendar.scss */
+/* line 111, ../sass/imports/entry_change_form/_callendar.scss */
 .cms_blogger-blogentrypage .ui-datepicker .ui-datepicker-header .ui-corner-all.ui-datepicker-next.ui-state-hover.ui-datepicker-prev-hover, .cms_blogger-blogentrypage .ui-datepicker .ui-datepicker-header .ui-corner-all.ui-datepicker-next.ui-state-hover.ui-datepicker-next-hover, .cms_blogger-blogentrypage .ui-datepicker .ui-datepicker-header .ui-corner-all.ui-datepicker-prev.ui-state-hover.ui-datepicker-prev-hover, .cms_blogger-blogentrypage .ui-datepicker .ui-datepicker-header .ui-corner-all.ui-datepicker-prev.ui-state-hover.ui-datepicker-next-hover {
   top: 2px;
 }
-/* line 111, ../sass/imports/entry_change_form/_callendar.scss */
+/* line 115, ../sass/imports/entry_change_form/_callendar.scss */
 .cms_blogger-blogentrypage .ui-datepicker .ui-datepicker-header .ui-corner-all.ui-datepicker-next.ui-state-hover.ui-datepicker-prev-hover, .cms_blogger-blogentrypage .ui-datepicker .ui-datepicker-header .ui-corner-all.ui-datepicker-prev.ui-state-hover.ui-datepicker-prev-hover {
   left: 2px;
 }
-/* line 115, ../sass/imports/entry_change_form/_callendar.scss */
+/* line 119, ../sass/imports/entry_change_form/_callendar.scss */
 .cms_blogger-blogentrypage .ui-datepicker .ui-datepicker-header .ui-corner-all.ui-datepicker-next.ui-state-hover.ui-datepicker-next-hover, .cms_blogger-blogentrypage .ui-datepicker .ui-datepicker-header .ui-corner-all.ui-datepicker-prev.ui-state-hover.ui-datepicker-next-hover {
   right: 2px;
 }
-/* line 120, ../sass/imports/entry_change_form/_callendar.scss */
+/* line 124, ../sass/imports/entry_change_form/_callendar.scss */
 .cms_blogger-blogentrypage .ui-datepicker .ui-datepicker-header .ui-corner-all.ui-datepicker-next .ui-icon-circle-triangle-e, .cms_blogger-blogentrypage .ui-datepicker .ui-datepicker-header .ui-corner-all.ui-datepicker-prev .ui-icon-circle-triangle-e {
   background-position: -32px 0px;
 }
-/* line 124, ../sass/imports/entry_change_form/_callendar.scss */
+/* line 128, ../sass/imports/entry_change_form/_callendar.scss */
 .cms_blogger-blogentrypage .ui-datepicker .ui-datepicker-header .ui-corner-all.ui-datepicker-next .ui-icon-circle-triangle-w, .cms_blogger-blogentrypage .ui-datepicker .ui-datepicker-header .ui-corner-all.ui-datepicker-prev .ui-icon-circle-triangle-w {
   background-position: -97px 0px;
 }
-/* line 131, ../sass/imports/entry_change_form/_callendar.scss */
+/* line 135, ../sass/imports/entry_change_form/_callendar.scss */
 .cms_blogger-blogentrypage .ui-datepicker .ui-datepicker-header {
   background: none;
   border: 0;
   color: #666666;
 }
-/* line 136, ../sass/imports/entry_change_form/_callendar.scss */
+/* line 140, ../sass/imports/entry_change_form/_callendar.scss */
 .cms_blogger-blogentrypage .ui-datepicker .ui-datepicker-header .ui-datepicker-year {
   font-weight: normal;
 }
-/* line 140, ../sass/imports/entry_change_form/_callendar.scss */
+/* line 144, ../sass/imports/entry_change_form/_callendar.scss */
 .cms_blogger-blogentrypage .ui-datepicker .ui-datepicker-header .ui-datepicker-month {
   text-transform: uppercase;
 }
-/* line 147, ../sass/imports/entry_change_form/_callendar.scss */
+/* line 151, ../sass/imports/entry_change_form/_callendar.scss */
 .cms_blogger-blogentrypage #datepicker {
   width: 100%;
   font-size: 13px;
