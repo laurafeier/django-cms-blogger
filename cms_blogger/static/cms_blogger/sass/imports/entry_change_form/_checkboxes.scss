@@ -1,0 +1,22 @@
+@mixin checkboxes($ns){
+    #{$ns}{
+        input[type="checkbox"]{
+
+            margin:0;
+            margin-right:5px;
+            vertical-align: top;
+            cursor: pointer;
+            &:before{
+                content: "";
+                width: 15px;
+                height: 15px;
+                border:1px solid $header-border-color;
+                display: inline-block;
+                background: #f7f7f7;
+                padding: 0;
+            }
+        }
+    }
+}
+
+@include checkboxes($namespace)

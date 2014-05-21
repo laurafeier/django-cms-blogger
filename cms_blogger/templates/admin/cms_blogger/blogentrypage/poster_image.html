@@ -1,0 +1,111 @@
+{% load i18n admin_modify adminmedia filermedia blogger_filters %}
+{% load url from future %}
+
+<div class="poster-image-container">
+    <div class="left-side">
+        <div class="title">Poster Image</div>
+        <div class="help"> Image must be 16:9 aspect ratio and at least 640px wide.</div>
+        <div id="upload-button" class="poster-image-button" title="{% trans 'upload files' %}"> {% trans 'Upload' %}</div>
+        <div id="delete-button" class="poster-image-button"> {% trans 'Remove' %}</div>
+
+    </div>
+
+    <div id="fileInputQueue" class="right-side">
+        <div id="fileUpload" class="clipboardItem fileUploadQueueItem">
+        {% if image_url %}
+            <div>
+                <a href="{{ image_url }}" target="_blank">
+                    <img class="thumbnail" src="{{ image_url }}" />
+                </a>
+            </div>
+        {% endif %}
+        </div>
+        <div class="help">
+            Image thumbnail displayed after upload.
+        </div>
+    </div>
+    <div style="clear: both; background-color: #EFEFEF;" id="poster-image-description">
+    </div>
+</div>
+
+<script type="text/javascript">
+//<![CDATA[
+$(function() {
+    toggleState= true;
+    addFields = true;
+    $('#delete-button').click(function(){
+        if(!$('#fileUpload img').length) return;
+        var answer = confirm("Are you sure you want to remove image?");
+        if(answer)
+        {
+            $.ajax({
+                url: "{% url 'admin:cms_blogger-delete-thumbnail' blog_entry_id=blog_entry_id %}",
+                type: 'post',
+                data: '',
+                success: function(data)
+                {
+                    $('#fileUpload').empty();
+                    $('#delete_image').html('');
+                    $('#fileInputQueue .help').show();
+                    alert('Image deleted successfully.');
+                }
+            });
+            return false;
+        }
+    });
+
+    if($('#fileUpload .thumbnail').length){
+        $('#fileInputQueue .help').hide();
+    }
+
+    var uploader = new qq.FileUploaderBasic({
+        action: '{% url 'admin:cms_blogger-upload-thumbnail' blog_entry_id=blog_entry_id %}',
+        button: document.getElementById('upload-button'),
+        multiple: false,
+        onSubmit: function(id, fileName){
+            $('#fileUpload').html('\
+                <div class="loadingThumb" />\
+                <div class="progress">\
+                    <div>\
+                        <span class="fileName">' + fileName + ' (<span class="size">?</span>)</span> \
+                    </div>\
+                    <div class="fileUploadProgress" style="width: 100%;">\
+                        <div id="fileUpload-ProgressBar" class="fileUploadProgressBar" style="width: 1px; height: 3px;">\
+                        </div>\
+                    </div>\
+                    <div>[<span class="percentage">&nbsp];</span>]</div>\
+                </div>');
+        },
+        onProgress: function(id, fileName, loaded, total){
+            var percent = Math.round(loaded / total * 100);
+            $('#fileUpload .size').html(uploader._formatSize(total));
+            $('#fileUpload .percentage').html('' + percent + "%");
+            $('#fileUpload-ProgressBar').css('width', percent + "%");
+        },
+        onComplete: function(id, fileName, responseJSON){
+            var file = responseJSON;
+            if (file.error) {
+                var html = '\
+                <table><tr><td><img style="width: 32px;height: 32px;" src="{% filer_staticmedia_prefix %}icons/missingfile_32x32.png" alt="{% trans 'file missing' %}" /></td>\
+                <td class="label">' + file.error + '</td></tr></table>';
+                $('#fileUpload').html(html);
+
+            } else {
+                var html = '\
+                    <a href="' + file.url + '" target="_blank">\
+                        <img class="thumbnail" src="' + file.url + '" alt="'+file.label+'"/>\
+                    </a>';
+                $('#fileUpload').html(html);
+                $('#fileInputQueue .help').hide();
+            }
+        },
+        onCancel: function(id, fileName){
+            $('#fileUpload').hide();
+        },
+        sizeLimit: {{ size_limit }},
+        allowedExtensions: {{ image_types|jsonify }},
+    });
+});
+
+</script>
+

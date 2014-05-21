@@ -1,0 +1,11 @@
+<div class='blog-header'>
+    {% if blog.attached_image %}
+    <img id='blog-banding-image' src='{{blog.attached_image.file.url}}'></img>
+    {% endif %}
+    {% if blog.title %}
+    <h1 id='blog-title' {% if not blog.tagline %}class="add-padding"{% endif %}><a href="{{PROXY_REWRITE_RULE}}{{blog.get_absolute_url}}" class="main_color_text">{{blog.title}}</a></h1>
+    {% endif %}
+    {% if blog.tagline %}
+    <h2 id='blog-tagline' class="add-padding"><a href="{{PROXY_REWRITE_RULE}}{{blog.get_absolute_url}}">{{blog.tagline}}</a></h2>
+    {% endif %}
+</div>
