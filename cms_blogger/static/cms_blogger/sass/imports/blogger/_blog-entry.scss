@@ -89,6 +89,11 @@
                 h1{
                     line-height: 38px;
                     font-size: 30px;
+                    a{
+                        &:hover{
+                            text-decoration: none;
+                        }
+                    }
                 }
                 & > .left-col{
                     display: table-cell;
@@ -148,7 +153,7 @@
             }
 
             .subtitle{
-                margin:0;
+                margin:0 0 10px 0;
                 color:$entry-subtitle-color;
                 .author{
                     color:$entry-text-color;
@@ -156,7 +161,7 @@
             }
             .entry-summary{
                 margin:0 0 30px 0;
-                text-align: justify;
+                text-align: left;
             }
 
             .social{
