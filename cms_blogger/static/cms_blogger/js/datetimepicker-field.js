@@ -30,7 +30,6 @@ if (!$.datepicker.___super_updateDatepicker){
 function buildDatetimePickerField(picker_field, input_picker_field, initial){
     var picker_field = $(picker_field);
     var input_picker_field = $(input_picker_field);
-
     if(initial){
         //use moment.js to format date appropriately for IE8
         initial = new Date(moment(initial));
@@ -39,13 +38,13 @@ function buildDatetimePickerField(picker_field, input_picker_field, initial){
     }
 
     function _setDate(value){
-        if (!value || (typeof value !== "string" && isNaN(value))){
+        if (!value){
             // reset sliders first
             picker_field.datetimepicker('setDate', new Date(0,0,0,1,0,0));
             picker_field.datetimepicker('setDate', null);
             input_picker_field.val('')
         } else {
-            picker_field.datetimepicker('setDate', value);
+            picker_field.datetimepicker('setDate', new Date(value));
         }
     }
 
@@ -59,14 +58,18 @@ function buildDatetimePickerField(picker_field, input_picker_field, initial){
 
     _setDate(initial);
 
+    //remove all event handlers; IE8 wierd bug (lose focus when clicking inside input)
+    input_picker_field.off();
     // change calendar date when input changes
     input_picker_field.on('blur' , function () {
         _setDate($(this).val());
     });
+
     input_picker_field.keypress(function(event){
         var enter_key = 13;
         if(event.keyCode == enter_key){
             _setDate($(this).val());
+            event.preventDefault(); //prevent form submission
         }
     });
 }
