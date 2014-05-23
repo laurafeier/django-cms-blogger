@@ -48,39 +48,6 @@ function buildDatetimePickerField(picker_field, input_picker_field, initial){
         }
     }
 
-    // used for parsing the date from the visible input;
-    // currently this has an invalid format
-    function parseDate(d){
-        // d should be in the following format : 5/22/2014 13:00 AM
-        // returns Date object
-        // fallback to current time if something goes wrong or invalid
-
-        if (!d || typeof d !== 'string'){
-            return new Date();
-        }
-
-        d = d.split(" ");
-        var date = d[0];
-        var time = d[1];
-        var tt = d[2];
-
-        if(!date || !time || !tt){
-            return new Date();
-        }
-
-        //use only 12H format
-        if(parseInt(time.split(":")[0], 10) > 12){
-            return new Date();
-        }else{
-            if(tt.toUpperCase() == "PM"){
-                time = time.split(":");
-                time[0] = (time[0] === "12" ? "00" : parseInt(time[0], 10) + 12+"");
-                time = time.join(":");
-            }
-            return new Date(date +" "+time);
-        }
-    }
-
     picker_field.datetimepicker({
         altField: input_picker_field,
         alwaysSetTime:false,
@@ -95,13 +62,13 @@ function buildDatetimePickerField(picker_field, input_picker_field, initial){
     input_picker_field.off();
     // change calendar date when input changes
     input_picker_field.on('blur' , function () {
-        _setDate(parseDate($(this).val()));
+        _setDate($(this).val());
     });
 
     input_picker_field.keypress(function(event){
         var enter_key = 13;
         if(event.keyCode == enter_key){
-            _setDate(parseDate($(this).val()));
+            _setDate($(this).val());
             event.preventDefault(); //prevent form submission
         }
     });
