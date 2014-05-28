@@ -22,7 +22,8 @@ class AdminHelper(admin.ModelAdmin):
             if js in django_jquery_urls:
                 new_media.add_js((new_jquery_version, ))
             elif js in django_collapse_js:
-                new_media.add_js((static('cms_blogger/js/admin-collapse.js'), ))
+                new_media.add_js(
+                    (static('cms_blogger/js/admin-collapse.js'), ))
             elif js == static('admin/js/jquery.init.js'):
                 new_media.add_js((js, jquery_namspace))
             elif js.startswith(static('cms/js/libs/jquery.ui.')):

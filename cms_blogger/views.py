@@ -96,8 +96,8 @@ def landing_page(request, blog_slug):
 
 
 def category_page(request, blog_slug, slug):
-    category = get_object_or_404(BlogCategory,
-        blog__slug=blog_slug, slug=slug,
+    category = get_object_or_404(
+        BlogCategory, blog__slug=blog_slug, slug=slug,
         blog__site=Site.objects.get_current())
 
     layout = category.get_layout()

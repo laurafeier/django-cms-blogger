@@ -107,7 +107,7 @@ class BlogAdmin(AdminHelper):
         (None, {
             'fields': ['title', 'slug'],
             'classes': ('general',)
-            }),
+        }),
     )
     change_form_fieldsets = (
         ('Blog setup', {
@@ -202,7 +202,8 @@ class BlogAdmin(AdminHelper):
 
     def get_urls(self):
         urls = super(BlogAdmin, self).get_urls()
-        url_patterns = patterns('',
+        url_patterns = patterns(
+            '',
             url(r'^(?P<blog_id>\d+)/navigation_tool/$',
                 self.admin_site.admin_view(self.navigation_tool),
                 name='cms_blogger-navigation-tool'),
@@ -266,7 +267,7 @@ class BlogAdmin(AdminHelper):
                 json.dumps({'error': unicode(e)}), mimetype=mimetype)
         finally:
             if upload:
-                upload.close() #memory leak if not closed?
+                upload.close()  # memory leak if not closed?
 
     @csrf_exempt
     def delete_thumbnail(self, request, blog_entry_id=None):
@@ -305,8 +306,8 @@ class BlogAdmin(AdminHelper):
             return HttpResponse(
                 '<!DOCTYPE html><html><head><title></title></head><body>'
                 '<script type="text/javascript">opener.closeNavigationPopup'
-                '(window, "%s");</script></body></html>' % \
-                    (escapejs(preview)), )
+                '(window, "%s");</script></body></html>' % (
+                    escapejs(preview)), )
         context = RequestContext(request)
         context.update({
             'title': 'Edit navigation menu',
@@ -343,9 +344,10 @@ def validate_image_dimensions(upload):
                 horizontal_px, horizontal_text,
                 vertical_px, vertical_text))
 
+
 def validate_image_size(upload, request):
     if ('CONTENT_LENGTH' in request.META and
-        len(upload) != int(request.META.get('CONTENT_LENGTH'))):
+            len(upload) != int(request.META.get('CONTENT_LENGTH'))):
 
         raise UploadException(
             "File not uploaded completely. "
@@ -425,7 +427,8 @@ class BlogEntryPageAdmin(AdminHelper, PlaceholderAdmin):
 
     def get_urls(self):
         urls = super(BlogEntryPageAdmin, self).get_urls()
-        url_patterns = patterns('',
+        url_patterns = patterns(
+            '',
             url(r'^(?P<entry_id>\d+)/preview/$',
                 self.admin_site.admin_view(self.preview),
                 name='cms_blogger-entry-preview'), )

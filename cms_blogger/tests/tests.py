@@ -18,6 +18,7 @@ from cms_layouts.slot_finder import get_fixed_section_slots
 import xml.etree.ElementTree
 import urlparse
 
+
 class TestBlogModel(TestCase):
 
     def setUp(self):
@@ -90,7 +91,7 @@ class TestBlogModel(TestCase):
         self.assertEquals(
             page_for_layouts.placeholders.model.objects.count(),
             phds_count_for_layouts * len(Blog.LAYOUTS_CHOICES) +
-                page_for_layouts.placeholders.count())
+            page_for_layouts.placeholders.count())
 
         blog.delete()
 
@@ -126,7 +127,8 @@ class TestBlogModel(TestCase):
         self.assertEquals(entry.get_absolute_url(), entry_url)
         blog.entries_slugs_with_date = True
         blog.save()
-        entry_url = reverse('cms_blogger.views.entry_page', kwargs={
+        entry_url = reverse(
+            'cms_blogger.views.entry_page', kwargs={
                 'blog_slug': 'one-title',
                 'year': entry.publication_date.year,
                 'month': entry.publication_date.strftime('%m'),
@@ -414,11 +416,11 @@ class TestBlogEntryModel(TestCase):
         blog_layout = Layout.objects.create(**{
             'from_page': page_for_layouts,
             'content_object': self.blog,
-            'layout_type': Blog.ALL })
+            'layout_type': Blog.ALL})
         entry = BlogEntryPage.objects.create(**{
             'title': 'Hello', 'blog': self.blog, 'is_published': True,
             'short_description': 'I am a blog entry',
-            'meta_keywords': "article,blog,keyword",})
+            'meta_keywords': "article,blog,keyword", })
         # make request to get all the cms midlleware data
         resp = self.client.get(page_for_layouts.get_absolute_url())
         # request with all middleware data
@@ -515,6 +517,7 @@ class TestNavigationMenu(BaseMenuTest):
         self.assertEquals(len(nodes_texts), 1)
         self.assertEquals(len(self._menu_nodes()[0].children), 0)
 
+
 class TestAuthorModel(TestCase):
 
     def setUp(self):
@@ -526,8 +529,8 @@ class TestAuthorModel(TestCase):
         self.entry = BlogEntryPage.objects.create(**{
             'title': 'first entry', 'blog': self.blog,
             'short_description': 'short_description'})
-        self.entry_url = reverse('admin:cms_blogger_blogentrypage_change',
-            args=(self.entry.pk, ))
+        self.entry_url = reverse(
+            'admin:cms_blogger_blogentrypage_change', args=(self.entry.pk, ))
 
     def tearDown(self):
         self.client.logout()
@@ -588,8 +591,8 @@ class TestAuthorModel(TestCase):
         self.assertEquals(Author.objects.count(), 3)
 
         # set the default author for the other entry
-        new_entry_url = reverse('admin:cms_blogger_blogentrypage_change',
-            args=(new_entry.pk, ))
+        new_entry_url = reverse(
+            'admin:cms_blogger_blogentrypage_change', args=(new_entry.pk, ))
         response = self.client.get(new_entry_url)
         self.assertEquals(new_entry.authors.count(), 3)
         initial = response.context_data['adminform'].form.initial
@@ -643,7 +646,7 @@ class TestSitemap(TestCase):
         category_path = blogcategory.get_absolute_url()
         self.assertEqual(category_path, url_parts.path)
         self.assertEqual(site.domain, url_parts.netloc)
-        
+
     def sitemap_locations(self, xml_string):
         xml_tree = xml.etree.ElementTree.fromstring(xml_string)
         location_iterator = xml_tree.iter(self.location_tag)
@@ -683,7 +686,7 @@ class TestSitemap(TestCase):
             category.entries.add(entry)
         category.save()
         return category
-        
+
     def test_baseview(self):
         self.assert_status_ok(self.url)
 
@@ -743,7 +746,6 @@ class TestSitemap(TestCase):
         self.assert_blog_landingpage(blog, locations[0])
         self.assert_blogentry_location(entry, locations[1])
         self.assert_blogcategory_location(category, locations[2])
-        
 
     def test_entries_same_categories(self):
         blog = Blog.objects.create(title='test_blog', slug='test_blog')

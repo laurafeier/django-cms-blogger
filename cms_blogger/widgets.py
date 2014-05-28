@@ -87,12 +87,12 @@ class ButtonWidget(forms.widgets.CheckboxInput):
     make_js_button = (
         "<script type='text/javascript'>"
         "jQuery('#id_%s').button().click(function(event) {"
-            "event.preventDefault();%s});"
+        "event.preventDefault();%s});"
         "</script>")
     submit_on_click_js = (
         "jQuery(this).closest('form').append("
         "jQuery('<input>').attr('type', 'hidden').attr("
-            "'name', '_continue').val('Save')"
+        "'name', '_continue').val('Save')"
         ").submit();")
 
     def __init__(self, attrs=None, check_test=None, link_url='',
