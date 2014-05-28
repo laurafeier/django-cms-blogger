@@ -1,11 +1,8 @@
-function html_unescape(text) {
-// Unescape a string that was escaped using django.utils.html.escape.
-    text = text.replace(/&lt;/g, '<');
-    text = text.replace(/&gt;/g, '>');
-    text = text.replace(/&quot;/g, '"');
-    text = text.replace(/&#39;/g, "'");
-    text = text.replace(/&amp;/g, '&');
-    return text;
+function html_unescape(string) {
+    // Unescape a string that was escaped using django.utils.html.escape.
+
+    //Create in-memory element; jQuery.html() will decode it
+    return jQuery('<div>').html(string).text();
 }
 
 function id_to_windowname(text) {
