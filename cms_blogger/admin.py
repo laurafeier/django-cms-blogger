@@ -1,6 +1,5 @@
 from django.conf.urls.defaults import patterns, url
 from django.contrib import admin
-from django.contrib.sites.models import Site
 from django.contrib.contenttypes.generic import GenericTabularInline
 from django.core.exceptions import PermissionDenied
 from django.core.files.images import get_image_dimensions
@@ -465,11 +464,12 @@ class BlogEntryPageAdmin(AdminHelper, PlaceholderAdmin):
         return super(BlogEntryPageAdmin, self).lookup_allowed(lookup, value)
 
     def add_plugin(self, request):
-        # sice there is no placeholder displayed in the change form, plugins
-        #   will be added by passing a parent_id to this view. parent_id
-        #   parameter will hold the blog entry id. We need to replace
-        #   the parent_id with the text plugin_id in order for the placeholder
-        #   admin add_plugin view to work
+        """
+        Adds a plugin the the hidded placeholder of the blog entry.
+        Since the placeholder has only one plugin(text plugin) we need to
+        set the parent_id in order for all plugins to be added inside the
+        text plugin.
+        """
         if 'parent_id' in request.POST:
             entry = get_object_or_404(
                 BlogEntryPage, pk=request.POST['parent_id'])

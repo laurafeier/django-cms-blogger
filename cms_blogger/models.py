@@ -164,7 +164,7 @@ class AbstractBlog(models.Model):
         abstract = True
 
     # values that are used distinguish layout types for this blog
-    ALL = 0
+    ALL = 0  # layout type that will be used by default by all blog pages
     LANDING_PAGE = 1
     ENTRY_PAGE = 2
     BIO_PAGE = 3
@@ -645,14 +645,14 @@ def fetch_author_to_update_name_for(instance, **kwargs):
     author = None
     try:
         author = Author.objects.get(user=instance)
-    except Author.DoesNotExist, e:
+    except Author.DoesNotExist:
         pass
-    except Author.MultipleObjectsReturned, e:
+    except Author.MultipleObjectsReturned:
         authors = Author.objects.filter(user=instance).order_by(slug)
         author = authors[0]
         for to_merge_author in author[1:]:
             author.blog_entries.add(*to_merge_author.entries.all())
-    except Exception, e:
+    except Exception:
         raise
     finally:
         if author:

@@ -1,8 +1,7 @@
-from django.http import HttpResponse, Http404, HttpResponseNotFound
+from django.http import Http404, HttpResponseNotFound
 from django.template.context import RequestContext
 from django.shortcuts import get_object_or_404
 from django.contrib.sites.models import Site
-from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.db.models import Q
 from cms_layouts.layout_response import LayoutResponse
 from .models import BlogEntryPage, Blog, BlogCategory
@@ -73,7 +72,7 @@ def landing_page(request, blog_slug):
             blog = Blog.objects.filter(site=site)[0]
         else:
             return HttpResponseNotFound(
-                "<h1>The blog slug is missing from the URL")
+                "<h1>The blog slug is missing from the URL</h1>")
     else:
         blog = get_object_or_404(
             Blog, slug=blog_slug, site=Site.objects.get_current())

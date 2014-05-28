@@ -413,7 +413,7 @@ class TestBlogEntryModel(TestCase):
     def test_title_rendering(self):
         page_for_layouts = create_page(
             'master', 'page_template.html', language='en', published=True)
-        blog_layout = Layout.objects.create(**{
+        Layout.objects.create(**{
             'from_page': page_for_layouts,
             'content_object': self.blog,
             'layout_type': Blog.ALL})

@@ -90,8 +90,7 @@ class BlogNavigationExtender(Modifier):
             #   nodes. The blog node needs to be inserted before the visible
             #   page node position in the nodes list.
 
-            visible_roots = filter(
-                lambda n: not n.parent and n.visible, nodes)
+            visible_roots =  [n for n in nodes if n.visible and not n.parent]
 
             for root_blog_node in root_blog_nodes:
                 blog_nav_node = _make_navigation_node(

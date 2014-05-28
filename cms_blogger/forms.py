@@ -38,9 +38,7 @@ class BlogLayoutInlineFormSet(BaseGenericInlineFormSet):
     def clean(self):
         if any(self.errors):
             return
-        data = self.cleaned_data
-        data_to_delete = filter(lambda x: x.get('DELETE', False), data)
-        data = filter(lambda x: not x.get('DELETE', False), data)
+        data = filter(lambda x: not x.get('DELETE', False), self.cleaned_data)
 
         if len(data) < 1:
             raise ValidationError('At least one layout is required!')
@@ -62,8 +60,9 @@ class BlogLayoutInlineFormSet(BaseGenericInlineFormSet):
             for layout_type in Blog.LAYOUTS_CHOICES.keys()
             if layout_type != Blog.ALL]
 
+        # if the default blog layout type is not submitted check if there
+        #   are layouts for all of the rest types
         if Blog.ALL not in submitted_layout_types:
-            # check if there are layouts for all of the rest types
             if not all([specific_layout_type in submitted_layout_types
                         for specific_layout_type in specific_layout_types]):
                 pretty_specific_layout_types = (
@@ -109,7 +108,7 @@ class BlogLayoutForm(forms.ModelForm):
                 'existing page.')
         try:
             slots = get_placeholders(page.get_template())
-            fixed_slots = get_fixed_section_slots(slots)
+            get_fixed_section_slots(slots)
             return page
         except MissingRequiredPlaceholder, e:
             raise ValidationError(
@@ -136,9 +135,8 @@ class MultipleUserField(AutoModelSelect2MultipleField):
 
 class BlogForm(forms.ModelForm):
     categories = forms.CharField(
-        widget=TagItWidget(attrs={
-            'tagit': '{allowSpaces: true, tagLimit: 25, '
-                     'caseSensitive: false}'}),
+        widget=TagItWidget(
+            attrs={'tagit': '{allowSpaces: true, caseSensitive: false}'}),
         help_text=_('Categories help text'))
 
     allowed_users = MultipleUserField(label="Add Users")
@@ -170,8 +168,9 @@ class BlogForm(forms.ModelForm):
 
         categories_names = [name.strip().lower()
                             for name in categories.split(',')]
-        invalid = filter(lambda n: len(n) < 3 or len(n) > 30,
-                         categories_names)
+        invalid = [name
+                   for name in categories_names
+                   if not 3 <= len(name) <= 30]
         if invalid:
             invalid_names = ', '.join(invalid)
             raise ValidationError(

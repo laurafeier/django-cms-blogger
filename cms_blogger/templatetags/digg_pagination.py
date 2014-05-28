@@ -2,7 +2,7 @@ from django import template
 
 register = template.Library()
 
-
+@register.inclusion_tag('cms_blogger/paginator.html', takes_context=True)
 def paginator(context, page, adjacent_pages=2):
     """
     Based on the logic provided here: https://djangosnippets.org/snippets/73/
@@ -27,5 +27,3 @@ def paginator(context, page, adjacent_pages=2):
         'STATIC_URL': context.get('STATIC_URL'),
         'page_param_name': context.get('page_param_name')
     }
-
-register.inclusion_tag('cms_blogger/paginator.html', takes_context=True)(paginator)
