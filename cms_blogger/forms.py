@@ -321,8 +321,8 @@ def _get_text_editor_widget():
                 'strikethrough, sub, sup, fullscreen'),
             'theme_advanced_toolbar_location': 'top',
             'theme_advanced_toolbar_align': 'left',
-            'setup' : 'tinyMCESetup'
-            })
+            'setup': 'tinyMCESetup'
+        })
     else:
         return WYMEditor(installed_plugins=plugins)
 
@@ -378,7 +378,7 @@ class BlogEntryPageChangeForm(forms.ModelForm):
                   ");")))
 
     schedule_publish = ButtonField(widget=ButtonWidget(
-        attrs={'style': 'float: right'},
+        attrs={'class': 'pull-right'},
         submit=True, text='Schedule Publish',
         on_click=("jQuery(this).closest('form').append("
                   "jQuery('<input>').attr('type', 'hidden').attr("
@@ -403,13 +403,12 @@ class BlogEntryPageChangeForm(forms.ModelForm):
 
     class Media:
         css = {"all": ("cms_blogger/css/entry-change-form.css",
-                       "cms_blogger/css/jquery.custom-scrollbar.css" )}
+                       "cms_blogger/css/jquery.custom-scrollbar.css")}
         js = ('cms_blogger/js/tinymce-extend.js',
               'cms_blogger/js/entry-admin.js',
               'cms_blogger/js/jquery.custom-scrollbar.min.js',
               'cms_blogger/js/admin-collapse.js',
-              'cms_blogger/js/entry-preview.js', )
-
+              'cms_blogger/js/entry-preview.js',)
 
     class Meta:
         model = BlogEntryPage
