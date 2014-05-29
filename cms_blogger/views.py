@@ -10,7 +10,7 @@ from .utils import paginate_queryset
 import re
 
 
-def get_entries_queryset_for_request(request):
+def get_entries_queryset(request):
     preview = 'preview' in request.GET and request.user.is_staff
     entry_qs = BlogEntryPage.objects.on_site()
     if not preview:
@@ -19,7 +19,7 @@ def get_entries_queryset_for_request(request):
 
 
 def entry_page(request, blog_slug, year, month, day, entry_slug):
-    entry_qs = get_entries_queryset_for_request(request)
+    entry_qs = get_entries_queryset(request)
     try:
         entry = entry_qs.get(
             publication_date__year=year,
@@ -115,7 +115,7 @@ def category_page(request, blog_slug, slug):
 
 
 def entry_or_bio_page(request, blog_slug, slug):
-    entry_qs = get_entries_queryset_for_request(request)
+    entry_qs = get_entries_queryset(request)
     try:
         entry = entry_qs.get(
             slug=slug, blog__slug=blog_slug,
