@@ -1,0 +1,50 @@
+{% extends "admin/cms/page/plugin_change_form.html" %}
+{% load url from future %}
+{% block extrahead %}
+{{ block.super }}
+<script>
+    $(document).ready(function() {
+        //makes the iframe larger to accommodate dropdown list
+        function maximize() {
+            s = '#iframe_' + {{ plugin.id }};
+            var frame = $(s,window.parent.document);
+            currentHeight = document.body.scrollHeight+20;
+            if (frame.height()<currentHeight) {
+                frame.height(currentHeight + 'px');
+            }
+        }
+
+        //call once on load
+        maximize();
+    });
+</script>
+<style type="text/css">
+    input.vTextField{
+        line-height: 23px;
+        width: 290px;
+        border: 1px solid #aaa;
+        background-image: -webkit-linear-gradient(top, #eee 1%, #fff 15%);
+        background-image: -moz-linear-gradient(top, #eee 1%, #fff 15%);
+        background-image: -o-linear-gradient(top, #eee 1%, #fff 15%);
+        background-image: -ms-linear-gradient(top, #eee 1%, #fff 15%);
+        background-image: linear-gradient(top, #eee 1%, #fff 15%);
+        outline: none;
+    }
+    .ui-spinner input{
+        width: 270px;
+        line-height: 23px;
+        border: 0;
+        outline: 0;
+    }
+
+    .ui-widget-content{
+        border: 1px solid #aaa;
+        background-image: -webkit-linear-gradient(top, #eee 1%, #fff 15%);
+        background-image: -moz-linear-gradient(top, #eee 1%, #fff 15%);
+        background-image: -o-linear-gradient(top, #eee 1%, #fff 15%);
+        background-image: -ms-linear-gradient(top, #eee 1%, #fff 15%);
+        background-image: linear-gradient(top, #eee 1%, #fff 15%);
+    }
+
+</style>
+{% endblock %}

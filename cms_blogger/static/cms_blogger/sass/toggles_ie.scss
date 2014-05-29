@@ -1,0 +1,18 @@
+.toggle-light{
+    .toggle-slide {
+        .toggle-blob,
+        .toggle-blob:hover{
+            // filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#f5f5f5', endColorstr='#cfcfcf',GradientType=3 )
+            filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#f5f5f5', endColorstr='#cfcfcf',GradientType=0 )
+        }
+
+        .toggle-on.active{
+            filter:none;
+            color:#fff;
+        }
+
+        .toggle-off{
+            color: #474747;
+        }
+    }
+}

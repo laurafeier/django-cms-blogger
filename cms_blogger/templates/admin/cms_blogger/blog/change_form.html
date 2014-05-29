@@ -1,0 +1,132 @@
+{% extends 'admin/change_form.html' %}
+{% load i18n blog_admin_tags %}
+
+{% block extrastyle %}
+{{block.super}}
+<style type="text/css">
+form ul.tagit {
+    padding: 1px 5px;
+}
+
+#id_navigation_node_pretty .current-node{
+    border: 2px solid #7CA0C7;
+}
+#id_navigation_node_pretty {
+    border: 1px solid #eee;
+    padding: 5px;
+}
+
+#id_navigation_node_pretty .arrow-down{
+    width: 0;
+    height: 0;
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    border-top: 5px solid black;
+    display: inline-block;
+    margin-left: 5px;
+}
+#id_navigation_node_pretty > ul{
+    display: inline-block;
+    vertical-align: top;
+}
+#id_navigation_node_pretty li{
+    padding: 3px;
+}
+#id_navigation_node_pretty > li{
+    display: inline-block;
+    vertical-align: top;
+    margin-right: 10px;
+}
+
+#id_navigation_node_pretty > li ul{
+    margin-left: 10px;
+    padding-left: 0px;
+    height: 0;
+    overflow: hidden;
+
+}
+#id_navigation_node_pretty > li:hover ul {
+    height: auto;
+}
+#id_navigation_node_pretty > li ul li {
+    list-style-type: none !important;
+}
+.title-site{
+    font-size: small;
+    font-weight: normal;
+}
+</style>
+{% endblock %}
+
+{% block extrahead %}
+{{block.super}}
+<!--[if lte IE 9]>
+<link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}cms_blogger/css/toggles_ie.css">
+<![endif]-->
+<script type="text/javascript" src="{{ STATIC_URL }}cms_blogger/js/popupHandler.js"></script>
+<script type="text/javascript">
+{% if not add %}
+    var current_site = {{adminform.form.instance.site_id}};
+{% endif %}
+</script>
+{% endblock %}
+
+{% block content_title %}
+{% if add and title %}
+{% comment %}show current site{% endcomment %}
+<h1><span class="title-site">
+{% current_site %} &#10148; </span>{{ title }}</h1>
+{% else %}
+{{ block.super }}
+{% endif %}
+{% endblock %}
+
+{% block form_top %}
+{% if adminform.form.missing_layouts %}
+<style type="text/css">
+.errornote li {
+    padding: inherit;
+    margin: inherit;
+    border: inherit;
+    color: inherit;
+    background: inherit;
+}
+</style>
+<div class='errornote' style='font-weight:bold;'>
+    {{adminform.form.missing_layouts}}
+</div>
+{% endif %}
+{% endblock %}
+
+{% block inline_field_sets %}
+<script type="text/javascript">django.jQuery(document).ready(function() {
+    var blog_setup = django.jQuery('fieldset').first();
+    django.jQuery('#cms_layouts-layout-content_type-object_id-group').insertAfter(blog_setup);
+});
+</script>
+{% for inline_admin_formset in inline_admin_formsets %}
+    {% if inline_admin_formset.opts.description %}
+        <script type="text/javascript">
+        django.jQuery(document).ready(function() {
+            var for_module_id = '{{ inline_admin_formset.formset.prefix }}-group';
+            var description = '{{inline_admin_formset.opts.description|safe}}';
+            var style = "padding-bottom: 10px; border-bottom: 1px solid #eee;"
+            django.jQuery("#" + for_module_id + " h2").first().after(
+                "<div class='description' style='" + style + "'>" + description + "</div>" );
+        })
+        </script>
+    {% endif %}
+    {% include inline_admin_formset.opts.template %}
+{% endfor %}
+{% endblock %}
+
+
+{% block submit_buttons_bottom %}
+{% if adminform and add %}
+<div class="submit-row">
+<input type="submit" value="{% trans 'Next' %}" name="_continue" {{ onclick_attrib }}/>
+</div>
+{% else %}
+{{block.super}}
+{% endif %}
+{% endblock %}

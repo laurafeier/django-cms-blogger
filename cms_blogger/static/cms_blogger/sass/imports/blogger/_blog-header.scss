@@ -1,0 +1,51 @@
+@import "imports/blogger/_globals.scss";
+
+@mixin blogHeader($ns){
+    #{$ns}{
+        .blog-header{
+            position: relative;
+            padding: 1% 0 1% 0;
+            #blog-title,
+            #blog-tagline{
+                z-index: 1;
+                position: relative;
+            }
+            #blog-title{
+                font-size: 40px;
+                text-transform: uppercase;
+                @media (max-width:480px){
+                    font-size: 30px;
+                }
+
+            }
+            #blog-tagline{
+                font-size: 16px;
+                margin-top: 5px;
+                color: $entry-text-color;
+                * {
+                    color: $entry-text-color;
+                }
+                @media (max-width:480px){
+                    display: none;
+                }
+            }
+            #blog-banding-image{
+                position:absolute;
+                bottom:0;
+                right:0;
+                z-index: 0;
+                max-height: 100%;
+
+                & + #blog-title.add-padding{
+                    margin-bottom:9%;
+                }
+                & + #blog-title + #blog-tagline.add-padding{
+                    margin-bottom:5%;
+                }
+
+            }
+        }
+    }
+}
+
+@include blogHeader($namespace);

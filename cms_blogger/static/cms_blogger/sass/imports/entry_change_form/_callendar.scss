@@ -1,0 +1,155 @@
+
+// overrides the default jquery css
+@mixin callendar($ns){
+    #{$ns}{
+        #ui-datepicker-div{
+            display: none;
+        }
+        .ui-datepicker-trigger{
+            outline: none
+        }
+        .ui-datepicker {
+            z-index:2000 !important;
+            font-size:13px;
+            border:1px solid #cccccc;
+            border-radius:0;
+            background:#fff;
+            margin: 0 auto;
+            width: 80%;
+            padding: 5%;
+            th{
+                background:none;
+                font-size: 13px;
+                color:#333333;
+                font-weight: normal;
+            }
+            &.ui-widget-content{
+                color: #323232;
+            }
+            @media all and (max-width:768px) {
+                font-size: 17px;
+            }
+
+            .ui-datepicker-calendar{
+                border:0;
+            }
+
+            .ui-timepicker-div{
+                padding-top:10px;
+                border-top:1px solid $header-border-color;
+            }
+
+            .ui-datepicker-buttonpane{
+                padding-top:10px;
+                background:none;
+                button{
+                    margin: 0;
+                }
+            }
+
+            .ui-slider-handle{
+                @include formButton("light-gray");
+                width: 1.2em;
+                height: 1.2em;
+                padding:0;
+                cursor: move;
+            }
+
+            dl{
+                padding:0;
+                dt,dd{
+                    font-size: 13px;
+                    margin-top: 0;
+                }
+                dd{
+                    margin-bottom: 13px;
+                }
+            }
+            td{
+                border:0;
+                span{
+                    background:none;
+                    color: #333333;
+                    text-align: center;
+                    border:0;
+                }
+                a{
+                    color:#309bc5;
+                    text-align: center;
+                    border:0;
+                    background:none;
+                    font-weight: normal;
+                    font-size: 13px;
+                    display: inline-block;
+                    width:21px;
+                    height: 21px;
+                    line-height: 21px;
+                    &.ui-state-active{
+                        background:#e7ebec;
+                        border:0;
+                        color: #323232;
+                    }
+                }
+            }
+            .ui-datepicker-header .ui-corner-all{
+                border-radius :0;
+                border-color: #cccccc;
+
+
+                &.ui-datepicker-next,
+                &.ui-datepicker-prev{
+                    background:#676767;
+                    cursor:pointer;
+                    &.ui-state-hover{
+                        background:#676767;
+                        border:0;
+                        &.ui-datepicker-prev-hover,
+                        &.ui-datepicker-next-hover{
+                            top:2px;
+                        }
+
+                        &.ui-datepicker-prev-hover{
+                            left: 2px;
+                        }
+
+                        &.ui-datepicker-next-hover{
+                            right: 2px;
+                        }
+                    }
+
+                    .ui-icon-circle-triangle-e{
+                        background-position: -32px 0px;
+                    }
+
+                    .ui-icon-circle-triangle-w{
+                        background-position: -97px 0px;
+
+                    }
+                }
+            }
+
+            .ui-datepicker-header{
+                background: none;
+                border: 0;
+                color: #666666;
+
+                .ui-datepicker-year{
+                    font-weight: normal;
+                }
+
+                .ui-datepicker-month{
+                    text-transform: uppercase;
+                }
+            }
+
+
+        }
+        #datepicker {
+            width:100%;
+            font-size:13px;
+            cursor:pointer;
+        }
+    }
+}
+
+@include callendar($namespace)
