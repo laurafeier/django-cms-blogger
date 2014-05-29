@@ -378,7 +378,7 @@ class BlogEntryPageChangeForm(forms.ModelForm):
         on_click=_ADD_HIDDEN_VAR_TO_FORM % ('_pub_pressed', 'true', "")))
 
     schedule_publish = ButtonField(widget=ButtonWidget(
-        attrs={'style': 'float: right'},
+        attrs={'class': 'pull-right'},
         submit=True, text='Schedule Publish',
         on_click=_ADD_HIDDEN_VAR_TO_FORM % (
             '_schedule_pub_pressed', 'true', "")))

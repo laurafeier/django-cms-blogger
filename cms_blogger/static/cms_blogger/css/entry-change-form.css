@@ -1,3 +1,8 @@
+/* line 16, ../sass/imports/entry_change_form/_globals.scss */
+.pull-right {
+  float: right;
+}
+
 /* line 141, ../sass/imports/entry_change_form/_layout.scss */
 .cms_blogger-blogentrypage {
   font-family: Verdana,Arial,sans-serif;
