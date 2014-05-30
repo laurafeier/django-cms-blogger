@@ -379,11 +379,13 @@ class TestBlogEntryModel(TestCase):
         entry = BlogEntryPage.objects.get(id=entry.id)
         self.assertFalse(entry.is_published)
         # publish with start date
-        data['start_publication'] = '05/06/2014 11:51 AM +03:00'
-        start_date = parser.parse(
-            data['start_publication']).astimezone(tz.tzutc())
+        data['start_publication'] = '05/06/2014 11:51 AM'
+        data['_start_publication_tzoffset'] = '+03:00'
         response = self.client.post(url, data)
         entry = BlogEntryPage.objects.get(id=entry.id)
+        start_date_str = ' '.join([data['start_publication'],
+                                   data['_start_publication_tzoffset']])
+        start_date = parser.parse(start_date_str).astimezone(tz.tzutc())
         self.assertEquals(start_date, entry.publication_date)
         self.assertTrue(entry.is_published)
 
