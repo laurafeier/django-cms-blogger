@@ -1,5 +1,5 @@
 from django.conf.urls.defaults import patterns, url
-from django.contrib import admin
+from django.contrib import admin, messages
 from django.contrib.sites.models import Site
 from django.contrib.contenttypes.generic import GenericTabularInline
 from django.core.exceptions import PermissionDenied
@@ -8,11 +8,12 @@ from django.core.urlresolvers import reverse
 from django.db import models
 from django.db.models import Q
 from django.http import HttpResponse, HttpResponseNotFound
-from django.shortcuts import get_object_or_404, render_to_response
+from django.shortcuts import get_object_or_404, render_to_response, redirect
 from django.template.context import RequestContext
 from django.utils.html import escapejs
 from django.utils import timezone
 from django.utils.translation import get_language, ugettext_lazy as _
+from django.utils.translation import ungettext
 from django.utils.safestring import mark_safe
 from django.views.decorators.csrf import csrf_exempt
 
@@ -27,11 +28,11 @@ from cms_layouts.models import Layout
 from cms_layouts.slot_finder import get_mock_placeholder
 
 from .changelists import BlogChangeList, BlogEntryChangeList
-from .models import Blog, BlogEntryPage, BlogNavigationNode
+from .models import Blog, BlogCategory, BlogEntryPage, BlogNavigationNode
 from .forms import (
     BlogLayoutForm, BlogForm, BlogAddForm, BlogEntryPageAddForm,
     BlogEntryPageChangeForm, BlogLayoutInlineFormSet,
-    EntryChangelistForm)
+    EntryChangelistForm, MoveEntriesForm)
 from .admin_helper import AdminHelper
 from .settings import (ALLOWED_THUMBNAIL_IMAGE_TYPES,
                        MINIMUM_POSTER_IMAGE_WIDTH,
@@ -42,6 +43,7 @@ from .widgets import ToggleWidget
 import imghdr
 import json
 import os
+import urllib
 
 
 class BlogLayoutInline(GenericTabularInline):
@@ -98,7 +100,7 @@ class BlogAdmin(AdminHelper):
     add_form = BlogAddForm
     change_form = BlogForm
     search_fields = ['title', 'site__name']
-    list_display = ('title', 'slug', 'site')
+    list_display = ('title', 'slug', 'site', 'mycat')
     readonly_in_change_form = ['site', 'location_in_navigation']
     formfield_overrides = {
         models.BooleanField: {'widget': ToggleWidget}
@@ -138,6 +140,9 @@ class BlogAdmin(AdminHelper):
         }),
     )
     prepopulated_fields = {"slug": ("title",)}
+
+    def mycat(self, obj):
+        return ', '.join(obj.categories.values_list('name', flat=True))
 
     def _get_nodes(self, request, nodes, node_id, output):
         for node in nodes:
@@ -214,9 +219,76 @@ class BlogAdmin(AdminHelper):
             url(r'^(?P<blog_entry_id>\d+)/delete_file/$',
                 self.admin_site.admin_view(self.delete_thumbnail),
                 name='cms_blogger-delete-thumbnail'),
+
+            url(r'^move-entries/$',
+                self.admin_site.admin_view(self.move_entries),
+                name='cms_blogger-move-entries'),
         )
         url_patterns.extend(urls)
         return url_patterns
+
+    def move_entries(self, request):
+        def response(form):
+            return render_to_response(
+                "admin/cms_blogger/blog/move_entries.html",
+                {'move_form': form},
+                context_instance=RequestContext(request))
+
+        qs = BlogEntryPage.objects.filter(id__in=request.GET.keys())
+        if request.method == "GET":
+            form = MoveEntriesForm(blogentries=qs, checked=qs)
+            return response(form)
+
+        form = MoveEntriesForm(request.POST, blogentries=qs, checked=qs)
+        if not form.is_valid():
+            return response(form)
+
+        post_data = request.POST.copy()
+        blogentries_ids = post_data.pop('blogentries', [])
+        if not blogentries_ids:
+            form = MoveEntriesForm(post_data, blogentries=qs)
+            messages.error(request, "There are no entries selected.")
+            return response(form)
+
+        #maybe get destination_blog from cleaned_data
+        destination_blog = Blog.objects.get(id=post_data['destination_blog'])
+        blogentries = BlogEntryPage.objects.filter(id__in=blogentries_ids)
+        valid_blogentries = blogentries.exclude(blog=destination_blog)
+        valid_blogentries_ids = list(valid_blogentries.values_list(
+            'id', flat=True))
+        redundant_blogentries = blogentries.filter(
+            blog=post_data['destination_blog'])
+        post_data.setlist('blogentries', map(unicode, valid_blogentries_ids))
+        form = MoveEntriesForm(post_data, blogentries=qs)
+
+        def f(x, s, length=100):
+            blogentries_list = ', '.join(x.values_list('title', flat=True))
+            if len(blogentries_list) > length:
+                blogentries_list = "%s ..." % blogentries_list[:(length - 4)]
+            message = "%s%s%s" % (
+                ungettext(
+                    'Entry %(entry)s was', 'Entries %(entry)s were ',
+                    x.count()),
+                s,
+                " blog %(blog)s")
+            return message % {
+                'entry': blogentries_list,
+                'blog': destination_blog}
+
+        if redundant_blogentries.exists():
+            message = f(redundant_blogentries, 'already present in')
+            messages.warning(request, message)
+            return response(form)
+
+        _do_stuff(
+            destination_blog,
+            valid_blogentries_ids,
+            'mirror_categories' in form.data)
+        message = f(BlogEntryPage.objects.filter(
+            id__in=list(valid_blogentries_ids)),
+            'successfully moved to')
+        messages.success(request, message)
+        return redirect(reverse('admin:cms_blogger_blogentrypage_changelist'))
 
     @csrf_exempt
     def upload_thumbnail(self, request, blog_entry_id=None):
@@ -266,7 +338,7 @@ class BlogAdmin(AdminHelper):
                 json.dumps({'error': unicode(e)}), mimetype=mimetype)
         finally:
             if upload:
-                upload.close() #memory leak if not closed?
+                upload.close()
 
     @csrf_exempt
     def delete_thumbnail(self, request, blog_entry_id=None):
@@ -343,6 +415,7 @@ def validate_image_dimensions(upload):
                 horizontal_px, horizontal_text,
                 vertical_px, vertical_text))
 
+
 def validate_image_size(upload, request):
     if ('CONTENT_LENGTH' in request.META and
         len(upload) != int(request.META.get('CONTENT_LENGTH'))):
@@ -366,10 +439,10 @@ class BlogEntryPageAdmin(AdminHelper, PlaceholderAdmin):
     list_editable = ('is_published', )
     custom_changelist_class = BlogEntryChangeList
     list_display = ('__str__', 'slug', 'blog', 'is_published', 'published_at',
-                    'entry_authors')
+                    'entry_authors', 'mycat')
     list_filter = (('blog', CurrentSiteBlogFilter), )
     search_fields = ('title', 'blog__title')
-    actions = ['make_published', 'make_unpublished']
+    actions = ['make_published', 'make_unpublished', 'move_entries']
     add_form_template = 'admin/cms_blogger/blogentrypage/add_form.html'
     add_form = BlogEntryPageAddForm
     change_form = BlogEntryPageChangeForm
@@ -422,6 +495,16 @@ class BlogEntryPageAdmin(AdminHelper, PlaceholderAdmin):
         }),
 
     )
+
+    def mycat(self, obj):
+        
+        from django.utils.safestring import mark_safe
+        all_cat = set(obj.blog.categories.values_list('name', flat=True))
+        some_cat = set(obj.categories.values_list('name', flat=True))
+        aa = (' '.join([x for x in some_cat])+
+             " || : "+' '.join([x for x in (all_cat-some_cat)]))
+        return mark_safe(aa)
+#       return ', '.join(obj.categories.values_list('name', flat=True))
 
     def get_urls(self):
         urls = super(BlogEntryPageAdmin, self).get_urls()
@@ -507,6 +590,53 @@ class BlogEntryPageAdmin(AdminHelper, PlaceholderAdmin):
             'document.write((new Date("%s")).toLocaleString());'
             '</script>' % entry.publication_date)
     published_at.allow_tags = True
+
+    def move_entries(self, request, queryset):
+        entries = {x: "" for x in request.POST.getlist(
+            admin.helpers.ACTION_CHECKBOX_NAME)}
+        url = "%s?%s" % (
+            reverse('admin:cms_blogger-move-entries'),
+            urllib.urlencode(entries))
+        return redirect(url)
+
+    move_entries.short_description = "Move entries to another blog"
+
+
+def _do_stuff(destination_blog, blogentries_ids, mirror_categories=True):
+    original_categories_ids = list(BlogCategory.objects.filter(
+        entries__in=blogentries_ids).values_list('id',flat=True))
+    original_categories_name = BlogCategory.objects.filter(
+        entries__in=blogentries_ids).values_list('name',flat=True)
+
+#    original_categories_name = BlogEntryPage.objects.filter(
+#        id__in=blogentries_ids
+#    ).values_list('categories__name', flat=True).distinct()
+    
+
+    if mirror_categories:
+        destination_categories = destination_blog.categories.values_list(
+            'name', flat=True)
+        delta = set(original_categories_name) - set(destination_categories)
+        delta = [ x for x in delta if x is not None]
+        for category_name in delta: #bulk_create instead? save is not called
+            BlogCategory.objects.create(
+                name=category_name,
+                blog=destination_blog)
+
+    blogentries = BlogEntryPage.objects.filter(id__in=list(blogentries_ids))
+    blogentries.update(blog=destination_blog)
+
+    for blogentry in BlogEntryPage.objects.filter(id__in=blogentries_ids):
+        previous_categories = list(blogentry.categories.values_list(
+            'name', flat=True))
+        blogentry.categories.clear()
+        destination_categories = BlogCategory.objects.filter(
+            blog = destination_blog, name__in=previous_categories)
+        blogentry.categories.add(*destination_categories)
+
+    BlogCategory.objects.filter(
+        id__in=original_categories_ids, entries=None
+    ).delete()
 
 
 admin.site.register(Blog, BlogAdmin)

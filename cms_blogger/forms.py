@@ -10,6 +10,7 @@ from django.utils.translation import ugettext_lazy as _
 from django.utils import timezone
 from django.contrib.auth.models import User
 from django.db import router
+from django.db.models.query import EmptyQuerySet
 
 from cms.plugin_pool import plugin_pool
 from cms.plugins.text.settings import USE_TINYMCE
@@ -619,3 +620,18 @@ class BlogRiverForm(forms.ModelForm):
 
     class Meta:
         model = RiverPlugin
+
+
+class MoveEntriesForm(forms.Form):
+    mirror_categories = forms.BooleanField(label="Mirror inexistent categories in destination blog", initial=True, required=False)
+    blogentries = forms.ModelMultipleChoiceField(queryset=EmptyQuerySet(), initial=EmptyQuerySet(), widget=forms.CheckboxSelectMultiple(), label="The following blog entries will be moved to the destination blog", required=False)
+    def __init__(self, *args, **kwargs):
+        blogentries = kwargs.pop('blogentries', EmptyQuerySet())
+        checked = kwargs.pop('checked', EmptyQuerySet())
+        destination_blog = kwargs.pop('destination_blog', None)
+        super(MoveEntriesForm, self).__init__(*args, **kwargs)
+        self.fields['destination_blog'] = forms.ModelChoiceField(Blog.objects.filter(site=Site.objects.get_current()),required=True)
+        self.fields['destination_blog'].initial = destination_blog
+
+        self.fields['blogentries'].queryset = blogentries
+        self.fields['blogentries'].initial = checked
