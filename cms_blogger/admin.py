@@ -497,7 +497,7 @@ class BlogEntryPageAdmin(AdminHelper, PlaceholderAdmin):
     )
 
     def mycat(self, obj):
-        
+
         from django.utils.safestring import mark_safe
         all_cat = set(obj.blog.categories.values_list('name', flat=True))
         some_cat = set(obj.categories.values_list('name', flat=True))
@@ -608,21 +608,17 @@ def _do_stuff(destination_blog, blogentries_ids, mirror_categories=True):
     original_categories_name = BlogCategory.objects.filter(
         entries__in=blogentries_ids).values_list('name',flat=True)
 
-#    original_categories_name = BlogEntryPage.objects.filter(
-#        id__in=blogentries_ids
-#    ).values_list('categories__name', flat=True).distinct()
-    
-
     if mirror_categories:
         destination_categories = destination_blog.categories.values_list(
             'name', flat=True)
         delta = set(original_categories_name) - set(destination_categories)
-        delta = [ x for x in delta if x is not None]
-        for category_name in delta: #bulk_create instead? save is not called
+        delta = filter(None, delta)
+        for category_name in delta:
             BlogCategory.objects.create(
                 name=category_name,
                 blog=destination_blog)
 
+    # link blogentries foreign key to the new blog
     blogentries = BlogEntryPage.objects.filter(id__in=list(blogentries_ids))
     blogentries.update(blog=destination_blog)
 
