@@ -71,6 +71,10 @@ form ul.tagit {
 </script>
 {% endblock %}
 
+{% block object-tools-items %}
+    {% if has_absolute_url and not original.is_draft %}<li><a href="http{% if request.is_secure %}s{% endif %}://{{original.site.domain}}{{original.get_absolute_url}}?preview" class="viewsitelink">{% trans "View on site" %}</a></li>{% endif%}
+{% endblock %}
+
 {% block content_title %}
 {% if add and title %}
 {% comment %}show current site{% endcomment %}

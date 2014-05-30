@@ -19,7 +19,7 @@
 {% endblock %}
 
 {% block object-tools-items %}
-    {% if has_absolute_url and not original.is_draft %}<li><a href="{{original.get_absolute_url}}?preview" class="viewsitelink">{% trans "View on site" %}</a></li>{% endif%}
+    {% if has_absolute_url and not original.is_draft %}<li><a href="http{% if request.is_secure %}s{% endif %}://{{original.blog.site.domain}}{{original.get_absolute_url}}?preview" class="viewsitelink">{% trans "View on site" %}</a></li>{% endif%}
 {% endblock %}
 
 {% block pretitle %}
