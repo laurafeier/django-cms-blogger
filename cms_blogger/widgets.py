@@ -87,12 +87,12 @@ class ButtonWidget(forms.widgets.CheckboxInput):
     make_js_button = (
         "<script type='text/javascript'>"
         "jQuery('#id_%s').button().click(function(event) {"
-            "event.preventDefault();%s});"
+        "event.preventDefault();%s});"
         "</script>")
     submit_on_click_js = (
         "jQuery(this).closest('form').append("
         "jQuery('<input>').attr('type', 'hidden').attr("
-            "'name', '_continue').val('Save')"
+        "'name', '_continue').val('Save')"
         ").submit();")
 
     def __init__(self, attrs=None, check_test=None, link_url='',
@@ -147,8 +147,9 @@ class DateTimeWidget(forms.widgets.TextInput):
             u"<input type='hidden' name='_{name}_tzoffset' "
             u"id='_{name}_tzoffset'/>"
             u"<script type='text/javascript'>"
-            u"var _now = document.getElementById('_{name}_tzoffset');"
-            u"_now.value = /GMT(.*)\s/g.exec(Date())[1];"
+            u"var offset_el = document.getElementById('_{name}_tzoffset');"
+            u"var now_str = (new Date()).toString();"
+            u"offset_el.value = /(GMT|UTC)([+-]\d*)/g.exec(now_str)[2];"
             u"buildDatetimePickerField("
             u"'#picker_id_{name}', '#id_{name}', '{initial}');"
             u"</script>"

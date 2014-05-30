@@ -1,6 +1,5 @@
 from django.conf.urls.defaults import patterns, url
 from django.contrib import admin, messages
-from django.contrib.sites.models import Site
 from django.contrib.contenttypes.generic import GenericTabularInline
 from django.core.exceptions import PermissionDenied
 from django.core.files.images import get_image_dimensions
@@ -109,7 +108,7 @@ class BlogAdmin(AdminHelper):
         (None, {
             'fields': ['title', 'slug'],
             'classes': ('general',)
-            }),
+        }),
     )
     change_form_fieldsets = (
         ('Blog setup', {
@@ -207,7 +206,8 @@ class BlogAdmin(AdminHelper):
 
     def get_urls(self):
         urls = super(BlogAdmin, self).get_urls()
-        url_patterns = patterns('',
+        url_patterns = patterns(
+            '',
             url(r'^(?P<blog_id>\d+)/navigation_tool/$',
                 self.admin_site.admin_view(self.navigation_tool),
                 name='cms_blogger-navigation-tool'),
@@ -377,8 +377,8 @@ class BlogAdmin(AdminHelper):
             return HttpResponse(
                 '<!DOCTYPE html><html><head><title></title></head><body>'
                 '<script type="text/javascript">opener.closeNavigationPopup'
-                '(window, "%s");</script></body></html>' % \
-                    (escapejs(preview)), )
+                '(window, "%s");</script></body></html>' % (
+                    escapejs(preview)), )
         context = RequestContext(request)
         context.update({
             'title': 'Edit navigation menu',
@@ -418,7 +418,7 @@ def validate_image_dimensions(upload):
 
 def validate_image_size(upload, request):
     if ('CONTENT_LENGTH' in request.META and
-        len(upload) != int(request.META.get('CONTENT_LENGTH'))):
+            len(upload) != int(request.META.get('CONTENT_LENGTH'))):
 
         raise UploadException(
             "File not uploaded completely. "
@@ -508,7 +508,8 @@ class BlogEntryPageAdmin(AdminHelper, PlaceholderAdmin):
 
     def get_urls(self):
         urls = super(BlogEntryPageAdmin, self).get_urls()
-        url_patterns = patterns('',
+        url_patterns = patterns(
+            '',
             url(r'^(?P<entry_id>\d+)/preview/$',
                 self.admin_site.admin_view(self.preview),
                 name='cms_blogger-entry-preview'), )
@@ -545,11 +546,12 @@ class BlogEntryPageAdmin(AdminHelper, PlaceholderAdmin):
         return super(BlogEntryPageAdmin, self).lookup_allowed(lookup, value)
 
     def add_plugin(self, request):
-        # sice there is no placeholder displayed in the change form, plugins
-        #   will be added by passing a parent_id to this view. parent_id
-        #   parameter will hold the blog entry id. We need to replace
-        #   the parent_id with the text plugin_id in order for the placeholder
-        #   admin add_plugin view to work
+        """
+        Adds a plugin the the hidded placeholder of the blog entry.
+        Since the placeholder has only one plugin(text plugin) we need to
+        set the parent_id in order for all plugins to be added inside the
+        text plugin.
+        """
         if 'parent_id' in request.POST:
             entry = get_object_or_404(
                 BlogEntryPage, pk=request.POST['parent_id'])

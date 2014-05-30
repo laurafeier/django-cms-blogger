@@ -90,21 +90,24 @@ class BlogNavigationExtender(Modifier):
             #   nodes. The blog node needs to be inserted before the visible
             #   page node position in the nodes list.
 
-            visible_roots = filter(
-                lambda n: not n.parent and n.visible, nodes)
+            nodes_with_position = {
+                node: position for position, node in enumerate(nodes)}
+
+            visible_roots =  dict(enumerate((
+                node for node in nodes if node.visible and not node.parent)))
+            last_position = len(visible_roots) - 1
 
             for root_blog_node in root_blog_nodes:
                 blog_nav_node = _make_navigation_node(
                     root_blog_node, None, proxy_prefix, node_visible)
+
                 # figure out the position to insert root blog node
                 if visible_roots:
-                    try:
-                        page_root = visible_roots[root_blog_node.position]
-                        position_in_nodes = nodes.index(page_root)
-                    except IndexError:
-                        # get position for last visible root node
-                        position_in_nodes = nodes.index(
-                            visible_roots[len(visible_roots) - 1])
+                    # of the blog node position is not in the existing
+                    #   root nodes anymore, insert it last
+                    before_page = visible_roots.get(
+                        root_blog_node.position, last_position)
+                    position_in_nodes = nodes_with_position[before_page]
                 else:
                     position_in_nodes = root_blog_node.position
                 nodes.insert(position_in_nodes, blog_nav_node)

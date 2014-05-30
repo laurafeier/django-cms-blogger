@@ -105,8 +105,7 @@ def getCMSContentModel(**kwargs):
     ModelWithCMSContent.add_to_class(
         body_attr,
         property(lambda x: getattr(x, "_%s" % body_attr),
-                 lambda x, v: setattr(x, "_%s" % body_attr, v))
-        )
+                 lambda x, v: setattr(x, "_%s" % body_attr, v)))
     ModelWithCMSContent.add_to_class(plugin_getter, get_attached_plugin)
     return ModelWithCMSContent
 
@@ -165,7 +164,7 @@ class AbstractBlog(models.Model):
         abstract = True
 
     # values that are used distinguish layout types for this blog
-    ALL = 0
+    ALL = 0  # layout type that will be used by default by all blog pages
     LANDING_PAGE = 1
     ENTRY_PAGE = 2
     BIO_PAGE = 3
@@ -321,8 +320,9 @@ class BlogRelatedPage(object):
 class Author(models.Model):
 
     name = models.CharField(_('name'), max_length=150)
-    user = models.ForeignKey(User, on_delete=models.SET_NULL,
-        null=True, blank=True, related_name='blog_authors')
+    user = models.ForeignKey(
+        User, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='blog_authors')
     slug = models.SlugField(
         _('slug'), max_length=150,
         help_text=_("Used to build the author's URL."))
@@ -355,7 +355,7 @@ class BioPage(models.Model, BlogRelatedPage):
     def get_absolute_url(self):
         return ('cms_blogger.views.entry_or_bio_page', (), {
             'blog_slug': self.blog.slug,
-            'slug': self.slug })
+            'slug': self.slug})
 
     def get_title_obj(self):
         title = LayoutTitle()
@@ -388,8 +388,8 @@ def get_image_storage():
 
 
 @blog_page
-class BlogEntryPage(
-    getCMSContentModel(content_attr='content'), BlogRelatedPage):
+class BlogEntryPage(getCMSContentModel(content_attr='content'),
+                    BlogRelatedPage):
     uses_layout_type = Blog.ENTRY_PAGE
     title = models.CharField(_('title'), max_length=255)
     slug = models.SlugField(
@@ -403,13 +403,14 @@ class BlogEntryPage(
     poster_image = models.ImageField(
         _("Thumbnail Image"), upload_to=upload_entry_image, blank=True,
         storage=get_image_storage())
-    caption = models.CharField(_('caption'),
-        max_length=70, blank=True, null=True)
-    credit = models.CharField(_('credit'),
-        max_length=35, blank=True, null=True)
+    caption = models.CharField(
+        _('caption'), max_length=70, blank=True, null=True)
+    credit = models.CharField(
+        _('credit'), max_length=35, blank=True, null=True)
 
-    authors = models.ManyToManyField(Author,
-        verbose_name=_('Blog Entry Authors'), related_name='blog_entries')
+    authors = models.ManyToManyField(
+        Author, verbose_name=_('Blog Entry Authors'),
+        related_name='blog_entries')
 
     short_description = models.TextField(
         _('Short Description'), help_text=_("400 characters or fewer"),
@@ -560,8 +561,8 @@ class BlogEntryPage(
 @blog_page
 class BlogCategory(models.Model, BlogRelatedPage):
     blog_related_name = 'categories'
-    name = models.CharField(_('name'),
-        max_length=CATEGORY_NAME_LENGTH, db_index=True)
+    name = models.CharField(
+        _('name'), max_length=CATEGORY_NAME_LENGTH, db_index=True)
     slug = models.SlugField(_('slug'), max_length=30)
     entries = models.ManyToManyField(
         BlogEntryPage, related_name='categories')
@@ -603,8 +604,8 @@ class RiverPlugin(CMSPlugin):
     title = models.CharField(_('title'), max_length=100)
     # allow maximum 20 categories and compute max chars taking commas into
     #   consideration
-    categories = models.CharField(BlogCategory,
-        max_length=(
+    categories = models.CharField(
+        BlogCategory, max_length=(
             CATEGORY_NAME_LENGTH * MAX_CATEGORIES_IN_PLUGIN +
             MAX_CATEGORIES_IN_PLUGIN - 1))
     display_abstract = models.BooleanField(default=True)
@@ -644,14 +645,14 @@ def fetch_author_to_update_name_for(instance, **kwargs):
     author = None
     try:
         author = Author.objects.get(user=instance)
-    except Author.DoesNotExist, e:
+    except Author.DoesNotExist:
         pass
-    except Author.MultipleObjectsReturned, e:
+    except Author.MultipleObjectsReturned:
         authors = Author.objects.filter(user=instance).order_by(slug)
         author = authors[0]
         for to_merge_author in author[1:]:
             author.blog_entries.add(*to_merge_author.entries.all())
-    except Exception, e:
+    except Exception:
         raise
     finally:
         if author:

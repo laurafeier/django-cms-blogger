@@ -1,8 +1,7 @@
-from django.http import HttpResponse, Http404, HttpResponseNotFound
+from django.http import Http404, HttpResponseNotFound
 from django.template.context import RequestContext
 from django.shortcuts import get_object_or_404
 from django.contrib.sites.models import Site
-from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.db.models import Q
 from cms_layouts.layout_response import LayoutResponse
 from .models import BlogEntryPage, Blog, BlogCategory
@@ -11,7 +10,7 @@ from .utils import paginate_queryset
 import re
 
 
-def get_entries_queryset_for_request(request):
+def get_entries_queryset(request):
     preview = 'preview' in request.GET and request.user.is_staff
     entry_qs = BlogEntryPage.objects.on_site()
     if not preview:
@@ -20,7 +19,7 @@ def get_entries_queryset_for_request(request):
 
 
 def entry_page(request, blog_slug, year, month, day, entry_slug):
-    entry_qs = get_entries_queryset_for_request(request)
+    entry_qs = get_entries_queryset(request)
     try:
         entry = entry_qs.get(
             publication_date__year=year,
@@ -73,7 +72,7 @@ def landing_page(request, blog_slug):
             blog = Blog.objects.filter(site=site)[0]
         else:
             return HttpResponseNotFound(
-                "<h1>The blog slug is missing from the URL")
+                "<h1>The blog slug is missing from the URL</h1>")
     else:
         blog = get_object_or_404(
             Blog, slug=blog_slug, site=Site.objects.get_current())
@@ -96,8 +95,8 @@ def landing_page(request, blog_slug):
 
 
 def category_page(request, blog_slug, slug):
-    category = get_object_or_404(BlogCategory,
-        blog__slug=blog_slug, slug=slug,
+    category = get_object_or_404(
+        BlogCategory, blog__slug=blog_slug, slug=slug,
         blog__site=Site.objects.get_current())
 
     layout = category.get_layout()
@@ -116,7 +115,7 @@ def category_page(request, blog_slug, slug):
 
 
 def entry_or_bio_page(request, blog_slug, slug):
-    entry_qs = get_entries_queryset_for_request(request)
+    entry_qs = get_entries_queryset(request)
     try:
         entry = entry_qs.get(
             slug=slug, blog__slug=blog_slug,

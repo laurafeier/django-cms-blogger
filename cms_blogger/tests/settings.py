@@ -63,11 +63,11 @@ TEMPLATE_CONTEXT_PROCESSORS = [
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME' : 'test.db', # Or path to database file if using sqlite3.
-        'USER' : '', # Not used with sqlite3.
-        'PASSWORD' : '', # Not used with sqlite3.
-        'HOST' : '', # Set to empty string for localhost. Not used with sqlite3.
-        'PORT' : '', # Set to empty string for default. Not used with sqlite3.
+        'NAME': 'test.db',
+        'USER': '',
+        'PASSWORD': '',
+        'HOST': '',
+        'PORT': '',
     }
 }
 MIDDLEWARE_CLASSES = (
@@ -87,11 +87,11 @@ TEMPLATE_LOADERS = (
     'cms_layouts.tests.utils.MockLoader',
     'django.template.loaders.filesystem.Loader',
     'django.template.loaders.app_directories.Loader',
-    )
+)
 
 CACHE_BACKEND = 'locmem:///'
 
 CMS_PLUGIN_PROCESSORS = ('cms_layouts.context_processor.add_extra_html', )
 SOUTH_TESTS_MIGRATE = False
-BLOGGER_ALLOWED_SITES_FOR_USER =  'cms_blogger.tests.utils.get_allowed_sites'
+BLOGGER_ALLOWED_SITES_FOR_USER = 'cms_blogger.tests.utils.get_allowed_sites'
 USE_TZ = True

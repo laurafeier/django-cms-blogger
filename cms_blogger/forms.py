@@ -39,17 +39,15 @@ class BlogLayoutInlineFormSet(BaseGenericInlineFormSet):
     def clean(self):
         if any(self.errors):
             return
-        data = self.cleaned_data
-        data_to_delete = filter(lambda x: x.get('DELETE', False), data)
-        data = filter(lambda x: not x.get('DELETE', False), data)
+        data = filter(lambda x: not x.get('DELETE', False), self.cleaned_data)
 
         if len(data) < 1:
             raise ValidationError('At least one layout is required!')
 
         if len(data) > len(Blog.LAYOUTS_CHOICES):
+            layout_types_count = len(Blog.LAYOUTS_CHOICES)
             raise ValidationError(
-                'There can be a maximum of %d layouts.' % \
-                    len(Blog.LAYOUTS_CHOICES))
+                'There can be a maximum of %d layouts.' % layout_types_count)
 
         submitted_layout_types = [layout.get('layout_type')
                                   for layout in data]
@@ -58,12 +56,14 @@ class BlogLayoutInlineFormSet(BaseGenericInlineFormSet):
             raise ValidationError(
                 "You can have only one layout for each layout type.")
 
-        specific_layout_types = [layout_type
+        specific_layout_types = [
+            layout_type
             for layout_type in Blog.LAYOUTS_CHOICES.keys()
             if layout_type != Blog.ALL]
 
+        # if the default blog layout type is not submitted check if there
+        #   are layouts for all of the rest types
         if Blog.ALL not in submitted_layout_types:
-            # check if there are layouts for all of the rest types
             if not all([specific_layout_type in submitted_layout_types
                         for specific_layout_type in specific_layout_types]):
                 pretty_specific_layout_types = (
@@ -89,7 +89,7 @@ class BlogLayoutForm(forms.ModelForm):
 
     def clean_layout_type(self):
         layout_type = self.cleaned_data.get('layout_type', None)
-        if layout_type == None:
+        if layout_type is None:
             raise ValidationError("Layout Type required")
         if layout_type not in Blog.LAYOUTS_CHOICES.keys():
             raise ValidationError(
@@ -109,7 +109,7 @@ class BlogLayoutForm(forms.ModelForm):
                 'existing page.')
         try:
             slots = get_placeholders(page.get_template())
-            fixed_slots = get_fixed_section_slots(slots)
+            get_fixed_section_slots(slots)
             return page
         except MissingRequiredPlaceholder, e:
             raise ValidationError(
@@ -136,9 +136,8 @@ class MultipleUserField(AutoModelSelect2MultipleField):
 
 class BlogForm(forms.ModelForm):
     categories = forms.CharField(
-        widget=TagItWidget(attrs={
-            'tagit': '{allowSpaces: true, tagLimit: 25, '
-                     'caseSensitive: false}'}),
+        widget=TagItWidget(
+            attrs={'tagit': '{allowSpaces: true, caseSensitive: false}'}),
         help_text=_('Categories help text'))
 
     allowed_users = MultipleUserField(label="Add Users")
@@ -170,8 +169,9 @@ class BlogForm(forms.ModelForm):
 
         categories_names = [name.strip().lower()
                             for name in categories.split(',')]
-        invalid = filter(lambda n: len(n) < 3 or len(n) > 30,
-                         categories_names)
+        invalid = [name
+                   for name in categories_names
+                   if not 3 <= len(name) <= 30]
         if invalid:
             invalid_names = ', '.join(invalid)
             raise ValidationError(
@@ -247,16 +247,17 @@ class BlogAddForm(forms.ModelForm):
         fields = ('title', 'slug',)
 
 
+_ADD_HIDDEN_VAR_TO_FORM = (
+    "jQuery(this).closest('form').append("
+    "jQuery('<input>').attr('type', 'hidden').attr('name', '%s').val(%s))%s;")
+
+
 class EntryChangelistForm(forms.ModelForm):
 
     is_published = forms.BooleanField(
         required=False, widget=forms.CheckboxInput(attrs={
-            'onclick': (
-                "jQuery(this).closest('form').append("
-                "jQuery('<input>').attr('type', 'hidden').attr("
-                    "'name', '_save').val('Save')"
-                ").submit();")
-            }))
+            'onclick': _ADD_HIDDEN_VAR_TO_FORM % (
+                '_save', '"Save"', ".submit()")}))
 
     def __init__(self, *args, **kwargs):
         entry = kwargs.get('instance', None)
@@ -322,8 +323,8 @@ def _get_text_editor_widget():
                 'strikethrough, sub, sup, fullscreen'),
             'theme_advanced_toolbar_location': 'top',
             'theme_advanced_toolbar_align': 'left',
-            'setup' : 'tinyMCESetup'
-            })
+            'setup': 'tinyMCESetup'
+        })
     else:
         return WYMEditor(installed_plugins=plugins)
 
@@ -369,29 +370,25 @@ class BlogEntryPageChangeForm(forms.ModelForm):
     poster_image_uploader = forms.CharField(label="", widget=PosterImage())
     categories = forms.ModelMultipleChoiceField(
         widget=forms.CheckboxSelectMultiple(),
-        help_text=_("Check all the categories to apply to this post. Uncheck to remove."),
+        help_text=_("Check all the categories to apply to this "
+                    "post. Uncheck to remove."),
         queryset=BlogCategory.objects.get_empty_query_set(), required=False)
 
-    publish = ButtonField(widget=ButtonWidget(submit=True,
-        on_click=("jQuery(this).closest('form').append("
-                  "jQuery('<input>').attr('type', 'hidden').attr("
-                    "'name', '_pub_pressed').val(true)"
-                  ");")))
+    publish = ButtonField(widget=ButtonWidget(
+        submit=True,
+        on_click=_ADD_HIDDEN_VAR_TO_FORM % ('_pub_pressed', 'true', "")))
 
     schedule_publish = ButtonField(widget=ButtonWidget(
-        attrs={'style': 'float: right'},
+        attrs={'class': 'pull-right'},
         submit=True, text='Schedule Publish',
-        on_click=("jQuery(this).closest('form').append("
-                  "jQuery('<input>').attr('type', 'hidden').attr("
-                    "'name', '_schedule_pub_pressed').val(true)"
-                  ");")))
+        on_click=_ADD_HIDDEN_VAR_TO_FORM % (
+            '_schedule_pub_pressed', 'true', "")))
+
     schedule_unpublish = ButtonField(widget=ButtonWidget(
         attrs={'style': 'float: right'},
         submit=True, text='Schedule Unpublish',
-        on_click=("jQuery(this).closest('form').append("
-                  "jQuery('<input>').attr('type', 'hidden').attr("
-                    "'name', '_schedule_unpub_pressed').val(true)"
-                  ");")))
+        on_click=_ADD_HIDDEN_VAR_TO_FORM % (
+            '_schedule_unpub_pressed', 'true', "")))
 
     start_publication = forms.Field(
         required=False, widget=DateTimeWidget())
@@ -404,13 +401,12 @@ class BlogEntryPageChangeForm(forms.ModelForm):
 
     class Media:
         css = {"all": ("cms_blogger/css/entry-change-form.css",
-                       "cms_blogger/css/jquery.custom-scrollbar.css" )}
+                       "cms_blogger/css/jquery.custom-scrollbar.css")}
         js = ('cms_blogger/js/tinymce-extend.js',
               'cms_blogger/js/entry-admin.js',
               'cms_blogger/js/jquery.custom-scrollbar.min.js',
               'cms_blogger/js/admin-collapse.js',
               'cms_blogger/js/entry-preview.js', )
-
 
     class Meta:
         model = BlogEntryPage
@@ -463,10 +459,11 @@ class BlogEntryPageChangeForm(forms.ModelForm):
     def _init_preview_buttons(self):
         preview1 = self.fields['preview_on_top'].widget
         preview2 = self.fields['preview_on_bottom'].widget
-        url = reverse('admin:cms_blogger-entry-preview',
-            args=[self.instance.id])
+        url = reverse(
+            'admin:cms_blogger-entry-preview', args=[self.instance.id])
         preview1.link_url = preview2.link_url = url
-        popup_js = "return showEntryPreviewPopup(this,'%s');" % admin_static_url()
+        popup_js = "return showEntryPreviewPopup(this,'%s');" % (
+            admin_static_url(), )
         preview1.on_click = preview2.on_click = popup_js
 
     def _init_poster_image_widget(self):

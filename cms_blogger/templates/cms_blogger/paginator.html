@@ -19,7 +19,7 @@
             {% endif %}
             {% for linkpage in page_numbers %}
                {% ifequal linkpage page.number %}
-                  <span class="current main_color_text">{{ page.number }}</span>
+                  <span class="current link_color_text">{{ page.number }}</span>
                {% else %}
                   <span class="page"><a href="?{{ page_param_name|default:'page' }}={{ linkpage }}{{extra_params|default:''}}">{{ linkpage }}</a></span>
                {% endifequal %}
