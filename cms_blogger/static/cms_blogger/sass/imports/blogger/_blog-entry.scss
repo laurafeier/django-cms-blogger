@@ -146,6 +146,7 @@
                 text-decoration: none;
                 margin:0;
                 font-size: 14px;
+                white-space: nowrap;
                 @include border-radius(3px);
                 &:hover{
                     background-color:darken($read-more-bg-color, 7%)

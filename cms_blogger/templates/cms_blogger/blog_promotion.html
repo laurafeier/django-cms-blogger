@@ -2,14 +2,14 @@
 
 {% addtoblock "css" %}
 <link rel="stylesheet" type="text/css" href="{{STATIC_URL}}cms_blogger/css/blogger.css">
-<!-- Blog targetting should run as soon as possible -->
-<script type="text/javascript" src="{{STATIC_URL}}cms_blogger/js/blog-targetting.js"></script>
 {% endaddtoblock %}
 
 {% addtoblock "js" %}
 <script type="text/javascript" src="{{STATIC_URL}}cms_blogger/js/blogger-frontend.js"></script>
 {% endaddtoblock %}
 
+<!-- Blog targeting should run as soon as possible -->
+<script type="text/javascript" src="{{STATIC_URL}}cms_blogger/js/blog-targetting.js"></script>
 <div class="blog-plomotion-plugin clearfix box">
     <div class='blog-promotion-header'>
         {% if plugin.title %}

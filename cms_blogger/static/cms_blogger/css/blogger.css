@@ -196,31 +196,32 @@
   text-decoration: none;
   margin: 0;
   font-size: 14px;
+  white-space: nowrap;
   -webkit-border-radius: 3px;
   -moz-border-radius: 3px;
   -ms-border-radius: 3px;
   -o-border-radius: 3px;
   border-radius: 3px;
 }
-/* line 150, ../sass/imports/blogger/_blog-entry.scss */
+/* line 151, ../sass/imports/blogger/_blog-entry.scss */
 .cms-blogger .blog-entry .entry-read-more:hover {
   background-color: #dddddd;
 }
-/* line 155, ../sass/imports/blogger/_blog-entry.scss */
+/* line 156, ../sass/imports/blogger/_blog-entry.scss */
 .cms-blogger .blog-entry .subtitle {
   margin: 0 0 10px 0;
   color: #999999;
 }
-/* line 158, ../sass/imports/blogger/_blog-entry.scss */
+/* line 159, ../sass/imports/blogger/_blog-entry.scss */
 .cms-blogger .blog-entry .subtitle .author {
   color: #747474;
 }
-/* line 162, ../sass/imports/blogger/_blog-entry.scss */
+/* line 163, ../sass/imports/blogger/_blog-entry.scss */
 .cms-blogger .blog-entry .entry-summary {
   margin: 0 0 30px 0;
   text-align: left;
 }
-/* line 167, ../sass/imports/blogger/_blog-entry.scss */
+/* line 168, ../sass/imports/blogger/_blog-entry.scss */
 .cms-blogger .blog-entry .social {
   display: block;
   margin: 20px auto 0 auto;
@@ -375,31 +376,32 @@
   text-decoration: none;
   margin: 0;
   font-size: 14px;
+  white-space: nowrap;
   -webkit-border-radius: 3px;
   -moz-border-radius: 3px;
   -ms-border-radius: 3px;
   -o-border-radius: 3px;
   border-radius: 3px;
 }
-/* line 150, ../sass/imports/blogger/_blog-entry.scss */
+/* line 151, ../sass/imports/blogger/_blog-entry.scss */
 .cms-blogger .blog-post .entry-read-more:hover {
   background-color: #dddddd;
 }
-/* line 155, ../sass/imports/blogger/_blog-entry.scss */
+/* line 156, ../sass/imports/blogger/_blog-entry.scss */
 .cms-blogger .blog-post .subtitle {
   margin: 0 0 10px 0;
   color: #999999;
 }
-/* line 158, ../sass/imports/blogger/_blog-entry.scss */
+/* line 159, ../sass/imports/blogger/_blog-entry.scss */
 .cms-blogger .blog-post .subtitle .author {
   color: #747474;
 }
-/* line 162, ../sass/imports/blogger/_blog-entry.scss */
+/* line 163, ../sass/imports/blogger/_blog-entry.scss */
 .cms-blogger .blog-post .entry-summary {
   margin: 0 0 30px 0;
   text-align: left;
 }
-/* line 167, ../sass/imports/blogger/_blog-entry.scss */
+/* line 168, ../sass/imports/blogger/_blog-entry.scss */
 .cms-blogger .blog-post .social {
   display: block;
   margin: 20px auto 0 auto;
