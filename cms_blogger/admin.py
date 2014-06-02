@@ -504,10 +504,10 @@ class BlogEntryPageAdmin(AdminHelper, PlaceholderAdmin):
     entry_authors.allow_tags = True
 
     def published_at(self, entry):
-        #publication_date
         return (
             '<script type="text/javascript">'
-            'document.write((new Date("%s")).toLocaleString());'
+            'var str_date = (new Date("%s")).toString();'
+            'document.write(/(.*)GMT|UTC[+-]\d*/g.exec(str_date)[1]);'
             '</script>' % entry.publication_date)
     published_at.allow_tags = True
 
