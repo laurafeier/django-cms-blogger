@@ -95,21 +95,22 @@ class BlogNavigationExtender(Modifier):
 
             visible_roots =  dict(enumerate((
                 node for node in nodes if node.visible and not node.parent)))
-            last_position = len(visible_roots) - 1
+            last_node = visible_roots.get(len(visible_roots) - 1)
 
             for root_blog_node in root_blog_nodes:
                 blog_nav_node = _make_navigation_node(
                     root_blog_node, None, proxy_prefix, node_visible)
+                # set default position
+                position_in_nodes = root_blog_node.position
+                # try to find the 'real' position in navigation node list
+                root_page = visible_roots.get(root_blog_node.position)
+                if root_page:
+                    # insert at exact position
+                    position_in_nodes = nodes_with_position[root_page]
+                elif last_node:
+                    # insert after last visible
+                    position_in_nodes = nodes_with_position[last_node] + 1
 
-                # figure out the position to insert root blog node
-                if visible_roots:
-                    # of the blog node position is not in the existing
-                    #   root nodes anymore, insert it last
-                    before_page = visible_roots.get(
-                        root_blog_node.position, last_position)
-                    position_in_nodes = nodes_with_position[before_page]
-                else:
-                    position_in_nodes = root_blog_node.position
                 nodes.insert(position_in_nodes, blog_nav_node)
                 new_nodes.append(blog_nav_node)
 
