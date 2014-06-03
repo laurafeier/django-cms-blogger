@@ -210,3 +210,58 @@ class SpinnerWidget(forms.widgets.TextInput):
         output = "%s%s" % (
             widget_html, self.spinner_script % (name, self.spinner_attrs))
         return mark_safe(output)
+
+
+class JQueryUIMultiselect(forms.widgets.SelectMultiple):
+
+    class Media:
+        css = {
+            'all': (
+                static('cms_blogger/css/redmond-jquery-ui.css'),
+                static('cms_blogger/css/jquery.multiselect.css'),
+                static('cms_blogger/css/jquery.multiselect.filter.css'),
+            )
+        }
+        js = (static('cms_blogger/js/jquery-1.9.1.min.js'),
+              static('cms_blogger/js/jquery-ui.min.js'),
+              static('cms_blogger/js/jquery.multiselect.min.js'),
+              static('cms_blogger/js/jquery.multiselect.filter.js'), )
+
+    multiselect_script = (
+        "<script type='text/javascript'>"
+        "jQuery('#id_%s').multiselect(%s)%s.next().css('width', 'auto');"
+        "</script>")
+
+    max_selected_script = (
+        "<script type='text/javascript'>"
+        "jQuery('#id_%s').on('multiselectclick', function(event, ui) {"
+        "var widget = jQuery(this).multiselect('widget');"
+        "var selected_items = widget.find('input:checked');"
+        "if(ui.checked && selected_items.length > %d){"
+        "alert('You can only select %d items.'); "
+        "return false;}"
+        "});"
+        "</script>")
+
+    def __init__(self, attrs=None):
+        attrs = attrs or {}
+        self.multiselect_attrs = attrs.pop('multiselect', '{}')
+        self.multiselectfilter = attrs.pop('multiselectfilter', None)
+        self.max_selected = attrs.pop('max_items_allowed', None)
+        super(JQueryUIMultiselect, self).__init__(attrs=attrs)
+
+    def render(self, name, value, attrs={}):
+        widget_html = super(JQueryUIMultiselect, self).render(
+            name, value, attrs=attrs)
+        multiselectfilter_html = ""
+        if self.multiselectfilter:
+            multiselectfilter_html = ".multiselectfilter(%s)" % (
+                self.multiselectfilter, )
+
+        widget_html += self.multiselect_script % (
+            name, self.multiselect_attrs, multiselectfilter_html)
+
+        if self.max_selected:
+            widget_html += self.max_selected_script % (
+                name, self.max_selected, self.max_selected)
+        return mark_safe(widget_html)
