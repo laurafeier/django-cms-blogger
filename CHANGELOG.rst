@@ -1,6 +1,39 @@
 CHANGELOG
 =========
 
+Revision 88c7b30 (03.06.2014, 10:37 UTC)
+----------------------------------------
+
+* LUN-1592
+
+  * changed widget for categories in blgo river plugin.
+
+* LUN-1594
+
+  * fixed getting last position in the root nodes.
+
+* LUN-1595
+
+  * added momentjs to blog entry admin in order for the date string to be parsed correctly.
+
+* LUN-1598
+
+  * Fix prev/next not displayed side by side in FF
+
+* LUN-1599
+
+  * URL encode params for social plugins
+
+* LUN-1601
+
+  * Fix entry author field not expanding for long author list
+
+* LUN-1604
+
+  * Use escape() instead of escapejs() to HTML escape menu preview HMTL
+
+No other commits.
+
 Revision fe37dbb (02.06.2014, 12:24 UTC)
 ----------------------------------------
 
