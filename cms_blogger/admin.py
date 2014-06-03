@@ -424,6 +424,10 @@ class BlogEntryPageAdmin(AdminHelper, PlaceholderAdmin):
 
     )
 
+    class Media:
+        js = ("cms_blogger/js/moment.min.js",)
+
+
     def get_urls(self):
         urls = super(BlogEntryPageAdmin, self).get_urls()
         url_patterns = patterns(
@@ -506,7 +510,7 @@ class BlogEntryPageAdmin(AdminHelper, PlaceholderAdmin):
     def published_at(self, entry):
         return (
             '<script type="text/javascript">'
-            'var str_date = (new Date("%s")).toString();'
+            'var str_date = (new Date(moment("%s"))).toString();'
             'document.write(/(.*)GMT|UTC[+-]\d*/g.exec(str_date)[1]);'
             '</script>' % entry.publication_date)
     published_at.allow_tags = True
