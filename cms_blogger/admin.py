@@ -9,7 +9,7 @@ from django.db.models import Q
 from django.http import HttpResponse, HttpResponseNotFound
 from django.shortcuts import get_object_or_404, render_to_response
 from django.template.context import RequestContext
-from django.utils.html import escapejs
+from django.utils.html import escape
 from django.utils import timezone
 from django.utils.translation import get_language, ugettext_lazy as _
 from django.utils.safestring import mark_safe
@@ -306,7 +306,7 @@ class BlogAdmin(AdminHelper):
                 '<!DOCTYPE html><html><head><title></title></head><body>'
                 '<script type="text/javascript">opener.closeNavigationPopup'
                 '(window, "%s");</script></body></html>' % (
-                    escapejs(preview)), )
+                    escape(preview)), )
         context = RequestContext(request)
         context.update({
             'title': 'Edit navigation menu',
