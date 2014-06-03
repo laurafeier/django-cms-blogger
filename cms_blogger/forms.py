@@ -28,9 +28,11 @@ from .models import (
     Blog, BlogEntryPage, BlogCategory, Author, RiverPlugin,
     MAX_CATEGORIES_IN_PLUGIN)
 from .widgets import (
-    TagItWidget, ButtonWidget, DateTimeWidget, PosterImage, SpinnerWidget)
+    TagItWidget, ButtonWidget, DateTimeWidget, PosterImage, SpinnerWidget,
+    JQueryUIMultiselect)
 from .utils import user_display_name
 from cms.templatetags.cms_admin import admin_static_url
+import json
 
 
 class BlogLayoutInlineFormSet(BaseGenericInlineFormSet):
@@ -548,29 +550,22 @@ class BlogEntryPageChangeForm(forms.ModelForm):
         return saved_instance
 
 
-class BlogsCategoriesField(AutoModelSelect2MultipleField):
-    search_fields = ['name__icontains', ]
-    queryset = BlogCategory.objects
-    empty_values = [None, '', 0]
-
-    def __init__(self, *args, **kwargs):
-        self.current_site = None
-        super(BlogsCategoriesField, self).__init__(*args, **kwargs)
-
-    def get_queryset(self):
-        if not self.current_site:
-            # be mean and don't show any categoriess
-            return BlogCategory.objects.none()
-        qs = super(BlogsCategoriesField, self).get_queryset()
-        # since we only want the names to appear exclude duplicates
-        names_with_ids = dict(
-            qs.filter(blog__site=self.current_site).values_list('name', 'pk'))
-        return BlogCategory.objects.filter(id__in=names_with_ids.values())
-
-
 class BlogRiverForm(forms.ModelForm):
     requires_request = True
-    categories = BlogsCategoriesField()
+    categories = forms.MultipleChoiceField(
+        widget=JQueryUIMultiselect(
+            attrs={
+                'multiselect': json.dumps({
+                    "selectedList": MAX_CATEGORIES_IN_PLUGIN,
+                    "header": "Choose categories below",
+                }),
+                'multiselectfilter': json.dumps({
+                    "label": "Search",
+                    "width": "190",
+                    "placeholder": "Enter category name"
+                }),
+                "max_items_allowed": MAX_CATEGORIES_IN_PLUGIN,
+            }))
     number_of_entries = forms.CharField(
         widget=SpinnerWidget(attrs={'spinner': '{min: 3, max: 10,}'}))
 
@@ -578,19 +573,21 @@ class BlogRiverForm(forms.ModelForm):
         request = kwargs.pop('request', None)
         plugin_page = getattr(request, 'current_page', None)
         categories_field = self.base_fields.get('categories')
-        if plugin_page and categories_field:
-            categories_field.current_site = plugin_page.site
+        if plugin_page and plugin_page.site and categories_field:
+            categories_field.choices = [
+                (name, name)
+                for name in BlogCategory.objects.filter(
+                    blog__site=plugin_page.site
+                ).order_by('name').values_list('name', flat=True).distinct()]
 
         super(BlogRiverForm, self).__init__(*args, **kwargs)
         self._init_categories()
         self._init_number_of_entries_field()
 
     def _init_categories(self):
-        if (self.instance and self.instance.categories and
-                not self.initial.get('initial')):
+        if (self.instance and self.instance.categories):
             names = self.instance.categories.split(',')
-            qs = self.fields['categories'].get_queryset()
-            self.initial['categories'] = qs.filter(name__in=names)
+            self.initial['categories'] = names
 
     def _init_number_of_entries_field(self):
         if not self.initial.get('number_of_entries'):
@@ -598,11 +595,11 @@ class BlogRiverForm(forms.ModelForm):
                 self.instance.number_of_entries, )
 
     def clean_categories(self):
-        categories = self.cleaned_data.get('categories')
+        categories = set(self.cleaned_data.get('categories'))
         if len(categories) > MAX_CATEGORIES_IN_PLUGIN:
             raise ValidationError(
                 'You can add only %d categories.' % MAX_CATEGORIES_IN_PLUGIN)
-        return ','.join(categories.values_list('name', flat=True))
+        return ','.join(list(categories))
 
     def clean_number_of_entries(self):
         no_entries = self.cleaned_data.get('number_of_entries', None)
