@@ -71,7 +71,7 @@ def resize_image(file_like_object):
     # add transparent background
     color = (255, 255, 255, 0)
     background_img = PILImage.new('RGBA', fixed_size, color)
-    # refetch size since it could have get smaller
+    # refetch size since it could be different than the original
     img_width, img_height = pil_img.size
 
     # paste image in the center of the transparent image
