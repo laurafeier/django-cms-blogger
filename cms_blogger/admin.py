@@ -99,7 +99,7 @@ class BlogAdmin(AdminHelper):
     add_form = BlogAddForm
     change_form = BlogForm
     search_fields = ['title', 'site__name']
-    list_display = ('title', 'slug', 'site', 'mycat')
+    list_display = ('title', 'slug', 'site')   # , 'mycat')
     readonly_in_change_form = ['site', 'location_in_navigation']
     formfield_overrides = {
         models.BooleanField: {'widget': ToggleWidget}
@@ -140,8 +140,8 @@ class BlogAdmin(AdminHelper):
     )
     prepopulated_fields = {"slug": ("title",)}
 
-    def mycat(self, obj):
-        return ', '.join(obj.categories.values_list('name', flat=True))
+#    def mycat(self, obj):
+#        return ', '.join(obj.categories.values_list('name', flat=True))
 
     def _get_nodes(self, request, nodes, node_id, output):
         for node in nodes:
@@ -439,7 +439,7 @@ class BlogEntryPageAdmin(AdminHelper, PlaceholderAdmin):
     list_editable = ('is_published', )
     custom_changelist_class = BlogEntryChangeList
     list_display = ('__str__', 'slug', 'blog', 'is_published', 'published_at',
-                    'entry_authors', 'mycat')
+                    'entry_authors')  # , 'mycat')
     list_filter = (('blog', CurrentSiteBlogFilter), )
     search_fields = ('title', 'blog__title')
     actions = ['make_published', 'make_unpublished', 'move_entries']
@@ -496,15 +496,15 @@ class BlogEntryPageAdmin(AdminHelper, PlaceholderAdmin):
 
     )
 
-    def mycat(self, obj):
-
-        from django.utils.safestring import mark_safe
-        all_cat = set(obj.blog.categories.values_list('name', flat=True))
-        some_cat = set(obj.categories.values_list('name', flat=True))
-        aa = (' '.join([x for x in some_cat])+
-             " || : "+' '.join([x for x in (all_cat-some_cat)]))
-        return mark_safe(aa)
-#       return ', '.join(obj.categories.values_list('name', flat=True))
+#    def mycat(self, obj):
+#
+#        from django.utils.safestring import mark_safe
+#        all_cat = set(obj.blog.categories.values_list('name', flat=True))
+#        some_cat = set(obj.categories.values_list('name', flat=True))
+#        aa = (' '.join([x for x in some_cat]) +
+#             " || : "+' '.join([x for x in (all_cat-some_cat)]))
+#        return mark_safe(aa)
+##       return ', '.join(obj.categories.values_list('name', flat=True))
 
     def get_urls(self):
         urls = super(BlogEntryPageAdmin, self).get_urls()
@@ -606,9 +606,9 @@ class BlogEntryPageAdmin(AdminHelper, PlaceholderAdmin):
 
 def _do_stuff(destination_blog, blogentries_ids, mirror_categories=True):
     original_categories_ids = list(BlogCategory.objects.filter(
-        entries__in=blogentries_ids).values_list('id',flat=True))
+        entries__in=blogentries_ids).values_list('id', flat=True))
     original_categories_name = BlogCategory.objects.filter(
-        entries__in=blogentries_ids).values_list('name',flat=True)
+        entries__in=blogentries_ids).values_list('name', flat=True)
 
     if mirror_categories:
         destination_categories = destination_blog.categories.values_list(
@@ -624,12 +624,19 @@ def _do_stuff(destination_blog, blogentries_ids, mirror_categories=True):
     blogentries = BlogEntryPage.objects.filter(id__in=list(blogentries_ids))
     blogentries.update(blog=destination_blog)
 
+    # make slug unique for saved entries (which are not draft)
+    saved_blogentries_ids = list(
+        blogentries.filter(draft_id=None).values_list('id', flat=True))
+    BlogEntryPage.objects.filter(id__in=saved_blogentries_ids).update(slug="")
+    for e in BlogEntryPage.objects.filter(id__in=saved_blogentries_ids):
+        e.save()
+
     for blogentry in BlogEntryPage.objects.filter(id__in=blogentries_ids):
         previous_categories = list(blogentry.categories.values_list(
             'name', flat=True))
         blogentry.categories.clear()
         destination_categories = BlogCategory.objects.filter(
-            blog = destination_blog, name__in=previous_categories)
+            blog=destination_blog, name__in=previous_categories)
         blogentry.categories.add(*destination_categories)
 
     BlogCategory.objects.filter(
