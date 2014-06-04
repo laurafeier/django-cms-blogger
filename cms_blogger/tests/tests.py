@@ -73,7 +73,7 @@ class TestMoveActionSimple(TestCase):
     def move_e1_e2_to_b3(self, mirror_categories=True):
         data = {
             'apply': 'Move',
-            'blogentries': [self.e1.id, self.e2.id],
+            'entries': [self.e1.id, self.e2.id],
             'destination_blog': self.blog3.id}
         if mirror_categories:
             data.update({'mirror_categories': 'on'})
@@ -89,7 +89,7 @@ class TestMoveActionSimple(TestCase):
     def move_e1_e2_to_b2(self, mirror_categories=True):
         data = {
             'apply': 'Move',
-            'blogentries': [self.e1.id, self.e2.id],
+            'entries': [self.e1.id, self.e2.id],
             'destination_blog': self.blog2.id}
         if mirror_categories:
             data.update({'mirror_categories': 'on'})
@@ -106,7 +106,7 @@ class TestMoveActionSimple(TestCase):
     def move_e1_from_b1_to_b1(self, mirror_categories=True):
         data = {
             'apply': 'Move',
-            'blogentries': [self.e1.id, ],
+            'entries': [self.e1.id, ],
             'destination_blog': self.blog1.id}
         if mirror_categories:
             data.update({'mirror_categories': 'on'})
@@ -121,7 +121,7 @@ class TestMoveActionSimple(TestCase):
     def move_e1_from_b1_to_b2(self, mirror_categories=True):
         data = {
             'apply': 'Move',
-            'blogentries': self.e1.id,
+            'entries': self.e1.id,
             'destination_blog': self.blog2.id}
         if mirror_categories:
             data.update({'mirror_categories': 'on'})

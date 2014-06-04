@@ -233,54 +233,52 @@ class BlogAdmin(AdminHelper):
 
         qs = BlogEntryPage.objects.filter(id__in=request.GET.keys())
         if request.method == "GET":
-            form = MoveEntriesForm(blogentries=qs, checked=qs)
+            form = MoveEntriesForm(entries=qs, checked=qs)
             return response(form)
 
-        form = MoveEntriesForm(request.POST, blogentries=qs, checked=qs)
+        form = MoveEntriesForm(request.POST, entries=qs, checked=qs)
         if not form.is_valid():
             return response(form)
 
         post_data = request.POST.copy()
-        blogentries = form.cleaned_data['blogentries']
-        if not blogentries.exists():
-            form = MoveEntriesForm(post_data, blogentries=qs)
+        entries = form.cleaned_data['entries']
+        if not entries.exists():
+            form = MoveEntriesForm(post_data, entries=qs)
             messages.error(request, "There are no entries selected.")
             return response(form)
 
         destination_blog = form.cleaned_data['destination_blog']
-        valid_blogentries = blogentries.exclude(blog=destination_blog)
-        valid_blogentries_ids = list(valid_blogentries.values_list(
-            'id', flat=True))
-        redundant_blogentries = blogentries.filter(
-            blog=post_data['destination_blog'])
-        post_data.setlist('blogentries', map(unicode, valid_blogentries_ids))
-        form = MoveEntriesForm(post_data, blogentries=qs)
+        valid_entries = entries.exclude(blog=destination_blog)
+        valid_entries_ids = list(valid_entries.values_list('id', flat=True))
+        redundant_entries = entries.filter(blog=post_data['destination_blog'])
+        post_data.setlist('entries', map(unicode, valid_entries_ids))
+        form = MoveEntriesForm(post_data, entries=qs)
 
-        def f(x, s, length=100):
-            blogentries_list = ', '.join(x.values_list('title', flat=True))
-            if len(blogentries_list) > length:
-                blogentries_list = "%s ..." % blogentries_list[:(length - 4)]
+        def f(entries, msg, length=100):
+            entries_list = ', '.join(entries.values_list('title', flat=True))
+            if len(entries_list) > length:
+                entries_list = "%s ..." % entries_list[:(length - 4)]
             message = "%s%s%s" % (
                 ungettext(
                     'Entry %(entry)s was', 'Entries %(entry)s were ',
-                    x.count()),
-                s,
+                    entries.count()),
+                msg,
                 " blog %(blog)s")
             return message % {
-                'entry': blogentries_list,
+                'entry': entries_list,
                 'blog': destination_blog}
 
-        if redundant_blogentries.exists():
-            message = f(redundant_blogentries, ' already present in')
+        if redundant_entries.exists():
+            message = f(redundant_entries, ' already present in')
             messages.warning(request, message)
             return response(form)
 
         _move_entries(
             destination_blog,
-            valid_blogentries_ids,
+            valid_entries_ids,
             'mirror_categories' in form.data)
         message = f(BlogEntryPage.objects.filter(
-            id__in=list(valid_blogentries_ids)),
+            id__in=list(valid_entries_ids)),
             'successfully moved to')
         messages.success(request, message)
         return redirect(reverse('admin:cms_blogger_blogentrypage_changelist'))
@@ -592,11 +590,11 @@ class BlogEntryPageAdmin(AdminHelper, PlaceholderAdmin):
     move_entries.short_description = "Move entries to another blog"
 
 
-def _move_entries(destination_blog, blogentries_ids, mirror_categories=True):
+def _move_entries(destination_blog, entries_ids, mirror_categories=True):
     original_categories_ids = list(BlogCategory.objects.filter(
-        entries__in=blogentries_ids).values_list('id', flat=True))
+        entries__in=entries_ids).values_list('id', flat=True))
     original_categories_name = BlogCategory.objects.filter(
-        entries__in=blogentries_ids).values_list('name', flat=True)
+        entries__in=entries_ids).values_list('name', flat=True)
 
     if mirror_categories:
         destination_categories = destination_blog.categories.values_list(
@@ -608,18 +606,18 @@ def _move_entries(destination_blog, blogentries_ids, mirror_categories=True):
                 name=category_name,
                 blog=destination_blog)
 
-    # link blogentries foreign key to the new blog
-    blogentries = BlogEntryPage.objects.filter(id__in=list(blogentries_ids))
-    blogentries.update(blog=destination_blog)
+    # link entries foreign key to the new blog
+    entries = BlogEntryPage.objects.filter(id__in=list(entries_ids))
+    entries.update(blog=destination_blog)
 
     # make slug unique for saved entries (which are not draft)
-    saved_blogentries_ids = list(
-        blogentries.filter(draft_id=None).values_list('id', flat=True))
-    BlogEntryPage.objects.filter(id__in=saved_blogentries_ids).update(slug="")
-    for e in BlogEntryPage.objects.filter(id__in=saved_blogentries_ids):
+    saved_entries_ids = list(
+        entries.filter(draft_id=None).values_list('id', flat=True))
+    BlogEntryPage.objects.filter(id__in=saved_entries_ids).update(slug="")
+    for e in BlogEntryPage.objects.filter(id__in=saved_entries_ids):
         e.save()
 
-    for blogentry in BlogEntryPage.objects.filter(id__in=blogentries_ids):
+    for blogentry in BlogEntryPage.objects.filter(id__in=entries_ids):
         previous_categories = list(blogentry.categories.values_list(
             'name', flat=True))
         blogentry.categories.clear()
