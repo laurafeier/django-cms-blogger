@@ -241,15 +241,13 @@ class BlogAdmin(AdminHelper):
             return response(form)
 
         post_data = request.POST.copy()
-        blogentries_ids = post_data.pop('blogentries', [])
-        if not blogentries_ids:
+        blogentries = form.cleaned_data['blogentries']
+        if not blogentries.exists():
             form = MoveEntriesForm(post_data, blogentries=qs)
             messages.error(request, "There are no entries selected.")
             return response(form)
 
-        #maybe get destination_blog from cleaned_data
-        destination_blog = Blog.objects.get(id=post_data['destination_blog'])
-        blogentries = BlogEntryPage.objects.filter(id__in=blogentries_ids)
+        destination_blog = form.cleaned_data['destination_blog']
         valid_blogentries = blogentries.exclude(blog=destination_blog)
         valid_blogentries_ids = list(valid_blogentries.values_list(
             'id', flat=True))
@@ -273,7 +271,7 @@ class BlogAdmin(AdminHelper):
                 'blog': destination_blog}
 
         if redundant_blogentries.exists():
-            message = f(redundant_blogentries, 'already present in')
+            message = f(redundant_blogentries, ' already present in')
             messages.warning(request, message)
             return response(form)
 

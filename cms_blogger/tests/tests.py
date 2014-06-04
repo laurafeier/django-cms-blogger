@@ -84,7 +84,24 @@ class TestMoveActionSimple(TestCase):
                 self.e1.id: "",
                 self.e2.id: "",
             }))
-        self.client.post(url, data)
+        return self.client.post(url, data)
+
+    def move_e1_e2_to_b2(self, mirror_categories=True):
+        data = {
+            'apply': 'Move',
+            'blogentries': [self.e1.id, self.e2.id],
+            'destination_blog': self.blog2.id}
+        if mirror_categories:
+            data.update({'mirror_categories': 'on'})
+
+        url = '%s?%s' % (
+            reverse('admin:cms_blogger-move-entries'),
+            urllib.urlencode({
+                self.e1.id: "",
+                self.e2.id: "",
+            }))
+        return self.client.post(url, data)
+
 
     def move_e1_from_b1_to_b1(self, mirror_categories=True):
         data = {
@@ -99,7 +116,7 @@ class TestMoveActionSimple(TestCase):
             urllib.urlencode({
                 self.e1.id: "",
             }))
-        self.client.post(url, data)
+        return self.client.post(url, data)
 
     def move_e1_from_b1_to_b2(self, mirror_categories=True):
         data = {
@@ -112,7 +129,7 @@ class TestMoveActionSimple(TestCase):
         url = '%s?%s' % (
             reverse('admin:cms_blogger-move-entries'),
             urllib.urlencode({self.e1.id: ""}))
-        self.client.post(url, data)
+        return self.client.post(url, data)
 
     def create_category(self, blog, category_name=None):
         category_name = category_name or self.CAT1_NAME
@@ -345,14 +362,32 @@ class TestMoveActionSimple(TestCase):
         self.cat1 = self.create_category(self.blog1)
         self.e1.categories.add(self.cat1)
 
-        self.move_e1_from_b1_to_b1(mirror_categories=True)
+        response = self.move_e1_from_b1_to_b1(mirror_categories=True)
+        messages = [m.message for m in response.context['messages']]
 
+        self.assertTrue(messages)
+        self.assertIn("already present", messages[0])
+
+    def test_attempt_move_to_same_blog(self):
+        """
+        move both to B2
+              B1        B2   >  
+             /         /     >  warn user he's attempting to move 
+        E1(e1)    E2(e1)     >  an entry to the same blog
+        """
+        self.e1 = self.create_entry(self.blog1)
+        self.e2 = self.create_entry(self.blog2)
+
+        response = self.move_e1_e2_to_b2()
+        messages = [m.message for m in response.context['messages']]
         e1 = BlogEntryPage.objects.get(id=self.e1.id)
         blog1 = Blog.objects.get(id=self.blog1.id)
-        self.assert_entry_tied_to_blog(e1, blog1)
-        self.assert_entry_has_category(e1, self.CAT1_NAME)
-        self.assert_blog_has_category(e1, self.CAT1_NAME)
 
+        self.assertTrue(messages)
+        self.assertIn("Entry e1 was already present in blog b2", messages[0])
+
+        #test it didn't move
+        self.assert_entry_tied_to_blog(e1, blog1)
 
 class TestBlogModel(TestCase):
 
