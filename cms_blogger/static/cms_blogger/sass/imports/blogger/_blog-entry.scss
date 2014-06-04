@@ -10,6 +10,7 @@
         }
         .box{
             padding: 15px;
+            width: auto;
         }
         .last{
             .#{$container} > .right-col{
@@ -29,7 +30,7 @@
                         float: none;
                         width: auto;
                         padding-left: 0;
-                        .entry-image{
+                        .entry-image-container{
                             margin-bottom: 10px;
                         }
                     }
@@ -42,9 +43,7 @@
             margin-bottom: 25px;
             color:$entry-text-color;
             background: #fff;
-            img{
-                width: 100%;
-            }
+
 
             & > .left-col{
                 float:left;
@@ -53,6 +52,32 @@
                 padding-bottom:30px;
                 text-align: center;
                 vertical-align: top;
+                @if $container == "blog-post"{
+                    @media (max-width:480px){
+                        float: none;
+                        width: auto;
+                        padding-right: 15px;
+                        padding-bottom: 0px;
+                        text-align: left;
+                        vertical-align: middle;
+                        margin-bottom: 10px;
+                        .date{
+                            display: inline-block
+                        }
+
+                        .social{
+                            display: inline-block;
+                            margin: 0;
+                            vertical-align: middle;
+                            white-space: nowrap;
+                            width: auto;
+                            a{
+                                margin-left: 20px;
+                                width: 25px;
+                            }
+                        }
+                    }
+                }
                 .date{
                     vertical-align: middle;
                     text-align: center;
@@ -75,13 +100,20 @@
                 padding-bottom:15px;
                 margin-left: $left-col-width !important;
                 margin-bottom: 0;
-                .entry-image{
+
+                @if $container == "blog-post"{
+                    @media (max-width:480px){
+                        margin-left: 0 !important;
+                    }
+                }
+
+                .entry-image-container{
                     margin-top: 20px;
                 }
 
                 @if $container == "blog-entry"{
                     @include entry-border();
-                    .entry-image{
+                    .entry-image-container{
                         margin-top: 0;
                     }
                 }
@@ -119,7 +151,7 @@
                         float: none;
                         width: auto;
                         padding-left: 0;
-                        .entry-image{
+                        .entry-image-container{
                             margin-bottom: 10px;
                         }
                     }
@@ -138,8 +170,16 @@
                     border:none !important;
                     padding:0;
                     margin-left:$left-col-width;
+                    width: auto;
                     .filer_image_container[style*="float: left"]{
                         margin-left: -$left-col-width !important;
+                    }
+
+                    @media (max-width:480px){
+                        margin-left: 0;
+                        .filer_image_container[style*="float: left"]{
+                            margin-left: 0 !important;
+                        }
                     }
                 }
             }
