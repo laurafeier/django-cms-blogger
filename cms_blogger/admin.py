@@ -280,7 +280,7 @@ class BlogAdmin(AdminHelper):
             messages.warning(request, message)
             return response(form)
 
-        _do_stuff(
+        _move_entries(
             destination_blog,
             valid_blogentries_ids,
             'mirror_categories' in form.data)
@@ -604,7 +604,7 @@ class BlogEntryPageAdmin(AdminHelper, PlaceholderAdmin):
     move_entries.short_description = "Move entries to another blog"
 
 
-def _do_stuff(destination_blog, blogentries_ids, mirror_categories=True):
+def _move_entries(destination_blog, blogentries_ids, mirror_categories=True):
     original_categories_ids = list(BlogCategory.objects.filter(
         entries__in=blogentries_ids).values_list('id', flat=True))
     original_categories_name = BlogCategory.objects.filter(

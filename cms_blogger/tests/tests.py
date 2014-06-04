@@ -24,8 +24,6 @@ class TestMoveActionSimple(TestCase):
     def setUp(self):
         """
           B1   B2
-         /
-        E1
         """
 
         self.superuser = User.objects.create_superuser(
@@ -35,10 +33,6 @@ class TestMoveActionSimple(TestCase):
             'title': 'b1', 'slug': 'b1'})
         self.blog2 = Blog.objects.create(**{
             'title': 'b2', 'slug': 'b2'})
-        self.e1 = BlogEntryPage.objects.create(
-            title='e1',
-            blog=self.blog1,
-            short_description='e1')
         self.CAT1_NAME = "cat1"
 
     def assert_one_category(self, blog):
@@ -48,7 +42,7 @@ class TestMoveActionSimple(TestCase):
             "Blog %s should have only one category")
 
     def assert_entry_tied_to_blog(self, e1, blog):
-        return self.assertEqual(
+        self.assertEqual(
             e1.blog.id,
             blog.id,
             'entry should be linked to new blog')
@@ -126,11 +120,29 @@ class TestMoveActionSimple(TestCase):
             name=category_name,
             blog=blog)
 
-    def create_entry(self, blog, title='e1'):
-        return BlogEntryPage.objects.create(
+    def create_entry(self, blog, title='e1', save=True):
+        entry = BlogEntryPage.objects.create(
             title=title,
             blog=blog,
             short_description=title)
+        if save:
+            entry.save()
+        return entry
+
+    def test_simple_move_draft(self):
+        """
+          B1  B2   >   B1  B2
+         /         >      /
+        E1         >     E1
+        """
+        self.e1 = self.create_entry(self.blog1, save=False)
+        self.move_e1_from_b1_to_b2()
+
+        e1 = BlogEntryPage.objects.get(id=self.e1.id)
+        blog2 = Blog.objects.get(id=self.blog2.id)
+
+        self.assert_entry_tied_to_blog(e1, blog2)
+
 
     def test_simple_move(self):
         """
@@ -138,6 +150,7 @@ class TestMoveActionSimple(TestCase):
          /         >      /
         E1         >     E1
         """
+        self.e1 = self.create_entry(self.blog1)
         self.move_e1_from_b1_to_b2()
 
         e1 = BlogEntryPage.objects.get(id=self.e1.id)
@@ -152,6 +165,7 @@ class TestMoveActionSimple(TestCase):
          /  \          >        /  \
         E1 = C1        >       E1 = C1
         """
+        self.e1 = self.create_entry(self.blog1)
         self.cat1 = self.create_category(blog=self.blog1)
         self.e1.categories.add(self.cat1)
         self.move_e1_from_b1_to_b2(mirror_categories=True)
@@ -172,6 +186,7 @@ class TestMoveActionSimple(TestCase):
         E1 = C1        >       E1
         """
 
+        self.e1 = self.create_entry(self.blog1)
         self.cat1 = self.create_category(self.blog1)
 
         self.e1.categories.add(self.cat1)
@@ -192,6 +207,7 @@ class TestMoveActionSimple(TestCase):
          /  \       \     >        /  \
         E1 = C1      C1   >       E1 = C1
         """
+        self.e1 = self.create_entry(self.blog1)
 
         self.b1cat1 = self.create_category(self.blog1)
         self.b1cat2 = self.create_category(self.blog2)
@@ -215,6 +231,7 @@ class TestMoveActionSimple(TestCase):
          /  \       \     >        /  \
         E1 = C1      C1   >       E1 = C1
         """
+        self.e1 = self.create_entry(self.blog1)
 
         self.b1cat1 = self.create_category(self.blog1)
         self.b1cat2 = self.create_category(self.blog2)
@@ -239,6 +256,7 @@ class TestMoveActionSimple(TestCase):
              /  \         /  \       >            / /      \
         E1(e1) = C1  E2(e1) = C1     >    E1(e1-1),E2(e1) = C1
         """
+        self.e1 = self.create_entry(self.blog1)
         self.e2 = self.create_entry(self.blog2)
         self.e1.save()
         self.e2.save()
@@ -280,6 +298,7 @@ class TestMoveActionSimple(TestCase):
         E1(e1) = C1  E2(e1) = C1     >      E1(e1),E2(e1-1) = C1
         """
 
+        self.e1 = self.create_entry(self.blog1)
         self.blog3 = Blog.objects.create(**{
             'title': 'b3', 'slug': 'b3'})
 
@@ -322,6 +341,7 @@ class TestMoveActionSimple(TestCase):
          /  \      >     /  \
         E1 = C1    >    E1 = C1
         """
+        self.e1 = self.create_entry(self.blog1)
         self.cat1 = self.create_category(self.blog1)
         self.e1.categories.add(self.cat1)
 
