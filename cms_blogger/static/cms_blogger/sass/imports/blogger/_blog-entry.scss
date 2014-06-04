@@ -2,6 +2,7 @@
 
 @mixin blogEntry($ns, $container){
     #{$ns}{
+        font-size: 10px;
         .clearfix:after{
             content: "";
             display: table;
@@ -89,6 +90,9 @@
                 h1{
                     line-height: 38px;
                     font-size: 30px;
+                    text-align: left;
+                    text-transform: capitalize;
+                    padding: 0;
                     a{
                         &:hover{
                             text-decoration: none;
@@ -146,6 +150,7 @@
                 text-decoration: none;
                 margin:0;
                 font-size: 14px;
+                white-space: nowrap;
                 @include border-radius(3px);
                 &:hover{
                     background-color:darken($read-more-bg-color, 7%)
@@ -153,20 +158,23 @@
             }
 
             .subtitle{
-                margin:0 0 10px 0;
-                color:$entry-subtitle-color;
+                margin: 0 0 10px 0;
+                color: $entry-subtitle-color;
+                font-size: 13px;
                 .author{
                     color:$entry-text-color;
                 }
             }
             .entry-summary{
-                margin:0 0 30px 0;
+                margin: 0 0 30px 0;
                 text-align: left;
+                font-size: 13px;
+                color: $entry-text-color;
             }
 
             .social{
                 display: block;
-                margin:20px auto 0 auto;
+                margin: 20px auto 0 auto;
                 width: 25px;
             }
         }

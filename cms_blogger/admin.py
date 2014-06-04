@@ -9,7 +9,7 @@ from django.db.models import Q
 from django.http import HttpResponse, HttpResponseNotFound
 from django.shortcuts import get_object_or_404, render_to_response, redirect
 from django.template.context import RequestContext
-from django.utils.html import escapejs
+from django.utils.html import escape
 from django.utils import timezone
 from django.utils.translation import get_language, ugettext_lazy as _
 from django.utils.translation import ungettext
@@ -99,7 +99,7 @@ class BlogAdmin(AdminHelper):
     add_form = BlogAddForm
     change_form = BlogForm
     search_fields = ['title', 'site__name']
-    list_display = ('title', 'slug', 'site')   # , 'mycat')
+    list_display = ('title', 'slug', 'site')
     readonly_in_change_form = ['site', 'location_in_navigation']
     formfield_overrides = {
         models.BooleanField: {'widget': ToggleWidget}
@@ -139,9 +139,6 @@ class BlogAdmin(AdminHelper):
         }),
     )
     prepopulated_fields = {"slug": ("title",)}
-
-#    def mycat(self, obj):
-#        return ', '.join(obj.categories.values_list('name', flat=True))
 
     def _get_nodes(self, request, nodes, node_id, output):
         for node in nodes:
@@ -378,7 +375,7 @@ class BlogAdmin(AdminHelper):
                 '<!DOCTYPE html><html><head><title></title></head><body>'
                 '<script type="text/javascript">opener.closeNavigationPopup'
                 '(window, "%s");</script></body></html>' % (
-                    escapejs(preview)), )
+                    escape(preview)), )
         context = RequestContext(request)
         context.update({
             'title': 'Edit navigation menu',
@@ -439,7 +436,7 @@ class BlogEntryPageAdmin(AdminHelper, PlaceholderAdmin):
     list_editable = ('is_published', )
     custom_changelist_class = BlogEntryChangeList
     list_display = ('__str__', 'slug', 'blog', 'is_published', 'published_at',
-                    'entry_authors')  # , 'mycat')
+                    'entry_authors') 
     list_filter = (('blog', CurrentSiteBlogFilter), )
     search_fields = ('title', 'blog__title')
     actions = ['make_published', 'make_unpublished', 'move_entries']
@@ -496,15 +493,8 @@ class BlogEntryPageAdmin(AdminHelper, PlaceholderAdmin):
 
     )
 
-#    def mycat(self, obj):
-#
-#        from django.utils.safestring import mark_safe
-#        all_cat = set(obj.blog.categories.values_list('name', flat=True))
-#        some_cat = set(obj.categories.values_list('name', flat=True))
-#        aa = (' '.join([x for x in some_cat]) +
-#             " || : "+' '.join([x for x in (all_cat-some_cat)]))
-#        return mark_safe(aa)
-##       return ', '.join(obj.categories.values_list('name', flat=True))
+    class Media:
+        js = ("cms_blogger/js/moment.min.js",)
 
     def get_urls(self):
         urls = super(BlogEntryPageAdmin, self).get_urls()
@@ -586,10 +576,10 @@ class BlogEntryPageAdmin(AdminHelper, PlaceholderAdmin):
     entry_authors.allow_tags = True
 
     def published_at(self, entry):
-        #publication_date
         return (
             '<script type="text/javascript">'
-            'document.write((new Date("%s")).toLocaleString());'
+            'var str_date = (new Date(moment("%s"))).toString();'
+            'document.write(/(.*)GMT|UTC[+-]\d*/g.exec(str_date)[1]);'
             '</script>' % entry.publication_date)
     published_at.allow_tags = True
 
