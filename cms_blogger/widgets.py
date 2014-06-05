@@ -160,6 +160,12 @@ class DateTimeWidget(forms.widgets.TextInput):
         value = super(DateTimeWidget, self).value_from_datadict(
             data, files, name)
         offset_str = data.get('_{name}_tzoffset'.format(name=name))
+        # apparently dateutil throws error when it tries to parse something
+        #   like ' +0500' but it works when parsing ' -0500' and the date
+        #   returned is naive.
+        #   Workaround for this: if no date is set, just don't go any further
+        if not value:
+            return None
         try:
             value_as_date = parser.parse(value + " " + offset_str)
         except:
