@@ -242,7 +242,7 @@ class BlogAdmin(AdminHelper):
 
         post_data = request.POST.copy()
         entries = form.cleaned_data['entries']
-        if not entries.exists():
+        if not entries:
             form = MoveEntriesForm(post_data, entries=qs)
             messages.error(request, "There are no entries selected.")
             return response(form)
