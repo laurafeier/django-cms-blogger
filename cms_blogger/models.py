@@ -623,6 +623,9 @@ class RiverPlugin(CMSPlugin):
         ).distinct().order_by('-publication_date', 'slug')
         return qs
 
+    def __unicode__(self):
+        return self.title
+
 
 @receiver(signals.post_save, sender=BlogEntryPage)
 def mark_draft(instance, **kwargs):
