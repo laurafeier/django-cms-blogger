@@ -35,11 +35,13 @@ def paginate_queryset(queryset, page, max_per_page):
 
 def resize_image(file_like_object):
     """
-    Resizes an image file based on the with and aspect ration settings and
-    returns a django like image that is used to be passed to an file field.
+    Resizes an image file based on the width and aspect ratio settings;
+    Returns a django like image that can be passed to a
+        django file/image field.
     """
 
     def _to_django_file(pil_image, filename):
+        # convert PIL Image to a django content file
         thumb_io = StringIO.StringIO()
         setattr(thumb_io, 'name', filename)
         pil_image.save(thumb_io)
