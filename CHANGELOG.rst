@@ -1,6 +1,31 @@
 CHANGELOG
 =========
 
+Revision cfd3bf4 (05.06.2014, 11:59 UTC)
+----------------------------------------
+
+* LUN-1611
+
+  * fix blog entries pagination display issues
+
+* LUN-1612
+
+  * , LUN-1613, LUN-1614: fix display issues on blog entry
+
+* LUN-1613
+
+  * LUN-1612, LUN-1613, LUN-1614: fix display issues on blog entry
+
+* LUN-1614
+
+  * LUN-1612, LUN-1613, LUN-1614: fix display issues on blog entry
+
+* LUN-1620
+
+  * Show title instead of description, remove date in entry footer
+
+No other commits.
+
 Revision 88c7b30 (03.06.2014, 10:37 UTC)
 ----------------------------------------
 
