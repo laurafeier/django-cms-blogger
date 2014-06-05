@@ -2,14 +2,18 @@ from django.test import TestCase
 from django.contrib.auth.models import User, Permission
 from django.contrib.sites.models import Site
 from django.contrib.admin.util import flatten_fieldsets
+from django.contrib.admin.sites import AdminSite
 from django.core.urlresolvers import reverse
 from django.template import Template
+from django.test.client import RequestFactory
 from dateutil import tz, parser
 
 from cms_blogger.models import *
 from cms_blogger import admin, forms
 from cms.api import create_page, add_plugin
 from cms.tests.menu import BaseMenuTest
+
+from cms_blogger.admin import BlogEntryPageAdmin
 
 from cms_layouts.models import Layout
 from cms_layouts.layout_response import LayoutResponse
@@ -20,15 +24,30 @@ import urlparse
 import urllib
 
 
-class TestMoveActionSimple(TestCase):
+class TestMoveAction(TestCase):
+    def super_user(self):
+        self.superuser = User.objects.create_superuser(
+            'superuser', 'admin@cms_blogger.com', 'secret')
+        self.superuser.is_active = True
+        self.superuser.is_staff = True
+        self.superuser.user_permissions = Permission.objects.all()
+        self.superuser.save()
+        self.client.login(username='superuser', password='secret')
+
+    def regular_user(self):
+        self.regularuser = User.objects.create_superuser(
+            'regular', 'admin@cms_blogger.com', 'secret')
+        self.regularuser.is_superuser = False
+        self.regularuser.is_active = True
+        self.regularuser.is_staff = True
+        self.regularuser.user_permissions = Permission.objects.all()
+        self.regularuser.save()
+        self.client.login(username='regular', password='secret')
+
     def setUp(self):
         """
           B1   B2
         """
-
-        self.superuser = User.objects.create_superuser(
-            'admin', 'admin@cms_blogger.com', 'secret')
-        self.client.login(username='admin', password='secret')
         self.blog1 = Blog.objects.create(**{
             'title': 'b1', 'slug': 'b1'})
         self.blog2 = Blog.objects.create(**{
@@ -81,7 +100,7 @@ class TestMoveActionSimple(TestCase):
         url = '%s?%s' % (
             reverse('admin:cms_blogger-move-entries'),
             urllib.urlencode({x.id: "" for x in entries}))
-        return self.client.post(url, data)
+        return self.client.post(url, data, follow=True)
 
     def create_category(self, blog, category_name=None):
         category_name = category_name or self.CAT1_NAME
@@ -104,6 +123,7 @@ class TestMoveActionSimple(TestCase):
          /         >      /
         E1         >     E1
         """
+        self.super_user()
         self.e1 = self.create_entry(self.blog1, save=False)
         self.move_entries(self.blog2, [self.e1])
 
@@ -118,6 +138,7 @@ class TestMoveActionSimple(TestCase):
          /         >      /
         E1         >     E1
         """
+        self.super_user()
         self.e1 = self.create_entry(self.blog1)
         self.move_entries(self.blog2, [self.e1])
 
@@ -133,6 +154,7 @@ class TestMoveActionSimple(TestCase):
          /  \          >        /  \
         E1 = C1        >       E1 = C1
         """
+        self.super_user()
         self.e1 = self.create_entry(self.blog1)
         self.cat1 = self.create_category(blog=self.blog1)
         self.e1.categories.add(self.cat1)
@@ -153,7 +175,7 @@ class TestMoveActionSimple(TestCase):
          /  \          >        /
         E1 = C1        >       E1
         """
-
+        self.super_user()
         self.e1 = self.create_entry(self.blog1)
         self.cat1 = self.create_category(self.blog1)
 
@@ -175,6 +197,8 @@ class TestMoveActionSimple(TestCase):
          /  \       \     >        /  \
         E1 = C1      C1   >       E1 = C1
         """
+
+        self.super_user()
         self.e1 = self.create_entry(self.blog1)
 
         self.b1cat1 = self.create_category(self.blog1)
@@ -199,6 +223,7 @@ class TestMoveActionSimple(TestCase):
          /  \       \     >        /  \
         E1 = C1      C1   >       E1 = C1
         """
+        self.super_user()
         self.e1 = self.create_entry(self.blog1)
 
         self.b1cat1 = self.create_category(self.blog1)
@@ -224,6 +249,8 @@ class TestMoveActionSimple(TestCase):
              /  \         /  \       >            / /      \
         E1(e1) = C1  E2(e1) = C1     >    E1(e1-1),E2(e1) = C1
         """
+
+        self.super_user()
         self.e1 = self.create_entry(self.blog1)
         self.e2 = self.create_entry(self.blog2)
         self.e1.save()
@@ -266,6 +293,7 @@ class TestMoveActionSimple(TestCase):
         E1(e1) = C1  E2(e1) = C1     >      E1(e1),E2(e1-1) = C1
         """
 
+        self.super_user()
         self.e1 = self.create_entry(self.blog1)
         self.blog3 = Blog.objects.create(**{
             'title': 'b3', 'slug': 'b3'})
@@ -309,6 +337,7 @@ class TestMoveActionSimple(TestCase):
          /  \      >     /  \
         E1 = C1    >    E1 = C1
         """
+        self.super_user()
         self.e1 = self.create_entry(self.blog1)
         self.cat1 = self.create_category(self.blog1)
         self.e1.categories.add(self.cat1)
@@ -327,6 +356,7 @@ class TestMoveActionSimple(TestCase):
              /         /     >  warn user he's attempting to move
         E1(e1)    E2(e1)     >  an entry to the same blog
         """
+        self.super_user()
         self.e1 = self.create_entry(self.blog1)
         self.e2 = self.create_entry(self.blog2)
 
@@ -342,10 +372,40 @@ class TestMoveActionSimple(TestCase):
         self.assert_entry_tied_to_blog(e1, blog1)
 
     def test_move_nothing(self):
+        self.super_user()
         response = self.move_entries(self.blog2, [])
         messages = [m.message for m in response.context['messages']]
         self.assertTrue(messages)
         self.assertIn("There are no entries selected.", messages[0])
+
+    def test_attempt_move_by_sneaky_regularuser(self):
+        self.regular_user()
+        response = self.move_entries(self.blog2, [])
+        messages = [m.message for m in response.context['messages']]
+        self.assertTrue(messages)
+        self.assertIn(
+            "Only superusers are allowed to move blog entries",
+            messages[0])
+
+    def test_move_action_exists_in_dropdown(self):
+        self.super_user()
+        response = self.move_entries(self.blog2, [])
+        request = RequestFactory().get('/admin/cms_blogger/blogentrypage/')
+        request.user = self.superuser
+
+        admin = BlogEntryPageAdmin(BlogEntryPage, AdminSite())
+        actions = admin.get_actions(request)
+        self.assertIn("move_entries", actions.keys())
+
+    def test_move_action_does_not_exist_in_dropdown(self):
+        self.regular_user()
+        response = self.move_entries(self.blog2, [])
+        request = RequestFactory().get('/admin/cms_blogger/blogentrypage/')
+        request.user = self.regularuser
+
+        admin = BlogEntryPageAdmin(BlogEntryPage, AdminSite())
+        actions = admin.get_actions(request)
+        self.assertNotIn("move_entries", actions.keys())
 
 
 class TestBlogModel(TestCase):

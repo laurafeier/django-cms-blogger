@@ -225,6 +225,12 @@ class BlogAdmin(AdminHelper):
         return url_patterns
 
     def move_entries(self, request):
+        if not request.user.is_superuser:
+            messages.error(
+                request, "Only superusers are allowed to move blog entries")
+            return redirect(
+                reverse('admin:cms_blogger_blogentrypage_changelist'))
+
         def response(form):
             return render_to_response(
                 "admin/cms_blogger/blog/move_entries.html",
@@ -570,6 +576,12 @@ class BlogEntryPageAdmin(AdminHelper, PlaceholderAdmin):
     def entry_authors(self, entry):
         return entry.authors_display_name
     entry_authors.allow_tags = True
+
+    def get_actions(self, request):
+        actions = super(BlogEntryPageAdmin, self).get_actions(request)
+        if not request.user.is_superuser:
+            del actions['move_entries']
+        return actions
 
     def published_at(self, entry):
         return (
