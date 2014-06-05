@@ -1,5 +1,5 @@
 {% if entry.poster_image %}
-<div class="entry-image"><img src='{{entry.poster_image.url}}' />
+<div class="entry-image-container"><img class="entry-image" src='{{entry.poster_image.url}}' />
     {% if entry.caption or entry.credit %}
     <div class="img-details" style="width:100%">
         {% if entry.caption %}

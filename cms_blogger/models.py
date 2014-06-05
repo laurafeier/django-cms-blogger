@@ -534,7 +534,7 @@ class BlogEntryPage(getCMSContentModel(content_attr='content'),
         return None
 
     def delete(self, *args, **kwargs):
-        path = self.poster_image.name if self.poster_image else None
+        path = self.poster_image.name
         super(BlogEntryPage, self).delete(*args, **kwargs)
         if path:
             self.poster_image.storage.delete(path)
@@ -545,9 +545,11 @@ class BlogEntryPage(getCMSContentModel(content_attr='content'),
                 blog=self.blog_id, draft_id=None)
             self.slug = get_unique_slug(self, self.title, unique_qs)
         super(BlogEntryPage, self).save(*args, **kwargs)
-        if hasattr(self, '_old_poster_image'):
-            old_poster_image_path = self._old_poster_image
-            self.poster_image.storage.delete(old_poster_image_path)
+        # _old_poster_image attribute is available only when a new image
+        #   was uploaded for the poster image field. This attribute holds the
+        #   full file name for the file that's going to be replaced.
+        if getattr(self, '_old_poster_image', ''):
+            self.poster_image.storage.delete(self._old_poster_image)
 
     class Meta:
         verbose_name = "blog entry"
@@ -620,6 +622,9 @@ class RiverPlugin(CMSPlugin):
             blog__site=Site.objects.get_current()
         ).distinct().order_by('-publication_date', 'slug')
         return qs
+
+    def __unicode__(self):
+        return self.title
 
 
 @receiver(signals.post_save, sender=BlogEntryPage)

@@ -5,9 +5,10 @@
       <tr>
          <td class="prev">
             {% if page.has_previous %}
-               <span class="page previous">
-               <a href="?{{ page_param_name|default:'page' }}={{ page.previous_page_number }}{{extra_params|default:''}}"><img src="{{STATIC_URL}}cms_blogger/img/arrow-left.png">newer posts</a>
-               </span>
+               <a class="page previous" href="?{{ page_param_name|default:'page' }}={{ page.previous_page_number }}{{extra_params|default:''}}">
+                  <img src="{{STATIC_URL}}cms_blogger/img/arrow-left.png">
+                  <span class="text">newer posts</span>
+               </a>
             {% endif %}
          </td>
          <td>
@@ -33,7 +34,10 @@
             </td>
          <td class="next">
             {% if page.has_next %}
-               <span class="page next"><a href="?{{ page_param_name|default:'page' }}={{ page.next_page_number }}{{extra_params|default:''}}">older posts<img src="{{STATIC_URL}}cms_blogger/img/arrow-right.png"></a></span>
+               <a class="page next" href="?{{ page_param_name|default:'page' }}={{ page.next_page_number }}{{extra_params|default:''}}">
+                  <span class="text">older posts</span>
+                  <img src="{{STATIC_URL}}cms_blogger/img/arrow-right.png">
+               </a>
             {% endif %}
          </td>
       </tr>

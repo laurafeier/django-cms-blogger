@@ -29,6 +29,15 @@
             a{
                 color: $entry-date-color;
                 white-space: nowrap;
+                 @media (max-width:480px){
+                    .text{
+                        white-space: normal;
+                        display: inline-block;
+                        vertical-align: middle;
+                        line-height: 20px;
+                        width: 70%;
+                    }
+                }
             }
             td{
                 width: 50%;
