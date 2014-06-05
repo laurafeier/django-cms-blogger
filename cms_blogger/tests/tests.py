@@ -70,65 +70,17 @@ class TestMoveActionSimple(TestCase):
             "Blog %s should have no categories" % (
                 blog.title))
 
-    def move_e1_e2_to_b3(self, mirror_categories=True):
+    def move_entries(self, destination_blog, entries, mirror_categories=True):
         data = {
             'apply': 'Move',
-            'entries': [self.e1.id, self.e2.id],
-            'destination_blog': self.blog3.id}
+            'entries': [x.id for x in entries],
+            'destination_blog': destination_blog.id}
         if mirror_categories:
             data.update({'mirror_categories': 'on'})
 
         url = '%s?%s' % (
             reverse('admin:cms_blogger-move-entries'),
-            urllib.urlencode({
-                self.e1.id: "",
-                self.e2.id: "",
-            }))
-        return self.client.post(url, data)
-
-    def move_e1_e2_to_b2(self, mirror_categories=True):
-        data = {
-            'apply': 'Move',
-            'entries': [self.e1.id, self.e2.id],
-            'destination_blog': self.blog2.id}
-        if mirror_categories:
-            data.update({'mirror_categories': 'on'})
-
-        url = '%s?%s' % (
-            reverse('admin:cms_blogger-move-entries'),
-            urllib.urlencode({
-                self.e1.id: "",
-                self.e2.id: "",
-            }))
-        return self.client.post(url, data)
-
-
-    def move_e1_from_b1_to_b1(self, mirror_categories=True):
-        data = {
-            'apply': 'Move',
-            'entries': [self.e1.id, ],
-            'destination_blog': self.blog1.id}
-        if mirror_categories:
-            data.update({'mirror_categories': 'on'})
-
-        url = '%s?%s' % (
-            reverse('admin:cms_blogger-move-entries'),
-            urllib.urlencode({
-                self.e1.id: "",
-            }))
-        return self.client.post(url, data)
-
-    def move_e1_from_b1_to_b2(self, mirror_categories=True):
-        data = {
-            'apply': 'Move',
-            'entries': self.e1.id,
-            'destination_blog': self.blog2.id}
-        if mirror_categories:
-            data.update({'mirror_categories': 'on'})
-
-        url = '%s?%s' % (
-            reverse('admin:cms_blogger-move-entries'),
-            urllib.urlencode({self.e1.id: ""}))
+            urllib.urlencode({x.id: "" for x in entries}))
         return self.client.post(url, data)
 
     def create_category(self, blog, category_name=None):
@@ -153,13 +105,12 @@ class TestMoveActionSimple(TestCase):
         E1         >     E1
         """
         self.e1 = self.create_entry(self.blog1, save=False)
-        self.move_e1_from_b1_to_b2()
+        self.move_entries(self.blog2, [self.e1])
 
         e1 = BlogEntryPage.objects.get(id=self.e1.id)
         blog2 = Blog.objects.get(id=self.blog2.id)
 
         self.assert_entry_tied_to_blog(e1, blog2)
-
 
     def test_simple_move(self):
         """
@@ -168,7 +119,7 @@ class TestMoveActionSimple(TestCase):
         E1         >     E1
         """
         self.e1 = self.create_entry(self.blog1)
-        self.move_e1_from_b1_to_b2()
+        self.move_entries(self.blog2, [self.e1])
 
         e1 = BlogEntryPage.objects.get(id=self.e1.id)
         blog2 = Blog.objects.get(id=self.blog2.id)
@@ -185,7 +136,7 @@ class TestMoveActionSimple(TestCase):
         self.e1 = self.create_entry(self.blog1)
         self.cat1 = self.create_category(blog=self.blog1)
         self.e1.categories.add(self.cat1)
-        self.move_e1_from_b1_to_b2(mirror_categories=True)
+        self.move_entries(self.blog2, [self.e1, ])
 
         e1 = BlogEntryPage.objects.get(id=self.e1.id)
         blog1 = Blog.objects.get(id=self.blog1.id)
@@ -207,7 +158,7 @@ class TestMoveActionSimple(TestCase):
         self.cat1 = self.create_category(self.blog1)
 
         self.e1.categories.add(self.cat1)
-        self.move_e1_from_b1_to_b2(mirror_categories=False)
+        self.move_entries(self.blog2, [self.e1, ], mirror_categories=False)
 
         e1 = BlogEntryPage.objects.get(id=self.e1.id)
         blog1 = Blog.objects.get(id=self.blog1.id)
@@ -230,7 +181,7 @@ class TestMoveActionSimple(TestCase):
         self.b1cat2 = self.create_category(self.blog2)
         self.e1.categories.add(self.b1cat1)
 
-        self.move_e1_from_b1_to_b2(mirror_categories=False)
+        self.move_entries(self.blog2, [self.e1, ], mirror_categories=False)
 
         e1 = BlogEntryPage.objects.get(id=self.e1.id)
         blog1 = Blog.objects.get(id=self.blog1.id)
@@ -254,7 +205,7 @@ class TestMoveActionSimple(TestCase):
         self.b1cat2 = self.create_category(self.blog2)
         self.e1.categories.add(self.b1cat1)
 
-        self.move_e1_from_b1_to_b2(mirror_categories=True)
+        self.move_entries(self.blog2, [self.e1, ])
 
         e1 = BlogEntryPage.objects.get(id=self.e1.id)
         blog1 = Blog.objects.get(id=self.blog1.id)
@@ -287,7 +238,7 @@ class TestMoveActionSimple(TestCase):
         self.e1.save()
         self.e2.save()
 
-        self.move_e1_from_b1_to_b2()
+        self.move_entries(self.blog2, [self.e1, ])
 
         e1 = BlogEntryPage.objects.get(id=self.e1.id)
         e2 = BlogEntryPage.objects.get(id=self.e2.id)
@@ -330,7 +281,7 @@ class TestMoveActionSimple(TestCase):
         self.e1.save()
         self.e2.save()
 
-        self.move_e1_e2_to_b3()
+        self.move_entries(self.blog3, [self.e1, self.e2])
 
         e1 = BlogEntryPage.objects.get(id=self.e1.id)
         e2 = BlogEntryPage.objects.get(id=self.e2.id)
@@ -362,7 +313,8 @@ class TestMoveActionSimple(TestCase):
         self.cat1 = self.create_category(self.blog1)
         self.e1.categories.add(self.cat1)
 
-        response = self.move_e1_from_b1_to_b1(mirror_categories=True)
+        response = self.move_entries(self.blog1, [self.e1, ])
+
         messages = [m.message for m in response.context['messages']]
 
         self.assertTrue(messages)
@@ -371,14 +323,14 @@ class TestMoveActionSimple(TestCase):
     def test_attempt_move_to_same_blog(self):
         """
         move both to B2
-              B1        B2   >  
-             /         /     >  warn user he's attempting to move 
+              B1        B2   >
+             /         /     >  warn user he's attempting to move
         E1(e1)    E2(e1)     >  an entry to the same blog
         """
         self.e1 = self.create_entry(self.blog1)
         self.e2 = self.create_entry(self.blog2)
 
-        response = self.move_e1_e2_to_b2()
+        response = self.move_entries(self.blog2, [self.e1, self.e2])
         messages = [m.message for m in response.context['messages']]
         e1 = BlogEntryPage.objects.get(id=self.e1.id)
         blog1 = Blog.objects.get(id=self.blog1.id)
@@ -388,6 +340,7 @@ class TestMoveActionSimple(TestCase):
 
         #test it didn't move
         self.assert_entry_tied_to_blog(e1, blog1)
+
 
 class TestBlogModel(TestCase):
 

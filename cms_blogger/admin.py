@@ -432,7 +432,7 @@ class BlogEntryPageAdmin(AdminHelper, PlaceholderAdmin):
     list_editable = ('is_published', )
     custom_changelist_class = BlogEntryChangeList
     list_display = ('__str__', 'slug', 'blog', 'is_published', 'published_at',
-                    'entry_authors') 
+                    'entry_authors')
     list_filter = (('blog', CurrentSiteBlogFilter), )
     search_fields = ('title', 'blog__title')
     actions = ['make_published', 'make_unpublished', 'move_entries']
