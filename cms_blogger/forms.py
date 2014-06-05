@@ -617,14 +617,27 @@ class BlogRiverForm(forms.ModelForm):
 
 
 class MoveEntriesForm(forms.Form):
-    mirror_categories = forms.BooleanField(label="Mirror inexistent categories in destination blog", initial=True, required=False)
-    entries = forms.ModelMultipleChoiceField(queryset=EmptyQuerySet(), initial=EmptyQuerySet(), widget=forms.CheckboxSelectMultiple(), label="The following blog entries will be moved to the destination blog", required=False)
+    mirror_categories = forms.BooleanField(
+        label="Mirror inexistent categories in destination blog",
+        initial=True,
+        required=False)
+    entries = forms.ModelMultipleChoiceField(
+        queryset=EmptyQuerySet(),
+        initial=EmptyQuerySet(),
+        widget=forms.CheckboxSelectMultiple(),
+        label="The following blog entries will be "
+              "moved to the destination blog",
+        required=False)
+
     def __init__(self, *args, **kwargs):
         entries = kwargs.pop('entries', EmptyQuerySet())
         checked = kwargs.pop('checked', EmptyQuerySet())
         destination_blog = kwargs.pop('destination_blog', None)
         super(MoveEntriesForm, self).__init__(*args, **kwargs)
-        self.fields['destination_blog'] = forms.ModelChoiceField(Blog.objects.filter(site=Site.objects.get_current()),required=True)
+        self.fields['destination_blog'] = forms.ModelChoiceField(
+            Blog.objects.filter(
+                site=Site.objects.get_current()),
+                required=True)
         self.fields['destination_blog'].initial = destination_blog
 
         self.fields['entries'].queryset = entries

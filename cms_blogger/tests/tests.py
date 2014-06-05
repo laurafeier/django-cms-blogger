@@ -341,6 +341,12 @@ class TestMoveActionSimple(TestCase):
         #test it didn't move
         self.assert_entry_tied_to_blog(e1, blog1)
 
+    def test_move_nothing(self):
+        response = self.move_entries(self.blog2, [])
+        messages = [m.message for m in response.context['messages']]
+        self.assertTrue(messages)
+        self.assertIn("There are no entries selected.", messages[0])
+
 
 class TestBlogModel(TestCase):
 
