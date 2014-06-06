@@ -1,0 +1,27 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+{% load admin_urls %}                                                           
+{% load url from future %}                                                      
+
+{% block breadcrumbs %}                                                         
+    <div class="breadcrumbs">                                                       
+        <a href="{% url 'admin:index' %}">{% trans 'Home' %}</a>                        
+        &rsaquo;
+        <a href="{% url 'admin:index' %}cms_blogger">{% trans 'Cms_blogger' %}</a> 
+        &rsaquo;
+        <a href="{% url 'admin:cms_blogger_blogentrypage_changelist' %}">{% trans 'Blog entries' %}</a>
+        &rsaquo;
+        Move entries
+    </div> 
+{% endblock %}                                                                  
+                 
+
+{% block content %}
+
+    <form method="post" action="" > {% csrf_token %}
+        {{ move_form.as_p }}
+
+        <input type="submit" name="apply" value="Move" />
+
+    </form>
+{% endblock content %}

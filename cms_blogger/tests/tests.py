@@ -2,8 +2,10 @@ from django.test import TestCase
 from django.contrib.auth.models import User, Permission
 from django.contrib.sites.models import Site
 from django.contrib.admin.util import flatten_fieldsets
+from django.contrib.admin.sites import AdminSite
 from django.core.urlresolvers import reverse
 from django.template import Template
+from django.test.client import RequestFactory
 from dateutil import tz, parser
 
 from cms_blogger.models import *
@@ -11,12 +13,399 @@ from cms_blogger import admin, forms
 from cms.api import create_page, add_plugin
 from cms.tests.menu import BaseMenuTest
 
+from cms_blogger.admin import BlogEntryPageAdmin
+
 from cms_layouts.models import Layout
 from cms_layouts.layout_response import LayoutResponse
 from cms_layouts.slot_finder import get_fixed_section_slots
 
 import xml.etree.ElementTree
 import urlparse
+import urllib
+
+
+class TestMoveAction(TestCase):
+    def super_user(self):
+        self.superuser = User.objects.create_superuser(
+            'superuser', 'admin@cms_blogger.com', 'secret')
+        self.superuser.is_active = True
+        self.superuser.is_staff = True
+        self.superuser.user_permissions = Permission.objects.all()
+        self.superuser.save()
+        self.client.login(username='superuser', password='secret')
+
+    def regular_user(self):
+        self.regularuser = User.objects.create_superuser(
+            'regular', 'admin@cms_blogger.com', 'secret')
+        self.regularuser.is_superuser = False
+        self.regularuser.is_active = True
+        self.regularuser.is_staff = True
+        self.regularuser.user_permissions = Permission.objects.all()
+        self.regularuser.save()
+        self.client.login(username='regular', password='secret')
+
+    def setUp(self):
+        """
+          B1   B2
+        """
+        self.blog1 = Blog.objects.create(**{
+            'title': 'b1', 'slug': 'b1'})
+        self.blog2 = Blog.objects.create(**{
+            'title': 'b2', 'slug': 'b2'})
+        self.CAT1_NAME = "cat1"
+
+    def assert_one_category(self, blog):
+        self.assertEquals(
+            1,
+            blog.categories.count(),
+            "Blog %s should have only one category")
+
+    def assert_entry_tied_to_blog(self, e1, blog):
+        self.assertEqual(
+            e1.blog.id,
+            blog.id,
+            'entry should be linked to new blog')
+
+    def assert_entry_has_category(self, entry, category_name):
+        try:
+            entry.categories.get(name=category_name)
+        except:
+            self.fail("Entry %s should have category %s" % (
+                entry.title,
+                category_name))
+
+    def assert_blog_has_category(self, blog, category_name):
+        try:
+            blog.categories.get(name=category_name)
+        except:
+            self.fail("Blog %s should have category %s" % (
+                blog.title,
+                category_name))
+
+    def assert_blog_has_no_category(self, blog):
+        self.assertEquals(
+            False,
+            blog.categories.exists(),
+            "Blog %s should have no categories" % (
+                blog.title))
+
+    def move_entries(self, destination_blog, entries, mirror_categories=True):
+        data = {
+            'apply': 'Move',
+            'entries': [x.id for x in entries],
+            'destination_blog': destination_blog.id}
+        if mirror_categories:
+            data.update({'mirror_categories': 'on'})
+
+        url = '%s?%s' % (
+            reverse('admin:cms_blogger-move-entries'),
+            urllib.urlencode({x.id: "" for x in entries}))
+        return self.client.post(url, data, follow=True)
+
+    def create_category(self, blog, category_name=None):
+        category_name = category_name or self.CAT1_NAME
+        return BlogCategory.objects.create(
+            name=category_name,
+            blog=blog)
+
+    def create_entry(self, blog, title='e1', save=True):
+        entry = BlogEntryPage.objects.create(
+            title=title,
+            blog=blog,
+            short_description=title)
+        if save:
+            entry.save()
+        return entry
+
+    def test_simple_move_draft(self):
+        """
+          B1  B2   >   B1  B2
+         /         >      /
+        E1         >     E1
+        """
+        self.super_user()
+        self.e1 = self.create_entry(self.blog1, save=False)
+        self.move_entries(self.blog2, [self.e1])
+
+        e1 = BlogEntryPage.objects.get(id=self.e1.id)
+        blog2 = Blog.objects.get(id=self.blog2.id)
+
+        self.assert_entry_tied_to_blog(e1, blog2)
+
+    def test_simple_move(self):
+        """
+          B1  B2   >   B1  B2
+         /         >      /
+        E1         >     E1
+        """
+        self.super_user()
+        self.e1 = self.create_entry(self.blog1)
+        self.move_entries(self.blog2, [self.e1])
+
+        e1 = BlogEntryPage.objects.get(id=self.e1.id)
+        blog2 = Blog.objects.get(id=self.blog2.id)
+
+        self.assert_entry_tied_to_blog(e1, blog2)
+
+    def test_move_blogentry_mirror_category(self):
+        """
+        mirror category
+          B1      B2   >   B1    B2
+         /  \          >        /  \
+        E1 = C1        >       E1 = C1
+        """
+        self.super_user()
+        self.e1 = self.create_entry(self.blog1)
+        self.cat1 = self.create_category(blog=self.blog1)
+        self.e1.categories.add(self.cat1)
+        self.move_entries(self.blog2, [self.e1, ])
+
+        e1 = BlogEntryPage.objects.get(id=self.e1.id)
+        blog1 = Blog.objects.get(id=self.blog1.id)
+        blog2 = Blog.objects.get(id=self.blog2.id)
+
+        self.assert_entry_tied_to_blog(e1, blog2)
+        self.assert_blog_has_no_category(blog1)
+        self.assert_blog_has_category(blog2, self.CAT1_NAME)
+
+    def test_move_blogentry_no_mirror_category(self):
+        """
+        no category mirroring
+          B1      B2   >   B1    B2
+         /  \          >        /
+        E1 = C1        >       E1
+        """
+        self.super_user()
+        self.e1 = self.create_entry(self.blog1)
+        self.cat1 = self.create_category(self.blog1)
+
+        self.e1.categories.add(self.cat1)
+        self.move_entries(self.blog2, [self.e1, ], mirror_categories=False)
+
+        e1 = BlogEntryPage.objects.get(id=self.e1.id)
+        blog1 = Blog.objects.get(id=self.blog1.id)
+        blog2 = Blog.objects.get(id=self.blog2.id)
+
+        self.assert_entry_tied_to_blog(e1, blog2)
+        self.assert_blog_has_no_category(blog2)
+        self.assert_blog_has_no_category(blog1)
+
+    def test_move_blogentry_no_mirror_already_existing_category(self):
+        """
+        no category mirroring
+          B1      B2      >   B1    B2
+         /  \       \     >        /  \
+        E1 = C1      C1   >       E1 = C1
+        """
+
+        self.super_user()
+        self.e1 = self.create_entry(self.blog1)
+
+        self.b1cat1 = self.create_category(self.blog1)
+        self.b1cat2 = self.create_category(self.blog2)
+        self.e1.categories.add(self.b1cat1)
+
+        self.move_entries(self.blog2, [self.e1, ], mirror_categories=False)
+
+        e1 = BlogEntryPage.objects.get(id=self.e1.id)
+        blog1 = Blog.objects.get(id=self.blog1.id)
+        blog2 = Blog.objects.get(id=self.blog2.id)
+
+        self.assert_entry_tied_to_blog(e1, blog2)
+        self.assert_entry_has_category(e1, self.CAT1_NAME)
+        self.assert_blog_has_category(blog2, self.CAT1_NAME)
+        self.assert_blog_has_no_category(blog1)
+
+    def test_move_blogentry_w_mirror_and_already_existing_category(self):
+        """
+        mirror category
+          B1      B2      >   B1    B2
+         /  \       \     >        /  \
+        E1 = C1      C1   >       E1 = C1
+        """
+        self.super_user()
+        self.e1 = self.create_entry(self.blog1)
+
+        self.b1cat1 = self.create_category(self.blog1)
+        self.b1cat2 = self.create_category(self.blog2)
+        self.e1.categories.add(self.b1cat1)
+
+        self.move_entries(self.blog2, [self.e1, ])
+
+        e1 = BlogEntryPage.objects.get(id=self.e1.id)
+        blog1 = Blog.objects.get(id=self.blog1.id)
+        blog2 = Blog.objects.get(id=self.blog2.id)
+
+        self.assert_entry_tied_to_blog(e1, blog2)
+        self.assert_entry_has_category(e1, self.CAT1_NAME)
+        self.assert_blog_has_category(blog2, self.CAT1_NAME)
+        self.assert_one_category(blog2)
+        self.assert_blog_has_no_category(blog1)
+
+    def test_entry_slug_collision1(self):
+        """
+        entries with same title
+              B1           B2        >    B1       B2......
+             /  \         /  \       >            / /      \
+        E1(e1) = C1  E2(e1) = C1     >    E1(e1-1),E2(e1) = C1
+        """
+
+        self.super_user()
+        self.e1 = self.create_entry(self.blog1)
+        self.e2 = self.create_entry(self.blog2)
+        self.e1.save()
+        self.e2.save()
+
+        self.cat1 = self.create_category(self.blog1)
+        self.e1.categories.add(self.cat1)
+
+        self.cat2 = self.create_category(self.blog2)
+        self.e2.categories.add(self.cat2)
+
+        self.e1.save()
+        self.e2.save()
+
+        self.move_entries(self.blog2, [self.e1, ])
+
+        e1 = BlogEntryPage.objects.get(id=self.e1.id)
+        e2 = BlogEntryPage.objects.get(id=self.e2.id)
+        blog1 = Blog.objects.get(id=self.blog1.id)
+        blog2 = Blog.objects.get(id=self.blog2.id)
+
+        self.assert_entry_tied_to_blog(e1, blog2)
+        self.assert_entry_tied_to_blog(e2, blog2)
+        self.assert_entry_has_category(e1, self.CAT1_NAME)
+        self.assert_entry_has_category(e2, self.CAT1_NAME)
+        self.assertNotEqual(
+            e1.slug,
+            e2.slug,
+            "Entries should have different slugs "
+            "since they are in the same blog")
+        self.assert_one_category(blog2)
+        self.assert_blog_has_category(blog2, self.CAT1_NAME)
+        self.assert_blog_has_no_category(blog1)
+
+    def test_entry_slug_collision2(self):
+        """
+        entries with same title
+              B1           B2    B3  >  B1 B2      B3........
+             /  \         /  \       >            / /        \
+        E1(e1) = C1  E2(e1) = C1     >      E1(e1),E2(e1-1) = C1
+        """
+
+        self.super_user()
+        self.e1 = self.create_entry(self.blog1)
+        self.blog3 = Blog.objects.create(**{
+            'title': 'b3', 'slug': 'b3'})
+
+        self.e2 = self.create_entry(self.blog2)
+
+        self.cat1 = self.create_category(self.blog1)
+        self.e1.categories.add(self.cat1)
+
+        self.cat2 = self.create_category(self.blog2)
+        self.e2.categories.add(self.cat2)
+
+        self.e1.save()
+        self.e2.save()
+
+        self.move_entries(self.blog3, [self.e1, self.e2])
+
+        e1 = BlogEntryPage.objects.get(id=self.e1.id)
+        e2 = BlogEntryPage.objects.get(id=self.e2.id)
+        blog1 = Blog.objects.get(id=self.blog1.id)
+        blog2 = Blog.objects.get(id=self.blog2.id)
+        blog3 = Blog.objects.get(id=self.blog3.id)
+
+        self.assert_entry_tied_to_blog(e1, blog3)
+        self.assert_entry_tied_to_blog(e2, blog3)
+        self.assert_entry_has_category(e1, self.CAT1_NAME)
+        self.assert_entry_has_category(e2, self.CAT1_NAME)
+        self.assertNotEqual(
+            e1.slug,
+            e2.slug,
+            "Entries should have different slugs "
+            "since they are in the same blog")
+        self.assert_one_category(blog3)
+        self.assert_blog_has_category(blog3, self.CAT1_NAME)
+        self.assert_blog_has_no_category(blog1)
+        self.assert_blog_has_no_category(blog2)
+
+    def test_move_to_same(self):
+        """
+          B1       >      B1
+         /  \      >     /  \
+        E1 = C1    >    E1 = C1
+        """
+        self.super_user()
+        self.e1 = self.create_entry(self.blog1)
+        self.cat1 = self.create_category(self.blog1)
+        self.e1.categories.add(self.cat1)
+
+        response = self.move_entries(self.blog1, [self.e1, ])
+
+        messages = [m.message for m in response.context['messages']]
+
+        self.assertTrue(messages)
+        self.assertIn("already present", messages[0])
+
+    def test_attempt_move_to_same_blog(self):
+        """
+        move both to B2
+              B1        B2   >
+             /         /     >  warn user he's attempting to move
+        E1(e1)    E2(e1)     >  an entry to the same blog
+        """
+        self.super_user()
+        self.e1 = self.create_entry(self.blog1)
+        self.e2 = self.create_entry(self.blog2)
+
+        response = self.move_entries(self.blog2, [self.e1, self.e2])
+        messages = [m.message for m in response.context['messages']]
+        e1 = BlogEntryPage.objects.get(id=self.e1.id)
+        blog1 = Blog.objects.get(id=self.blog1.id)
+
+        self.assertTrue(messages)
+        self.assertIn("Entry e1 was already present in blog b2", messages[0])
+
+        #test it didn't move
+        self.assert_entry_tied_to_blog(e1, blog1)
+
+    def test_move_nothing(self):
+        self.super_user()
+        response = self.move_entries(self.blog2, [])
+        messages = [m.message for m in response.context['messages']]
+        self.assertTrue(messages)
+        self.assertIn("There are no entries selected.", messages[0])
+
+    def test_attempt_move_by_sneaky_regularuser(self):
+        self.regular_user()
+        response = self.move_entries(self.blog2, [])
+        messages = [m.message for m in response.context['messages']]
+        self.assertTrue(messages)
+        self.assertIn(
+            "Only superusers are allowed to move blog entries",
+            messages[0])
+
+    def test_move_action_exists_in_dropdown(self):
+        self.super_user()
+        response = self.move_entries(self.blog2, [])
+        request = RequestFactory().get('/admin/cms_blogger/blogentrypage/')
+        request.user = self.superuser
+
+        admin = BlogEntryPageAdmin(BlogEntryPage, AdminSite())
+        actions = admin.get_actions(request)
+        self.assertIn("move_entries", actions.keys())
+
+    def test_move_action_does_not_exist_in_dropdown(self):
+        self.regular_user()
+        response = self.move_entries(self.blog2, [])
+        request = RequestFactory().get('/admin/cms_blogger/blogentrypage/')
+        request.user = self.regularuser
+
+        admin = BlogEntryPageAdmin(BlogEntryPage, AdminSite())
+        actions = admin.get_actions(request)
+        self.assertNotIn("move_entries", actions.keys())
 
 
 class TestBlogModel(TestCase):
