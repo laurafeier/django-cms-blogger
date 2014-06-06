@@ -573,11 +573,13 @@ class BlogEntryPageAdmin(AdminHelper, PlaceholderAdmin):
 
 
 def _move_entries(destination_blog, entries_ids, mirror_categories=True):
-    original_categories = BlogCategory.objects.filter(entries__in=entries_ids)
-    original_categories_ids = list(
-        original_categories.values_list('id', flat=True))
-    original_categories_name = list(
-        original_categories.values_list('name', flat=True))
+    original_categories = list(BlogCategory.objects.filter(
+        entries__in=entries_ids).values_list('id', 'name'))
+    if original_categories:
+        original_categories_ids, original_categories_name = zip(
+            *original_categories)
+    else:
+        original_categories_ids, original_categories_name = [], []
 
     if mirror_categories:
         destination_categories = list(
@@ -593,16 +595,20 @@ def _move_entries(destination_blog, entries_ids, mirror_categories=True):
     entries = BlogEntryPage.objects.filter(id__in=entries_ids)
     entries.update(blog=destination_blog)
 
-    # make slug unique for saved entries (which are not draft)
+    # regenerate slugs for saved entries (which
+    # are not draft) to make sure they are unique
     saved_entries_ids = list(
         entries.filter(draft_id=None).values_list('id', flat=True))
     BlogEntryPage.objects.filter(id__in=saved_entries_ids).update(slug="")
     for e in BlogEntryPage.objects.filter(id__in=saved_entries_ids):
         e.save()
 
+    # performance improvement getting previous_categories in dict
     for blogentry in BlogEntryPage.objects.filter(id__in=entries_ids):
         previous_categories = list(blogentry.categories.values_list(
             'name', flat=True))
+        #performance improvement by assigning m2m queryset instead of clearing
+        # and reassigning
         blogentry.categories.clear()
         destination_categories = BlogCategory.objects.filter(
             blog=destination_blog, name__in=previous_categories)
