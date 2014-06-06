@@ -1,6 +1,35 @@
 CHANGELOG
 =========
 
+Revision 4092525 (06.06.2014, 09:05 UTC)
+----------------------------------------
+
+* LUN-1603
+
+  * all poster images should have a fixed width/height. Smaller images will get a transparent background.
+
+* LUN-1618
+
+  * ignore empty values for date time widget
+
+* Misc commits
+
+  * improve query for getting categories names and ids
+  * don't allow regular users to move entries; +tests
+  * test move nothing; pep8 forms.py
+  * don't test entries.exists(), entries could be []
+  * river should diplay its title in the placeholder admin
+  * refactoring tests; +pep8
+  * changed docstring
+  * don't use post_data; don't use redundant list()
+  * rename blogentries to entries
+  * don't use post_data; add tests for redundant moves
+  * comment change.
+  * test with saved entries, and one draft entry
+  * increment duplicate slug when moving entry; +tests
+  * minor stuff
+  * move blog entries to a blog
+
 Revision cfd3bf4 (05.06.2014, 11:59 UTC)
 ----------------------------------------
 
