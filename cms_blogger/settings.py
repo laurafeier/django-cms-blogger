@@ -14,12 +14,13 @@ def _get_image_storage():
     if USE_FILER_STORAGE:
         storage = copy.deepcopy(
             filer_settings.FILER_PUBLICMEDIA_STORAGE)
+
+        def overwrite_s3botostorage(domain):
+            setattr(storage, 'custom_domain', domain)
+
         cdn_domain = getattr(filer_settings, 'CDN_DOMAIN', None)
-        if not cdn_domain:
-            return storage
-        # for s3 storage
-        if hasattr(storage, 'custom_domain'):
-            setattr(storage, 'custom_domain', cdn_domain)
+        if cdn_domain and hasattr(storage, 'custom_domain'):
+            overwrite_s3botostorage(cdn_domain)
         return storage
     return None
 
