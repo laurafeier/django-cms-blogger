@@ -1,6 +1,24 @@
 CHANGELOG
 =========
 
+Revision 8504886 (10.06.2014, 15:44 UTC)
+----------------------------------------
+
+* LUN-1626
+
+  * Fix blog entry admin buttons after 'Reset' is pressed in FF
+
+* LUN-1630
+
+  * code style changes
+  * if cdn domain is provided, use it as a custom domain and serve files from it.
+
+* Misc commits
+
+  * Drop entry pagination 'newer'/'older' text on small breakpoints
+  * Prevent some style to be overridden by station styles
+  * Fix menu going under blog banner
+
 Revision 4092525 (06.06.2014, 09:05 UTC)
 ----------------------------------------
 
