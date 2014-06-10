@@ -1,6 +1,6 @@
 
 // ugly way of extending datetimepicker to allow other buttons in the buttonpane
-if (!$.datepicker.___super_updateDatepicker){
+if (!$.datepicker.__super_updateDatepicker){
     $.datepicker.__super_updateDatepicker = $.datepicker._updateDatepicker;
     $.datepicker._updateDatepicker = function (inst) {
         this.__super_updateDatepicker(inst);
@@ -14,16 +14,14 @@ if (!$.datepicker.___super_updateDatepicker){
         if (!buttons || !buttonPane){
             return;
         }
-
         for (var name in buttons) {
-            var btn = $('<button />').addClass(
+            var btn = $('<button type="button"/>').addClass(
                 'ui-state-default ui-priority-secondary ui-corner-all');
             btn.text(name).click(function(){
                 return buttons[name]();
             });
             btn.appendTo(buttonPane);
         }
-
     };
 }
 
