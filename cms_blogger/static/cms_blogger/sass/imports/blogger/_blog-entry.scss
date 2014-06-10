@@ -39,7 +39,7 @@
         }
         .#{$container}{
             vertical-align: top;
-            font-size: 1em;
+            font-size: 13px;
             margin-bottom: 25px;
             color:$entry-text-color;
             background: #fff;
@@ -89,9 +89,11 @@
                     .month{
                         font-size: 16px;
                         text-transform: uppercase;
+                        line-height: 21px;
                     }
                     .day{
                         font-size: 22px;
+                        line-height: 21px;
                     }
                 }
             }
@@ -216,6 +218,9 @@
                 display: block;
                 margin: 20px auto 0 auto;
                 width: 25px;
+                img{
+                    max-width: 100%;
+                }
             }
         }
     }
