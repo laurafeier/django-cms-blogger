@@ -639,81 +639,85 @@
 @media (max-width: 480px) {
   /* line 33, ../sass/imports/blogger/_blog-pagination.scss */
   .cms-blogger .pagination a .text {
-    white-space: normal;
-    display: inline-block;
-    vertical-align: middle;
-    line-height: 20px;
-    width: 70%;
+    display: none;
   }
 }
-/* line 42, ../sass/imports/blogger/_blog-pagination.scss */
+/* line 38, ../sass/imports/blogger/_blog-pagination.scss */
 .cms-blogger .pagination td {
   width: 50%;
   text-align: center;
 }
 @media (max-width: 480px) {
-  /* line 42, ../sass/imports/blogger/_blog-pagination.scss */
+  /* line 38, ../sass/imports/blogger/_blog-pagination.scss */
   .cms-blogger .pagination td {
-    width: 40%;
+    width: auto;
   }
 }
-/* line 48, ../sass/imports/blogger/_blog-pagination.scss */
+/* line 44, ../sass/imports/blogger/_blog-pagination.scss */
 .cms-blogger .pagination td.prev {
   width: 25%;
   text-align: left;
 }
 @media (max-width: 480px) {
-  /* line 48, ../sass/imports/blogger/_blog-pagination.scss */
+  /* line 44, ../sass/imports/blogger/_blog-pagination.scss */
   .cms-blogger .pagination td.prev {
-    width: 30%;
+    width: auto;
   }
 }
-/* line 55, ../sass/imports/blogger/_blog-pagination.scss */
+/* line 51, ../sass/imports/blogger/_blog-pagination.scss */
 .cms-blogger .pagination td.next {
   width: 25%;
   text-align: right;
 }
 @media (max-width: 480px) {
-  /* line 55, ../sass/imports/blogger/_blog-pagination.scss */
+  /* line 51, ../sass/imports/blogger/_blog-pagination.scss */
   .cms-blogger .pagination td.next {
-    width: 30%;
+    width: auto;
   }
 }
-/* line 63, ../sass/imports/blogger/_blog-pagination.scss */
+/* line 59, ../sass/imports/blogger/_blog-pagination.scss */
 .cms-blogger .pagination .current {
   text-decoration: underline;
 }
-/* line 68, ../sass/imports/blogger/_blog-pagination.scss */
+/* line 64, ../sass/imports/blogger/_blog-pagination.scss */
 .cms-blogger .pagination .page,
 .cms-blogger .pagination .ellipsis,
 .cms-blogger .pagination .current {
   margin: 0 5px;
 }
-/* line 72, ../sass/imports/blogger/_blog-pagination.scss */
+@media (max-width: 480px) {
+  /* line 64, ../sass/imports/blogger/_blog-pagination.scss */
+  .cms-blogger .pagination .page,
+  .cms-blogger .pagination .ellipsis,
+  .cms-blogger .pagination .current {
+    margin: 0 10px;
+  }
+}
+/* line 71, ../sass/imports/blogger/_blog-pagination.scss */
 .cms-blogger .pagination .previous,
 .cms-blogger .pagination .next {
   margin: 0;
 }
-/* line 74, ../sass/imports/blogger/_blog-pagination.scss */
+/* line 73, ../sass/imports/blogger/_blog-pagination.scss */
 .cms-blogger .pagination .previous img,
 .cms-blogger .pagination .next img {
   text-decoration: none;
   width: 12px;
 }
-/* line 80, ../sass/imports/blogger/_blog-pagination.scss */
+/* line 79, ../sass/imports/blogger/_blog-pagination.scss */
 .cms-blogger .pagination .previous {
   float: none;
   text-align: left;
 }
-/* line 83, ../sass/imports/blogger/_blog-pagination.scss */
+/* line 82, ../sass/imports/blogger/_blog-pagination.scss */
 .cms-blogger .pagination .previous img {
   padding-right: 10px;
 }
-/* line 87, ../sass/imports/blogger/_blog-pagination.scss */
+/* line 86, ../sass/imports/blogger/_blog-pagination.scss */
 .cms-blogger .pagination .next {
   float: none;
 }
-/* line 89, ../sass/imports/blogger/_blog-pagination.scss */
+/* line 88, ../sass/imports/blogger/_blog-pagination.scss */
 .cms-blogger .pagination .next img {
   padding-left: 10px;
 }

@@ -31,11 +31,7 @@
                 white-space: nowrap;
                  @media (max-width:480px){
                     .text{
-                        white-space: normal;
-                        display: inline-block;
-                        vertical-align: middle;
-                        line-height: 20px;
-                        width: 70%;
+                        display: none;
                     }
                 }
             }
@@ -43,20 +39,20 @@
                 width: 50%;
                 text-align: center;
                 @media (max-width:480px){
-                    width: 40%;
+                    width: auto;
                 }
                 &.prev{
                     width: 25%;
                     text-align: left;
                     @media (max-width:480px){
-                        width: 30%;
+                        width: auto;
                     }
                 }
                 &.next{
                     width: 25%;
                     text-align: right;
                     @media (max-width:480px){
-                        width: 30%;
+                        width: auto;
                     }
                 }
             }
@@ -67,6 +63,9 @@
             .ellipsis,
             .current{
                 margin: 0 5px;
+                @media (max-width:480px){
+                    margin: 0 10px;
+                }
             }
             .previous,
             .next{
