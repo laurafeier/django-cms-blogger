@@ -19,10 +19,9 @@ from cms_layouts.models import LayoutTitle, Layout
 from cms_layouts.layout_response import LayoutResponse
 
 from filer.fields.image import FilerImageField
-from filer.settings import FILER_PUBLICMEDIA_STORAGE
 import filer
 
-from .settings import USE_FILER_STORAGE, UPLOAD_TO_PREFIX
+from .settings import POSTER_IMAGE_STORAGE, UPLOAD_TO_PREFIX
 from .utils import user_display_name
 from .slug import get_unique_slug
 from .managers import EntriesManager
@@ -381,12 +380,6 @@ def upload_entry_image(instance, filename):
     return new_base_trimmed + new_ext
 
 
-def get_image_storage():
-    if USE_FILER_STORAGE:
-        return FILER_PUBLICMEDIA_STORAGE
-    return None
-
-
 @blog_page
 class BlogEntryPage(getCMSContentModel(content_attr='content'),
                     BlogRelatedPage):
@@ -402,7 +395,7 @@ class BlogEntryPage(getCMSContentModel(content_attr='content'),
 
     poster_image = models.ImageField(
         _("Thumbnail Image"), upload_to=upload_entry_image, blank=True,
-        storage=get_image_storage())
+        storage=POSTER_IMAGE_STORAGE)
     caption = models.CharField(
         _('caption'), max_length=70, blank=True, null=True)
     credit = models.CharField(
