@@ -347,6 +347,8 @@ class AuthorsField(AutoModelSelect2TagField):
                      'user__username__icontains']
 
     def get_model_field_values(self, value):
+        if not value:
+            raise ValidationError("This field is required.")
         return {'name': value}
 
     def make_authors(self):
