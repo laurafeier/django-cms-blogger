@@ -1,6 +1,39 @@
 CHANGELOG
 =========
 
+Revision e0ab12a (12.06.2014, 12:53 UTC)
+----------------------------------------
+
+* LUN-1631
+
+  * changed fieldset text
+
+* LUN-1635
+
+  * should not allow empty author names.
+
+* LUN-1636
+
+  * Remove image Credit/Caption on blog landing page and blog promotion plugin
+
+* LUN-1638
+
+  * poster image should not be displayed in the entry page unless it's enabled
+  * added poster image display switch.
+  * Changed some poster image help text/label
+
+* LUN-1639
+
+  * Update entry unpublish help text
+
+* Misc commits
+
+  * added tests
+  * Fix number of blogs and entries in changelist.
+  * Remove dafult entry H1 margin for pages that do not use bootstrap css
+  * remove useless space
+  * Fix title and category related messages.
+
 Revision 8504886 (10.06.2014, 15:44 UTC)
 ----------------------------------------
 
