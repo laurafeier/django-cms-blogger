@@ -136,15 +136,15 @@ class MultipleUserField(AutoModelSelect2MultipleField):
         return user_display_name(obj)
 
 
-def _save_related(form, commit, model_obj, *post_save_func):
+def _save_related(form, commit, model_obj, *form_functions):
     """
-    Allowes 'post_save_func' to get called just after the form saved the
-        model instance. Useful for cases for m2m objects saved from form
+    Allowes 'form_functions' to be called just after the form saved the
+        model instance. Useful in cases where m2m objects are saved from form
         and not from inlines.
     """
     def call_post_save():
-        for _save in post_save_func:
-            _save(model_obj)
+        for post_save_func in form_functions:
+            post_save_func(model_obj)
 
     if commit:
         call_post_save()
