@@ -793,6 +793,11 @@
 .cms-blogger .img-details .img-caption + .img-credit {
   padding: 0 15px 15px 15px;
 }
+/* line 33, ../sass/imports/blogger/_image.scss */
+.cms-blogger .blog-plomotion-plugin .img-details,
+.cms-blogger .blog-entry .img-details {
+  display: none;
+}
 
 /* line 5, ../sass/imports/blogger/_snippets.scss */
 .cms-blogger .promo-container.horizontal .promo {
