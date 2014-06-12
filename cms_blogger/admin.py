@@ -124,7 +124,7 @@ class BlogAdmin(AdminHelper):
             'fields': [('in_navigation', 'location_in_navigation'), ],
             'classes': ('extrapretty',),
         }),
-        ('Social media and commenting integration', {
+        ('Social media integration', {
             'fields': ['enable_facebook', 'enable_twitter',
                        'email_account_link'],
             'classes': ('collapse', 'extrapretty', )
