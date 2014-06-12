@@ -397,7 +397,7 @@
 /* line 382, ../sass/imports/entry_change_form/_layout.scss */
 .cms_blogger-blogentrypage #content div.right-col > fieldset .field-seo_title,
 .cms_blogger-blogentrypage #content div.right-col > fieldset .field-meta_keywords,
-.cms_blogger-blogentrypage #content div.right-col > fieldset .field-disqus_enabled {
+.cms_blogger-blogentrypage #content div.right-col > fieldset .field-disqus_enabled, .cms_blogger-blogentrypage #content div.right-col > fieldset .field-enable_poster_image {
   white-space: nowrap;
   padding: 25px 0 0 0;
   width: 100%;
@@ -408,14 +408,15 @@
 .cms_blogger-blogentrypage #content div.right-col > fieldset .field-meta_keywords input,
 .cms_blogger-blogentrypage #content div.right-col > fieldset .field-meta_keywords textarea,
 .cms_blogger-blogentrypage #content div.right-col > fieldset .field-disqus_enabled input,
-.cms_blogger-blogentrypage #content div.right-col > fieldset .field-disqus_enabled textarea {
+.cms_blogger-blogentrypage #content div.right-col > fieldset .field-disqus_enabled textarea, .cms_blogger-blogentrypage #content div.right-col > fieldset .field-enable_poster_image input,
+.cms_blogger-blogentrypage #content div.right-col > fieldset .field-enable_poster_image textarea {
   width: 68%;
   white-space: normal;
 }
 /* line 391, ../sass/imports/entry_change_form/_layout.scss */
 .cms_blogger-blogentrypage #content div.right-col > fieldset .field-seo_title label,
 .cms_blogger-blogentrypage #content div.right-col > fieldset .field-meta_keywords label,
-.cms_blogger-blogentrypage #content div.right-col > fieldset .field-disqus_enabled label {
+.cms_blogger-blogentrypage #content div.right-col > fieldset .field-disqus_enabled label, .cms_blogger-blogentrypage #content div.right-col > fieldset .field-enable_poster_image label {
   white-space: normal;
   width: 24%;
   margin-top: 5px;
@@ -423,7 +424,7 @@
   font-size: 14px;
 }
 /* line 401, ../sass/imports/entry_change_form/_layout.scss */
-.cms_blogger-blogentrypage #content div.right-col > fieldset .field-disqus_enabled .help {
+.cms_blogger-blogentrypage #content div.right-col > fieldset .field-disqus_enabled .help, .cms_blogger-blogentrypage #content div.right-col > fieldset .field-enable_poster_image .help {
   margin: 0;
   padding: 0;
   white-space: normal;
@@ -433,11 +434,11 @@
   width: 75%;
 }
 /* line 410, ../sass/imports/entry_change_form/_layout.scss */
-.cms_blogger-blogentrypage #content div.right-col > fieldset .field-disqus_enabled label {
+.cms_blogger-blogentrypage #content div.right-col > fieldset .field-disqus_enabled label, .cms_blogger-blogentrypage #content div.right-col > fieldset .field-enable_poster_image label {
   display: none;
 }
 /* line 413, ../sass/imports/entry_change_form/_layout.scss */
-.cms_blogger-blogentrypage #content div.right-col > fieldset .field-disqus_enabled .toggle-modern {
+.cms_blogger-blogentrypage #content div.right-col > fieldset .field-disqus_enabled .toggle-modern, .cms_blogger-blogentrypage #content div.right-col > fieldset .field-enable_poster_image .toggle-modern {
   float: right;
 }
 /* line 417, ../sass/imports/entry_change_form/_layout.scss */

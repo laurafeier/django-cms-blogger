@@ -36,6 +36,7 @@
     <p class="subtitle">
         Posted by <span class="author">{{entry.authors_display_name}}</span>
     </p>
-
+    {% if entry.enable_poster_image %}
     {% include "cms_blogger/poster_image.html" %}
+    {% endif %}
 </div>

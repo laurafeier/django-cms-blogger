@@ -459,7 +459,8 @@ class BlogEntryPageAdmin(AdminHelper, PlaceholderAdmin):
             'classes': ('right-col', )
         }),
         ('Advanced Options', {
-            'fields': ['seo_title', 'meta_keywords', 'disqus_enabled'],
+            'fields': ['seo_title', 'meta_keywords',
+                       'disqus_enabled', 'enable_poster_image'],
             'classes': ('right-col', 'collapse')
         }),
 

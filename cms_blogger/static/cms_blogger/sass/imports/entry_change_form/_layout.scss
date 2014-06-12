@@ -379,7 +379,7 @@
 
                     .field-seo_title,
                     .field-meta_keywords,
-                    .field-disqus_enabled{
+                    .field-disqus_enabled, .field-enable_poster_image{
                         white-space: nowrap;
                         padding:25px 0 0 0;
                         width: 100%;
@@ -397,7 +397,7 @@
                         }
                     }
 
-                    .field-disqus_enabled{
+                    .field-disqus_enabled, .field-enable_poster_image{
                         .help{
                             margin:0;
                             padding: 0;
