@@ -70,7 +70,9 @@ msgstr "Select date and time for this blog entry to go live."
 
 #: admin.py:412
 msgid "Schedule End Date description"
-msgstr "Select date and time to remove post from site."
+msgstr ""
+"Select date and time to remove post from site.<br />"
+"<span>(Will publish unpublished entries)</span>"
 
 #: cms_plugins.py:15
 msgid "Blog River Plugin"
