@@ -419,9 +419,13 @@ class TestBlogModel(TestCase):
     def test_creation(self):
         # only title and slug are required fields
         data = {'title': 'one title', 'slug': 'one-title'}
-        blog = Blog.objects.create(**data)
+        add_url = reverse('admin:cms_blogger_blog_add')
+        response = self.client.post(add_url, data)
+        blog = Blog.objects.all().get()
         # blog site should be prepopulated with the current site
         self.assertEquals(blog.site.pk, 1)
+        # current user should be added
+        self.assertEquals(blog.allowed_users.all().get().pk, self.user.pk)
         landing_url = reverse('cms_blogger.views.landing_page', kwargs={
             'blog_slug': 'one-title'})
         self.assertEquals(blog.get_absolute_url(), landing_url)

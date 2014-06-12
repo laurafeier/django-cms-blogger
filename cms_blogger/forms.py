@@ -136,6 +136,29 @@ class MultipleUserField(AutoModelSelect2MultipleField):
         return user_display_name(obj)
 
 
+def _save_related(form, commit, model_obj, *post_save_func):
+    """
+    Allowes 'post_save_func' to get called just after the form saved the
+        model instance. Useful for cases for m2m objects saved from form
+        and not from inlines.
+    """
+    def call_post_save():
+        for _save in post_save_func:
+            _save(model_obj)
+
+    if commit:
+        call_post_save()
+        return
+    original_save_m2m = form.save_m2m
+    if hasattr(original_save_m2m, '_save_related_attached'):
+        return
+    def _extra_save_m2m():
+        call_post_save()
+        original_save_m2m()
+    form.save_m2m = _extra_save_m2m
+    setattr(form.save_m2m, '_save_related_attached', True)
+
+
 class BlogForm(forms.ModelForm):
     categories = forms.CharField(
         widget=TagItWidget(
@@ -221,21 +244,16 @@ class BlogForm(forms.ModelForm):
 
     def save(self, commit=True):
         saved_instance = super(BlogForm, self).save(commit=commit)
-        if commit:
-            self._save_categories(saved_instance)
-        else:
-            original_save_m2m = self.save_m2m
-            if not hasattr(original_save_m2m, '_save_categories_attached'):
-                def _extra_save_m2m():
-                    self._save_categories(saved_instance)
-                    original_save_m2m()
-                self.save_m2m = _extra_save_m2m
-                setattr(self.save_m2m, '_save_categories_attached', True)
-
+        _save_related(self, commit, saved_instance, self._save_categories)
         return saved_instance
 
 
 class BlogAddForm(forms.ModelForm):
+    requires_request = True
+
+    def __init__(self, *args, **kwargs):
+        self.request = kwargs.pop('request', None)
+        super(BlogAddForm, self).__init__(*args, **kwargs)
 
     def clean(self):
         self.instance.site = Site.objects.get_current()
@@ -243,6 +261,16 @@ class BlogAddForm(forms.ModelForm):
         if Blog.objects.filter(site=self.instance.site, slug=slug).exists():
             raise ValidationError("Blog with this slug already exists.")
         return self.cleaned_data
+
+    def _allow_current_user(self, blog):
+        if (blog.allowed_users.count() == 0
+                and self.request and self.request.user):
+            blog.allowed_users.add(self.request.user)
+
+    def save(self, commit=True):
+        saved = super(BlogAddForm, self).save(commit=commit)
+        _save_related(self, commit, saved, self._allow_current_user)
+        return saved
 
     class Meta:
         model = Blog
@@ -535,21 +563,8 @@ class BlogEntryPageChangeForm(forms.ModelForm):
     def save(self, commit=True):
         saved_instance = super(BlogEntryPageChangeForm, self).save(
             commit=commit)
-
-        def custom_save_related():
-            self._save_categories(saved_instance)
-            self._remove_unused_authors(saved_instance)
-
-        if commit:
-            custom_save_related()
-        else:
-            original_save_m2m = self.save_m2m
-            if not hasattr(original_save_m2m, '_custom_save_rel_attached'):
-                def _extra_save_m2m():
-                    custom_save_related()
-                    original_save_m2m()
-                self.save_m2m = _extra_save_m2m
-                setattr(self.save_m2m, '_custom_save_rel_attached', True)
+        _save_related(self, commit, saved_instance,
+            self._save_categories, self._remove_unused_authors)
         return saved_instance
 
 
