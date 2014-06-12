@@ -232,7 +232,7 @@ class BlogAdmin(AdminHelper):
         def response(form):
             return render_to_response(
                 "admin/cms_blogger/blog/move_entries.html",
-                {'move_form': form},
+                {'move_form': form, 'title': 'Move entries'},
                 context_instance=RequestContext(request))
 
         qs = BlogEntryPage.objects.filter(id__in=request.GET.keys())

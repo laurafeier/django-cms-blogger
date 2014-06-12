@@ -620,7 +620,9 @@ class BlogRiverForm(forms.ModelForm):
 
 class MoveEntriesForm(forms.Form):
     mirror_categories = forms.BooleanField(
-        label="Mirror inexistent categories in destination blog",
+        label="Create missing categories in destination blog",
+        help_text="<p>(Categories from source blogs will be deleted if they "
+                  "have no entries left after the move operation.)</p>",
         initial=True,
         required=False)
     entries = forms.ModelMultipleChoiceField(
