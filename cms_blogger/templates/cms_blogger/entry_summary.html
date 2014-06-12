@@ -19,7 +19,9 @@
         </p>
         {% if entry.poster_image and not hide_entry_image %}
             <div class='right-col'>
+                <a href="{{PROXY_REWRITE_RULE}}{{entry.get_absolute_url}}">
                 {% include "cms_blogger/poster_image.html" %}
+                </a>
             </div>
         {% endif %}
         <div class='left-col'>
