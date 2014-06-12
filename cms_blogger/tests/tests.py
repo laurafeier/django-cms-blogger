@@ -689,6 +689,31 @@ class TestChangeLists(TestCase):
         self.assertEquals(len(qs), 1)
         self.client.logout()
 
+    def test_user_sees_only_accessible_entries(self):
+        self.client.login(username='regular', password='secret')
+        self.blog1 = Blog.objects.create(**{
+            'title': 'b1', 'slug': 'b1'})
+        self.blog1.allowed_users.add(self.regular_user)
+
+        self.blog2 = Blog.objects.create(**{
+            'title': 'b2', 'slug': 'b2'})
+
+        self.entry1 = BlogEntryPage.objects.create(
+            title="e1", blog=self.blog1, short_description="e1")
+        self.entry2 = BlogEntryPage.objects.create(
+            title="e2", blog=self.blog2, short_description="e2")
+
+        url = reverse('admin:cms_blogger_blogentrypage_changelist')
+        response = self.client.get(url)
+        self.assertItemsEqual(self._items(response), [self.entry1.pk])
+
+        url2 = '%s?%s' % (
+            reverse('admin:cms_blogger_blogentrypage_changelist'),
+            urllib.urlencode({"q": "e"}))
+        response = self.client.get(url)
+        self.assertItemsEqual(self._items(response), [self.entry1.pk])
+        self.client.logout()
+
 
 class TestBlogEntryModel(TestCase):
 
