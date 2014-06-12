@@ -566,22 +566,26 @@
 .cms_blogger-blogentrypage #content .collapsible-inner .description {
   padding: 12px;
 }
-/* line 537, ../sass/imports/entry_change_form/_layout.scss */
+/* line 533, ../sass/imports/entry_change_form/_layout.scss */
+.cms_blogger-blogentrypage #content .collapsible-inner .description span {
+  color: #828282;
+}
+/* line 540, ../sass/imports/entry_change_form/_layout.scss */
 .cms_blogger-blogentrypage #content .collapse h2 {
   background: none;
 }
-/* line 539, ../sass/imports/entry_change_form/_layout.scss */
+/* line 542, ../sass/imports/entry_change_form/_layout.scss */
 .cms_blogger-blogentrypage #content .collapse h2 a {
   font-size: 16px;
   color: #474747;
   font-weight: normal;
   white-space: nowrap;
 }
-/* line 544, ../sass/imports/entry_change_form/_layout.scss */
+/* line 547, ../sass/imports/entry_change_form/_layout.scss */
 .cms_blogger-blogentrypage #content .collapse h2 a:hover {
   color: #3482af;
 }
-/* line 547, ../sass/imports/entry_change_form/_layout.scss */
+/* line 550, ../sass/imports/entry_change_form/_layout.scss */
 .cms_blogger-blogentrypage #content .collapse h2 a:before {
   content: "\2013";
   background: #3482af;
@@ -598,11 +602,11 @@
   vertical-align: top;
   text-indent: -0.5px;
 }
-/* line 566, ../sass/imports/entry_change_form/_layout.scss */
+/* line 569, ../sass/imports/entry_change_form/_layout.scss */
 .cms_blogger-blogentrypage #content .collapse.collapsed a:before {
   content: "+";
 }
-/* line 572, ../sass/imports/entry_change_form/_layout.scss */
+/* line 575, ../sass/imports/entry_change_form/_layout.scss */
 .cms_blogger-blogentrypage #content .submit-row {
   margin-top: 17px;
   padding: 18px 0;
