@@ -48,6 +48,11 @@ class BlogChangeList(ChangeList):
         qs = super(BlogChangeList, self).get_query_set(request)
         return qs.filter(**{self.site_lookup: self.current_site})
 
+    def get_results(self, request):
+        self.root_query_set = self.root_query_set.filter(
+            **{self.site_lookup: self.current_site})
+        super(BlogChangeList, self).get_results(request)
+
     @property
     def current_site(self):
         return self._current_site
