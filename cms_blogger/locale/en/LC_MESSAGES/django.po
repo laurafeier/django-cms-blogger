@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2014-05-28 07:15-0400\n"
+"POT-Creation-Date: 2014-06-13 09:34+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -21,7 +21,12 @@ msgstr ""
 "This blogging tool allows you to select the layouts - header, footer, and "
 "right rail - for blog landing pages and blog entry pages. You may choose one "
 "layout for both types of pages, or separate layouts for blog landing pages "
-"and blog entry pages. <br/><b>NOTE</b>: Because of the way blogs work, you "
+"and blog entry pages. "
+"<span class='help-tooltip' title='<p>Blog Landing Pages have a "
+"reverse-chronological list of blog entries, displaying the title, "
+"short description, and image.</p><p>Blog Entry Pages are the individual "
+"blog post pages.</p>'>What are these?</span>"
+"<br/><b>NOTE</b>: Because of the way blogs work, you "
 "must select a page that has a template with the extra-page-content and main-"
 "content placeholders. Those two placeholders will be used by all blog-"
 "related pages and will not be available for non-programmatic blog content. "
@@ -64,37 +69,52 @@ msgstr ""
 "Comment management, including approving, removing, and moderating comments, "
 "takes place via the Disqus admin."
 
-#: admin.py:406
+#: admin.py:267
+#, python-format
+msgid "Entry %(entry)s was "
+msgid_plural "Entries %(entry)s were "
+msgstr[0] ""
+msgstr[1] ""
+
+#: admin.py:447
 msgid "Schedule Start Date description"
 msgstr "Select date and time for this blog entry to go live."
 
-#: admin.py:412
+#: admin.py:453
 msgid "Schedule End Date description"
 msgstr ""
-"Select date and time to remove post from site.<br />"
-"<span>(Will publish unpublished entries)</span>"
+"Select date and time to remove post from site.<br /><span>(Will publish "
+"unpublished entries)</span>"
 
 #: cms_plugins.py:15
 msgid "Blog River Plugin"
 msgstr ""
 
-#: forms.py:140
+#: forms.py:143
 msgid "Categories help text"
 msgstr ""
-"Categories help organize blog content. Categories are unique to a blog and"
-" can only be created in this admin to eliminate redundancy. Each category "
-"generates its own page of categorized entries. Use the tab key or commas to"
-" separate categories."
+"Categories help organize blog content. Categories are unique to a blog and "
+"can only be created in this admin to eliminate redundancy. Each category "
+"generates its own page of categorized entries. Use the tab key or commas to "
+"separate categories. <span class='help-tooltip' title='<p>Categories, also "
+"called tags, are used to denote common themes in a blog.</p><p>For example, "
+"a blog about food might use categories such as baking, frying, vegetables, "
+"healthy, recipes, or grilling. Every post that involves grilling should be "
+"categorized with grilling. That way, if a user goes to youresite.org/blogs/"
+"your-blog/category/grilling/, she will get a list of all grilling-specific "
+"blog entries.</p><p>Categories and tags are different from meta-keywords, "
+"which are blog entry-specific words used to improve SEO.</p>'>What are "
+"these?</span>"
 
-#: forms.py:372
+#: forms.py:377
 msgid "Check all the categories to apply to this post. Uncheck to remove."
 msgstr ""
 
-#: models.py:146 models.py:394 models.py:604
+#: models.py:145 models.py:387 models.py:602
 msgid "title"
 msgstr ""
 
-#: models.py:147
+#: models.py:146
 msgid "Blog Title"
 msgstr ""
 "Please enter the blog's title. This title will be displayed at the top of "
@@ -102,190 +122,214 @@ msgstr ""
 "Branding Image (if one is used). Ideally, it should be no longer than 30 "
 "characters."
 
-#: models.py:149 models.py:327 models.py:396 models.py:566
+#: models.py:148 models.py:326 models.py:389 models.py:564
 msgid "slug"
 msgstr ""
 
-#: models.py:149
+#: models.py:148
 msgid "Blog Slug"
 msgstr ""
 "The blog slug is the URL for the blog landing page, and will be present in "
 "ALL blog entry URLs. It is best to use a slug no more than 25 characters. It "
 "may not contain spaces or special characters."
 
-#: models.py:151
+#: models.py:150
 msgid "Blog Site"
 msgstr "The site associated with this blog."
 
-#: models.py:151
+#: models.py:150
 msgid "site"
 msgstr ""
 
-#: models.py:153
+#: models.py:152
 msgid "Dates in blog entry URLs"
 msgstr "Insert dates into blog entry URLs"
 
-#: models.py:154
+#: models.py:153
 msgid "Blog Entries With Slugs"
 msgstr ""
 "Blogs that are frequently updated, especially news-themed blogs, often "
 "insert dates [/2014/03/15/] into the URLs for blog entries. To insert a date-"
 "stamp into all blog entries for this blog, select ON."
 
-#: models.py:158
+#: models.py:157
 msgid "Add Users"
 msgstr ""
 
-#: models.py:232
+#: models.py:231
 msgid "tagline"
 msgstr "Blog Tagline"
 
-#: models.py:233
+#: models.py:232
 msgid "Blog Tagline"
 msgstr ""
 "Optional. Appears immediately below the Blog Title, and over the Blog "
 "Branding Image (if one is used). Recommended: 60 characters or fewer."
 
-#: models.py:237
+#: models.py:236
 msgid "Blog Branding Image"
 msgstr ""
 "Upload or select an image that appears behind the Blog Title and Blog "
 "Tagline at the top of all blog pages. Size: 960 pixels wide and no more than "
-"150 pixels tall."
+"150 pixels tall. <span class='help-tooltip' title='<img width=700 src="
+"STATIC_URLadmin/img/blog-banner-help.jpg>'>What's this?</span>"
 
-#: models.py:241
+#: models.py:240
 msgid "Add blog to navigation"
 msgstr ""
 
-#: models.py:242
+#: models.py:241
 msgid "Blog navigation"
 msgstr "ON allows users to display this blog in the navigation menu."
 
-#: models.py:248
+#: models.py:247
 msgid "Facebook integration"
 msgstr ""
 
-#: models.py:249
+#: models.py:248
 msgid "Blog Facebook integration"
 msgstr ""
 "ON allows users to share blog entries on Facebook. The post will pull the "
 "Open Graph information from the blog entry metadata."
 
-#: models.py:251
+#: models.py:250
 msgid "Twitter integration"
 msgstr ""
 
-#: models.py:252
+#: models.py:251
 msgid "Blog Twitter integration"
 msgstr ""
 "ON allows users to share blog entries via Twitter. The Tweet will derive "
 "information from the blog entry metadata."
 
-#: models.py:255
+#: models.py:254
 msgid "Blog Email integration"
 msgstr ""
 "ON allows users to email the post's short description and a link to it."
 
-#: models.py:261
+#: models.py:260
 msgid "Blog Disqus Shortname"
 msgstr ""
 "Tells Disqus which website account (called a forum on Disqus) this system "
 "belongs to."
 
-#: models.py:263
+#: models.py:262
 msgid "DISABLE Disqus commenting at mobile breakpoints (<480)"
 msgstr ""
 
-#: models.py:266
+#: models.py:265
 msgid "Select ON to hide comments on phone sized mobile devices."
-msgstr "Selecting ON hides comments on phone-sized mobile devices."
+msgstr "Selecting ON hides comments on phone-sized mobile devices. This "
+"improves page load speed and prevents hanging issues for users relying on "
+"cellular data service."
 
-#: models.py:322 models.py:565
+#: models.py:321 models.py:563
 msgid "name"
 msgstr ""
 
-#: models.py:328
+#: models.py:327
 msgid "Used to build the author's URL."
 msgstr ""
 
-#: models.py:397 models.py:401
+#: models.py:390 models.py:394
 msgid "Used to build the entry's URL."
 msgstr ""
 
-#: models.py:399
+#: models.py:392
 msgid "publication date"
 msgstr ""
 
-#: models.py:404
+#: models.py:397
 msgid "Thumbnail Image"
 msgstr ""
 
-#: models.py:407
+#: models.py:400
 msgid "caption"
 msgstr ""
 
-#: models.py:409
+#: models.py:402
 msgid "credit"
 msgstr ""
 
-#: models.py:412
+#: models.py:405
 msgid "Blog Entry Authors"
 msgstr ""
 
-#: models.py:416
+#: models.py:409
 msgid "Short Description"
 msgstr ""
 
-#: models.py:416
+#: models.py:409
 msgid "400 characters or fewer"
 msgstr ""
 
-#: models.py:420
+#: models.py:413
 msgid "start publication"
 msgstr ""
 
-#: models.py:422
+#: models.py:415
 msgid "Start date of publication."
 msgstr ""
 
-#: models.py:424
+#: models.py:417
 msgid "end publication"
 msgstr ""
 
-#: models.py:426
+#: models.py:419
 msgid "End date of publication."
 msgstr ""
 
-#: models.py:427
+#: models.py:420
 msgid "is published"
 msgstr ""
 
-#: models.py:430
+#: models.py:423
 msgid "SEO Title"
 msgstr ""
 
-#: models.py:432
+#: models.py:425
 msgid "Keywords Meta"
 msgstr ""
 
-#: models.py:434
+#: models.py:427
 msgid "Disqus integration"
 msgstr ""
 
-#: models.py:435
+#: models.py:428
 msgid "Set OFF to disable commenting for this entry."
 msgstr ""
 
-#: models.py:615
+#: models.py:430
+msgid "Display thumbnail"
+msgstr ""
+
+#: models.py:431
+msgid "Display thumbnail in blog entry"
+msgstr ""
+
+#: models.py:613
 msgid "Entries to Display"
 msgstr ""
 
-#: templates/admin/cms_blogger/blog/change_form.html:124
+#: templates/admin/cms_blogger/blog/change_form.html:75
+#: templates/admin/cms_blogger/blogentrypage/change_form.html:22
+msgid "View on site"
+msgstr ""
+
+#: templates/admin/cms_blogger/blog/change_form.html:132
 msgid "Next"
 msgstr ""
 
-#: templates/admin/cms_blogger/blogentrypage/change_form.html:22
-msgid "View on site"
+#: templates/admin/cms_blogger/blog/move_entries.html:8
+msgid "Home"
+msgstr ""
+
+#: templates/admin/cms_blogger/blog/move_entries.html:10
+msgid "Cms_blogger"
+msgstr ""
+
+#: templates/admin/cms_blogger/blog/move_entries.html:12
+msgid "Blog entries"
 msgstr ""
 
 #: templates/admin/cms_blogger/blogentrypage/change_form.html:54
@@ -308,6 +352,6 @@ msgstr ""
 msgid "Remove"
 msgstr ""
 
-#: templates/admin/cms_blogger/blogentrypage/poster_image.html:89
+#: templates/admin/cms_blogger/blogentrypage/poster_image.html:88
 msgid "file missing"
 msgstr ""

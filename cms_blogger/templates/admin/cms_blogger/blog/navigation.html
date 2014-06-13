@@ -65,7 +65,7 @@ $(function() {
     });
     var blog_node = tree.tree('getNodeById', blog_item_id);
     if (!blog_node){
-        var text_label = {% if initial_blog_node and initial_blog_node.text %}'{{initial_blog_node.text}}'{% else %}'Edit Label!'{% endif %};
+        var text_label = {% if initial_blog_node and initial_blog_node.text %}'{{initial_blog_node.text}}'{% else %}'Click to edit text!'{% endif %};
         tree.tree(
             'appendNode', {
                 label: text_label,
@@ -84,6 +84,8 @@ $(function() {
 
 {% block content %}
 <div id='nav-tree'></div>
+<p class="help">Click on the green box to edit the text that will appear in your site's menu.</p>
+<p class="help">Click and hold on the green box to drag the blog into the desired spot in the menu.</p>
 <form action="." method="post">
 {% csrf_token %}
 {% if is_popup %}<input type="hidden" name="_popup" value="1" />{% endif %}

@@ -154,7 +154,7 @@ class BlogAdmin(AdminHelper):
 
     def _navigation_preview(self, request, nav_node):
         if not request or not nav_node:
-            return '(Choose position)'
+            return ''
         nodes = menu_pool.get_nodes(request, None, None)
         nodes = cut_levels(nodes, 0, 1, 1, 100)
         nodes = menu_pool.apply_modifiers(
@@ -164,7 +164,7 @@ class BlogAdmin(AdminHelper):
         self._get_nodes(request, nodes, node_id, output)
         html_preview = ''.join(output)
         if 'current-node' not in html_preview:
-            return "(Choose Position)"
+            return ""
         return html_preview
 
     def location_in_navigation(self, obj):
@@ -180,9 +180,10 @@ class BlogAdmin(AdminHelper):
                 u'<input type="button" value="Open Navigation Tool" /></a>')
             preview = self._navigation_preview(
                 request, nav_node)
-            output.append('<ul id="id_navigation_node_pretty">')
-            output.append(preview)
-            output.append('</ul')
+            if preview:
+                output.append('<ul id="id_navigation_node_pretty">')
+                output.append(preview)
+                output.append('</ul')
             html_out = u''.join(output)
             html_out = mark_safe(html_out)
             return html_out
