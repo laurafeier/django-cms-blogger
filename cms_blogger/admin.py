@@ -564,7 +564,8 @@ class BlogEntryPageAdmin(AdminHelper, PlaceholderAdmin):
     published_at.allow_tags = True
 
     def categories_assigned(self, entry):
-        category_names = list(entry.categories.values_list('name', flat=True))
+        category_names = list(entry.categories
+            .values_list('name', flat=True).order_by('name'))
         text = ', '.join(category_names)
         max_len = 70
         return text if len(text) <= max_len else (text[:max_len-3] + '...')
