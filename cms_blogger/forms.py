@@ -17,6 +17,7 @@ from cms.plugins.text.settings import USE_TINYMCE
 from cms.plugins.text.widgets.wymeditor_widget import WYMEditor
 from cms.utils.plugins import get_placeholders
 from cms.models import Page
+from cms.exceptions import NoHomeFound
 
 from cms_layouts.models import Layout
 from cms_layouts.slot_finder import (
@@ -78,6 +79,23 @@ class BlogLayoutInlineFormSet(BaseGenericInlineFormSet):
                         ', '.join(pretty_specific_layout_types)))
 
 
+def is_valid_for_layout(page):
+    """
+    Checks if a page can be used for a layout
+    """
+    try:
+        slots = get_placeholders(page.get_template())
+        get_fixed_section_slots(slots)
+    except MissingRequiredPlaceholder, e:
+        raise ValidationError(
+            "Page %s is missing a required placeholder named %s. Add this "
+            "placeholder in the page template." % (page, e.slot, ))
+    except Exception, page_exception:
+        raise ValidationError(
+            "Error found while scanning template from page %s: %s. "
+            "You need to fix this manually." % (page, page_exception))
+
+
 class BlogLayoutForm(forms.ModelForm):
     layout_type = forms.IntegerField(
         label='Layout Type',
@@ -109,21 +127,8 @@ class BlogLayoutForm(forms.ModelForm):
             raise ValidationError(
                 'This page does not exist. Refresh this form and select an '
                 'existing page.')
-        try:
-            slots = get_placeholders(page.get_template())
-            get_fixed_section_slots(slots)
-            return page
-        except MissingRequiredPlaceholder, e:
-            raise ValidationError(
-                "Page %s is missing a required placeholder "
-                "named %s. Choose a different page for this layout that"
-                " has the required placeholder or just add this "
-                "placeholder in the page template." % (page, e.slot, ))
-        except Exception, page_exception:
-            raise ValidationError(
-                "Error found while scanning template from page %s: %s. "
-                "Change page with a valid one or fix this error." % (
-                    page, page_exception))
+        is_valid_for_layout(page)
+        return page
 
 
 class MultipleUserField(AutoModelSelect2MultipleField):
@@ -134,6 +139,29 @@ class MultipleUserField(AutoModelSelect2MultipleField):
 
     def label_from_instance(self, obj):
         return user_display_name(obj)
+
+
+def _save_related(form, commit, model_obj, *form_functions):
+    """
+    Allowes 'form_functions' to be called just after the form saved the
+        model instance. Useful in cases where m2m objects are saved from form
+        and not from inlines.
+    """
+    def call_post_save():
+        for post_save_func in form_functions:
+            post_save_func(model_obj)
+
+    if commit:
+        call_post_save()
+        return
+    original_save_m2m = form.save_m2m
+    if hasattr(original_save_m2m, '_save_related_attached'):
+        return
+    def _extra_save_m2m():
+        call_post_save()
+        original_save_m2m()
+    form.save_m2m = _extra_save_m2m
+    setattr(form.save_m2m, '_save_related_attached', True)
 
 
 class BlogForm(forms.ModelForm):
@@ -221,28 +249,51 @@ class BlogForm(forms.ModelForm):
 
     def save(self, commit=True):
         saved_instance = super(BlogForm, self).save(commit=commit)
-        if commit:
-            self._save_categories(saved_instance)
-        else:
-            original_save_m2m = self.save_m2m
-            if not hasattr(original_save_m2m, '_save_categories_attached'):
-                def _extra_save_m2m():
-                    self._save_categories(saved_instance)
-                    original_save_m2m()
-                self.save_m2m = _extra_save_m2m
-                setattr(self.save_m2m, '_save_categories_attached', True)
-
+        _save_related(self, commit, saved_instance, self._save_categories)
         return saved_instance
 
 
 class BlogAddForm(forms.ModelForm):
+    requires_request = True
+
+    def __init__(self, *args, **kwargs):
+        self.request = kwargs.pop('request', None)
+        super(BlogAddForm, self).__init__(*args, **kwargs)
 
     def clean(self):
-        self.instance.site = Site.objects.get_current()
+        site = Site.objects.get_current()
+        self.instance.site = site
         slug = self.cleaned_data.get('slug', None)
         if Blog.objects.filter(site=self.instance.site, slug=slug).exists():
             raise ValidationError("Blog with this slug already exists.")
+        try:
+            home_page = Page.objects.get_home(site)
+        except NoHomeFound:
+            raise ValidationError(
+                "The site you are working on does not have a valid layout "
+                "page. You need to have a root published page before you can"
+                " add a blog.")
+        is_valid_for_layout(home_page)
         return self.cleaned_data
+
+    def _allow_current_user(self, blog):
+        if (blog.allowed_users.count() == 0
+                and self.request and self.request.user):
+            blog.allowed_users.add(self.request.user)
+
+    def _add_default_layout(self, blog):
+        if blog.layouts.count() == 0:
+            home_page = Page.objects.get_home(Site.objects.get_current())
+            article_layout = Layout()
+            article_layout.from_page = home_page
+            article_layout.content_object = blog
+            article_layout.save()
+
+    def save(self, commit=True):
+        saved = super(BlogAddForm, self).save(commit=commit)
+        _save_related(self, commit, saved,
+            self._allow_current_user, self._add_default_layout)
+        return saved
 
     class Meta:
         model = Blog
@@ -535,21 +586,8 @@ class BlogEntryPageChangeForm(forms.ModelForm):
     def save(self, commit=True):
         saved_instance = super(BlogEntryPageChangeForm, self).save(
             commit=commit)
-
-        def custom_save_related():
-            self._save_categories(saved_instance)
-            self._remove_unused_authors(saved_instance)
-
-        if commit:
-            custom_save_related()
-        else:
-            original_save_m2m = self.save_m2m
-            if not hasattr(original_save_m2m, '_custom_save_rel_attached'):
-                def _extra_save_m2m():
-                    custom_save_related()
-                    original_save_m2m()
-                self.save_m2m = _extra_save_m2m
-                setattr(self.save_m2m, '_custom_save_rel_attached', True)
+        _save_related(self, commit, saved_instance,
+            self._save_categories, self._remove_unused_authors)
         return saved_instance
 
 

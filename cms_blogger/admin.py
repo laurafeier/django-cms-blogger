@@ -409,8 +409,9 @@ class BlogEntryPageAdmin(AdminHelper, PlaceholderAdmin):
     list_editable = ('is_published', )
     custom_changelist_class = BlogEntryChangeList
     list_display = ('__str__', 'slug', 'blog', 'is_published', 'published_at',
-                    'entry_authors')
+                    'entry_authors', 'categories_assigned')
     list_filter = (('blog', CurrentSiteBlogFilter), )
+    list_per_page = 50
     search_fields = ('title', 'blog__title')
     actions = ['make_published', 'make_unpublished', 'move_entries']
     add_form_template = 'admin/cms_blogger/blogentrypage/add_form.html'
@@ -562,6 +563,14 @@ class BlogEntryPageAdmin(AdminHelper, PlaceholderAdmin):
             'document.write(/(.*)GMT|UTC[+-]\d*/g.exec(str_date)[1]);'
             '</script>' % entry.publication_date)
     published_at.allow_tags = True
+
+    def categories_assigned(self, entry):
+        category_names = list(entry.categories
+            .values_list('name', flat=True).order_by('name'))
+        text = ', '.join(category_names)
+        max_len = 70
+        return text if len(text) <= max_len else (text[:max_len-3] + '...')
+    categories_assigned.short_description = 'Categories'
 
     def move_entries(self, request, queryset):
         entries = {x: "" for x in request.POST.getlist(

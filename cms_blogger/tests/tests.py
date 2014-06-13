@@ -418,10 +418,17 @@ class TestBlogModel(TestCase):
 
     def test_creation(self):
         # only title and slug are required fields
+        # at least one page is required
+        create_page('master', 'page_template.html',
+                    language='en', published=True)
         data = {'title': 'one title', 'slug': 'one-title'}
-        blog = Blog.objects.create(**data)
+        add_url = reverse('admin:cms_blogger_blog_add')
+        self.client.post(add_url, data)
+        blog = Blog.objects.all().get()
         # blog site should be prepopulated with the current site
         self.assertEquals(blog.site.pk, 1)
+        # current user should be added
+        self.assertEquals(blog.allowed_users.all().get().pk, self.user.pk)
         landing_url = reverse('cms_blogger.views.landing_page', kwargs={
             'blog_slug': 'one-title'})
         self.assertEquals(blog.get_absolute_url(), landing_url)
@@ -562,6 +569,8 @@ class TestBlogModel(TestCase):
         response = self.client.get(add_url)
         form = response.context_data['adminform'].form
         self.assertItemsEqual(sorted(form.fields.keys()), ['title', 'slug'])
+        create_page('master', 'page_template.html',
+                    language='en', published=True)
         response = self.client.post(add_url, {
             'title': 'one title', 'slug': 'one-title'})
         self.assertEqual(response.status_code, 302)
