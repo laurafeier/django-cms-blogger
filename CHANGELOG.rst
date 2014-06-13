@@ -1,6 +1,35 @@
 CHANGELOG
 =========
 
+Revision 547f41e (13.06.2014, 16:22 UTC)
+----------------------------------------
+
+* LUN-1621
+
+  * Add link to entry image in blog landing page and river plugin
+
+* LUN-1642
+
+  * fixed tests since blog creation now requires a home page on the working site.
+  * a default layout will get generated for a new blog.
+
+* LUN-1643
+
+  * current user should be added in the blog allowed users on creation.
+  * added categories to list display; * in order to not affect performance too much, restricted items per page to 50
+
+* LUN-1645
+
+  * Fix text deisplayed under poster image
+
+* LUN-1648
+
+  * changed help text + added help tooltips
+
+* LUN-1650
+
+  * Make header image only 100
+
 Revision e0ab12a (12.06.2014, 12:53 UTC)
 ----------------------------------------
 
