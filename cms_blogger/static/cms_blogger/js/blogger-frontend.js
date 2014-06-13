@@ -3,6 +3,7 @@
 
         this.init = function(){
             normalizeSocialURLs();
+            domChanges();
         };
 
         var social = {
@@ -110,6 +111,17 @@
                     e.preventDefault();
                 }
             });
+        }
+
+        function domChanges(){
+            var $blogHeader = $('.cms-blogger .blog-header');
+
+            $blogHeader.closest('.text-plugin').addClass('no-padding');
+
+            if($blogHeader.find('#blog-tagline').length === 0 ||
+               !$blogHeader.find('#blog-tagline').is(':visible')){
+                $blogHeader.find('#blog-title').css('margin-bottom', 15);
+            }
         }
 
         return this;
