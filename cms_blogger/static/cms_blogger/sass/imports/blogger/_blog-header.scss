@@ -4,7 +4,8 @@
     #{$ns}{
         .blog-header{
             position: relative;
-            padding: 1% 0 1% 0;
+            padding: 0;
+            min-height: 150px;
             #blog-title,
             #blog-tagline{
                 position: relative;
@@ -12,7 +13,10 @@
             }
             #blog-title{
                 font-size: 40px;
-                text-transform: uppercase;
+                line-height: 44px;
+                text-transform: capitalize;
+                padding: 15px;
+                padding-bottom: 0;
                 @media (max-width:480px){
                     font-size: 30px;
                 }
@@ -20,7 +24,8 @@
             }
             #blog-tagline{
                 font-size: 16px;
-                margin-top: 5px;
+                padding: 15px;
+                padding-top: 5px;
                 color: $entry-text-color;
                 * {
                     color: $entry-text-color;
@@ -31,15 +36,14 @@
             }
             #blog-banding-image{
                 position:absolute;
-                bottom:0;
-                right:0;
+                left:0;
+                top:0;
                 max-height: 100%;
-
-                & + #blog-title.add-padding{
-                    margin-bottom:9%;
-                }
-                & + #blog-title + #blog-tagline.add-padding{
-                    margin-bottom:5%;
+                width: 100%;
+                height: 100%;
+                min-width: 800px;
+                @media (max-width:480px){
+                    display: none;
                 }
 
             }
