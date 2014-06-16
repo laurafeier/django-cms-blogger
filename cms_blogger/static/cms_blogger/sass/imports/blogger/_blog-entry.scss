@@ -136,12 +136,9 @@
                 }
                 & > .left-col{
                     float:left;
-                    width: 48%;
-                    padding-right: 2%;
                     text-align: left;
                     white-space: normal;
                     vertical-align: top;
-
                     @media (max-width:599px){
                         display: block;
                         padding-right:0;
@@ -153,6 +150,10 @@
                     float:right;
                     width: 48%;
                     padding-left: 2%;
+                    & + .left-col{
+                        width: 48%;
+                        padding-right: 2%;
+                    }
                     @media (max-width:599px){
                         float: none;
                         width: auto;
