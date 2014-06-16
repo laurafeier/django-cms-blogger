@@ -118,10 +118,6 @@
 
             $blogHeader.closest('.text-plugin').addClass('no-padding');
 
-            if($blogHeader.find('#blog-tagline').length === 0 ||
-               !$blogHeader.find('#blog-tagline').is(':visible')){
-                $blogHeader.find('#blog-title').css('margin-bottom', 15);
-            }
         }
 
         return this;

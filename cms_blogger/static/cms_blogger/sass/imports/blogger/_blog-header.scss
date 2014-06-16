@@ -6,6 +6,9 @@
             position: relative;
             padding: 0;
             min-height: 150px;
+            @media (max-width:480px){
+                min-height: inherit;
+            }
             #blog-title,
             #blog-tagline{
                 position: relative;
