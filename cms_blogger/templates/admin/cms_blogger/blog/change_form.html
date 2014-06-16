@@ -72,7 +72,11 @@ $(function() {
     }).prepend(
         $("<span>").addClass(
             "ui-state-default ui-corner-all ui-icon ui-icon-help").css({
-                "position": "absolute", "top": "50%", "margin-top": "-10px"})
+                "position": "absolute",
+                "left": "0",
+                "top": "50%",
+                "margin-top": "-10px"
+            })
     ).tooltip({
         position: { my: "center bottom", at: "center top" },
         content: function() {
