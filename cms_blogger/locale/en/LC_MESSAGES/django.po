@@ -102,9 +102,10 @@ msgstr ""
 "healthy, recipes, or grilling. Every post that involves grilling should be "
 "categorized with grilling. That way, if a user goes to youresite.org/blogs/"
 "your-blog/category/grilling/, she will get a list of all grilling-specific "
-"blog entries.</p><p>Categories and tags are different from meta-keywords, "
-"which are blog entry-specific words used to improve SEO.</p>'>What are "
-"these?</span>"
+"blog entries.</p><p>Categories and tags differ from meta-keywords, which "
+"are blog entry-specific words used by search engines. Meta-keywords can be"
+" added to specific blogs entries in the advanced settings admin.</p>'>What"
+" are these?</span>"
 
 #: forms.py:377
 msgid "Check all the categories to apply to this post. Uncheck to remove."
