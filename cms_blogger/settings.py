@@ -32,7 +32,7 @@ ALLOWED_THUMBNAIL_IMAGE_TYPES = getattr(
     ['jpg', 'jpeg', 'png', 'gif'])
 
 MAXIMUM_THUMBNAIL_FILE_SIZE = getattr(
-    settings, 'BLOGGER_MAXIMUM_THUMBNAIL_FILE_SIZE', 1 * 1024 * 1024)
+    settings, 'BLOGGER_MAXIMUM_THUMBNAIL_FILE_SIZE', int(2.5 * 1024 * 1024))
 
 POSTER_IMAGE_WIDTH = getattr(
     settings, 'BLOGGER_POSTER_IMAGE_WIDTH', 640)
