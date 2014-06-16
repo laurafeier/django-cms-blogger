@@ -180,10 +180,12 @@ class BlogAdmin(AdminHelper):
                 u'<input type="button" value="Open Navigation Tool" /></a>')
             preview = self._navigation_preview(
                 request, nav_node)
+            hide = 'style="display:none"'
             if preview:
-                output.append('<ul id="id_navigation_node_pretty">')
-                output.append(preview)
-                output.append('</ul')
+                hide = ''
+            output.append('<ul id="id_navigation_node_pretty" %s>' % hide)
+            output.append(preview)
+            output.append('</ul')
             html_out = u''.join(output)
             html_out = mark_safe(html_out)
             return html_out
