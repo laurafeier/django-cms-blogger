@@ -36,5 +36,6 @@ function closeNavigationPopup(win, newRepr) {
     var name = windowname_to_id(win.name);
     var pretty_repr = name + '_pretty';
     document.getElementById(pretty_repr).innerHTML = newRepr;
+    document.getElementById(pretty_repr).style.display = "block";
     win.close();
 }
