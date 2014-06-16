@@ -365,7 +365,7 @@ class BlogAdmin(AdminHelper):
         if request.method == 'POST':
             data = {
                 'parent_node_id': request.POST.get('parent_node_id') or None,
-                'text': request.POST.get('text') or blog.title[:15],
+                'text': (request.POST.get('text') or blog.title)[:15],
                 'position': int(request.POST.get('position'))
             }
             nav_node = blog.navigation_node
