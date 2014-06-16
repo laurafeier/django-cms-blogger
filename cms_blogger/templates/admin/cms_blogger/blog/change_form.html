@@ -67,19 +67,19 @@ form ul.tagit {
 <script type="text/javascript">
 $(function() {
     $(".help-tooltip").addClass("ui-state-default").css({
-        "position": "relative", "padding-left": "20px", "margin": "20px",
-        "background": "none", "border": "none", "font-size": "10px"
+        "position": "relative", "padding-left": "25px", "margin-left": "20px",
+        "background": "none", "border": "none", "font-size": "10px",
+        "white-space": "nowrap", "display": "inline-block"
     }).prepend(
         $("<span>").addClass(
             "ui-state-default ui-corner-all ui-icon ui-icon-help").css({
-                "position": "absolute",
-                "left": "0",
-                "top": "50%",
-                "margin-top": "-10px",
-                "white-space": "nowrap"
+                "margin-left": "-25px",
+                "margin-right": "5px",
+                "display": "inline-block",
+                "vertical-align": "middle"
             })
     ).tooltip({
-        position: { my: "center bottom", at: "center top" },
+        position: { my: "right bottom", at: "center top", collision: "flipfit" },
         content: function() {
             var text = $(this).attr('title');
             return text.replace(/STATIC_URL/g, '{{STATIC_URL}}')
