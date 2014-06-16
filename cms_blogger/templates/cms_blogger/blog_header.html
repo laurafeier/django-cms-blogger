@@ -1,4 +1,4 @@
-<div class='blog-header'>
+<div class='blog-header' {% if not blog.attached_image %} style="height:auto; min-height:inherit;"{% endif %}>
     {% if blog.attached_image %}
     <img id='blog-banding-image' src='{{blog.attached_image.file.url}}'></img>
     {% endif %}
