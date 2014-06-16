@@ -6,7 +6,7 @@
             position: relative;
             padding: 0;
             min-height: 150px;
-            @media (max-width:480px){
+            @media (max-width:481px){
                 min-height: inherit;
             }
             #blog-title,
@@ -20,7 +20,7 @@
                 text-transform: capitalize;
                 padding: 15px;
                 padding-bottom: 0;
-                @media (max-width:480px){
+                @media (max-width:481px){
                     font-size: 30px;
                 }
 
@@ -33,7 +33,7 @@
                 * {
                     color: $entry-text-color;
                 }
-                @media (max-width:480px){
+                @media (max-width:481px){
                     display: none;
                 }
             }
@@ -42,7 +42,7 @@
                 left: 0;
                 bottom: 0;
                 max-height: 100%;
-                @media (max-width:480px){
+                @media (max-width:481px){
                     display: none;
                 }
 
