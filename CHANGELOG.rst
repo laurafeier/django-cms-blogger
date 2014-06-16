@@ -1,6 +1,31 @@
 CHANGELOG
 =========
 
+Revision 99d6541 (16.06.2014, 14:40 UTC)
+----------------------------------------
+
+* LUN-1651
+
+  * Fix help text alignment in FF and IE
+  * Fix help text icon in FF, fix entry description
+
+* LUN-1652
+
+  * blog menu node text should be max 15 chars
+
+* LUN-1653
+
+  * Fix navigation popup not closing
+
+* LUN-1656
+
+  * change 480 breakpoint to be inclusive
+
+* Misc commits
+
+  * Fix blog header height when no image is present
+  * help text changes
+
 Revision 547f41e (13.06.2014, 16:22 UTC)
 ----------------------------------------
 
