@@ -56,7 +56,7 @@
 .cms-blogger .blog-header #blog-banding-image {
   position: absolute;
   left: 0;
-  top: 0;
+  bottom: 0;
   max-height: 100%;
 }
 @media (max-width: 481px) {
@@ -213,13 +213,18 @@
   .cms-blogger .blog-entry > .right-col > .right-col .entry-image-container {
     margin-bottom: 10px;
   }
+  /* line 164, ../sass/imports/blogger/_blog-entry.scss */
+  .cms-blogger .blog-entry > .right-col > .right-col + .left-col {
+    width: auto;
+    padding-right: 0;
+  }
 }
-/* line 167, ../sass/imports/blogger/_blog-entry.scss */
+/* line 171, ../sass/imports/blogger/_blog-entry.scss */
 .cms-blogger .blog-entry > .right-col > .right-col img {
   max-width: 100%;
   max-height: 100%;
 }
-/* line 194, ../sass/imports/blogger/_blog-entry.scss */
+/* line 198, ../sass/imports/blogger/_blog-entry.scss */
 .cms-blogger .blog-entry .entry-read-more {
   background-color: #efefef;
   padding: 5px 20px;
@@ -233,34 +238,34 @@
   -o-border-radius: 3px;
   border-radius: 3px;
 }
-/* line 202, ../sass/imports/blogger/_blog-entry.scss */
+/* line 206, ../sass/imports/blogger/_blog-entry.scss */
 .cms-blogger .blog-entry .entry-read-more:hover {
   background-color: #dddddd;
 }
-/* line 207, ../sass/imports/blogger/_blog-entry.scss */
+/* line 211, ../sass/imports/blogger/_blog-entry.scss */
 .cms-blogger .blog-entry .subtitle {
   margin: 0 0 10px 0;
   color: #999999;
   font-size: 13px;
 }
-/* line 211, ../sass/imports/blogger/_blog-entry.scss */
+/* line 215, ../sass/imports/blogger/_blog-entry.scss */
 .cms-blogger .blog-entry .subtitle .author {
   color: #747474;
 }
-/* line 215, ../sass/imports/blogger/_blog-entry.scss */
+/* line 219, ../sass/imports/blogger/_blog-entry.scss */
 .cms-blogger .blog-entry .entry-summary {
   margin: 0 0 30px 0;
   text-align: left;
   font-size: 13px;
   color: #747474;
 }
-/* line 222, ../sass/imports/blogger/_blog-entry.scss */
+/* line 226, ../sass/imports/blogger/_blog-entry.scss */
 .cms-blogger .blog-entry .social {
   display: block;
   margin: 20px auto 0 auto;
   width: 25px;
 }
-/* line 226, ../sass/imports/blogger/_blog-entry.scss */
+/* line 230, ../sass/imports/blogger/_blog-entry.scss */
 .cms-blogger .blog-entry .social img {
   max-width: 100%;
 }
@@ -437,34 +442,39 @@
   .cms-blogger .blog-post > .right-col > .right-col .entry-image-container {
     margin-bottom: 10px;
   }
+  /* line 164, ../sass/imports/blogger/_blog-entry.scss */
+  .cms-blogger .blog-post > .right-col > .right-col + .left-col {
+    width: auto;
+    padding-right: 0;
+  }
 }
-/* line 167, ../sass/imports/blogger/_blog-entry.scss */
+/* line 171, ../sass/imports/blogger/_blog-entry.scss */
 .cms-blogger .blog-post > .right-col > .right-col img {
   max-width: 100%;
   max-height: 100%;
 }
-/* line 176, ../sass/imports/blogger/_blog-entry.scss */
+/* line 180, ../sass/imports/blogger/_blog-entry.scss */
 .cms-blogger .blog-post > .text-plugin {
   border: none !important;
   padding: 0;
   margin-left: 70px;
   width: auto;
 }
-/* line 181, ../sass/imports/blogger/_blog-entry.scss */
+/* line 185, ../sass/imports/blogger/_blog-entry.scss */
 .cms-blogger .blog-post > .text-plugin .filer_image_container[style*="float: left"] {
   margin-left: -70px !important;
 }
 @media (max-width: 480px) {
-  /* line 176, ../sass/imports/blogger/_blog-entry.scss */
+  /* line 180, ../sass/imports/blogger/_blog-entry.scss */
   .cms-blogger .blog-post > .text-plugin {
     margin-left: 0;
   }
-  /* line 187, ../sass/imports/blogger/_blog-entry.scss */
+  /* line 191, ../sass/imports/blogger/_blog-entry.scss */
   .cms-blogger .blog-post > .text-plugin .filer_image_container[style*="float: left"] {
     margin-left: 0 !important;
   }
 }
-/* line 194, ../sass/imports/blogger/_blog-entry.scss */
+/* line 198, ../sass/imports/blogger/_blog-entry.scss */
 .cms-blogger .blog-post .entry-read-more {
   background-color: #efefef;
   padding: 5px 20px;
@@ -478,34 +488,34 @@
   -o-border-radius: 3px;
   border-radius: 3px;
 }
-/* line 202, ../sass/imports/blogger/_blog-entry.scss */
+/* line 206, ../sass/imports/blogger/_blog-entry.scss */
 .cms-blogger .blog-post .entry-read-more:hover {
   background-color: #dddddd;
 }
-/* line 207, ../sass/imports/blogger/_blog-entry.scss */
+/* line 211, ../sass/imports/blogger/_blog-entry.scss */
 .cms-blogger .blog-post .subtitle {
   margin: 0 0 10px 0;
   color: #999999;
   font-size: 13px;
 }
-/* line 211, ../sass/imports/blogger/_blog-entry.scss */
+/* line 215, ../sass/imports/blogger/_blog-entry.scss */
 .cms-blogger .blog-post .subtitle .author {
   color: #747474;
 }
-/* line 215, ../sass/imports/blogger/_blog-entry.scss */
+/* line 219, ../sass/imports/blogger/_blog-entry.scss */
 .cms-blogger .blog-post .entry-summary {
   margin: 0 0 30px 0;
   text-align: left;
   font-size: 13px;
   color: #747474;
 }
-/* line 222, ../sass/imports/blogger/_blog-entry.scss */
+/* line 226, ../sass/imports/blogger/_blog-entry.scss */
 .cms-blogger .blog-post .social {
   display: block;
   margin: 20px auto 0 auto;
   width: 25px;
 }
-/* line 226, ../sass/imports/blogger/_blog-entry.scss */
+/* line 230, ../sass/imports/blogger/_blog-entry.scss */
 .cms-blogger .blog-post .social img {
   max-width: 100%;
 }
