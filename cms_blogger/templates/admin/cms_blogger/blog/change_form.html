@@ -66,28 +66,34 @@ form ul.tagit {
 <script type="text/javascript" src="{{ STATIC_URL }}cms_blogger/js/popupHandler.js"></script>
 <script type="text/javascript">
 $(function() {
-    $(".help-tooltip").addClass("ui-state-default").css({
-        "position": "relative", "padding-left": "25px", "margin-left": "20px",
-        "background": "none", "border": "none", "font-size": "10px",
-        "white-space": "nowrap", "display": "inline-block"
-    }).prepend(
-        $("<span>").addClass(
-            "ui-state-default ui-corner-all ui-icon ui-icon-help").css({
-                "margin-left": "-25px",
-                "margin-right": "5px",
-                "display": "inline-block",
-                "vertical-align": "middle"
-            })
-    ).tooltip({
-        position: { my: "right bottom", at: "center top", collision: "flipfit" },
-        content: function() {
-            var text = $(this).attr('title');
-            return text.replace(/STATIC_URL/g, '{{STATIC_URL}}')
-        },
-        open: function (event, ui) {
-            ui.tooltip.css({"max-width": "700px",});
-        }
-    });
+    $(".help-tooltip")
+        .addClass("ui-state-default")
+        .css({
+            "position": "relative", "padding-left": "25px",
+            "background": "none", "border": "none", "font-size": "10px",
+            "white-space": "nowrap", "display": "inline-block", "margin":"5px 0"
+        })
+        .prepend(
+            $("<span>")
+                .addClass("ui-state-default ui-corner-all ui-icon ui-icon-help")
+                .css({
+                    "margin-left": "-25px",
+                    "margin-right": "5px",
+                    "display": "inline-block",
+                    "vertical-align": "middle"
+                })
+        )
+        .before('<br />')
+        .tooltip({
+            position: { my: "right bottom", at: "center top" },
+            content: function() {
+                var text = $(this).attr('title');
+                return text.replace(/STATIC_URL/g, '{{STATIC_URL}}')
+            },
+            open: function (event, ui) {
+                ui.tooltip.css({"max-width": "700px",});
+            }
+        });
 });
 {% if not add %}
     var current_site = {{adminform.form.instance.site_id}};
