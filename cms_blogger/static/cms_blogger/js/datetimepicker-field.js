@@ -74,10 +74,12 @@ function buildDatetimePickerField(picker_field, input_picker_field, initial){
 
 function getTimezone(){
     var now_str = new Date();
-    var tz_offset = (now_str.getTimezoneOffset() ) / 60;
+    var tz_offset = parseInt(now_str.getTimezoneOffset() / 60, 10);
     var formated = Math.abs(tz_offset).toString().length < 2 ?
-                   '0' + Math.abs(tz_offset) + '00':
-                   ''+Math.abs(tz_offset) + '00';
+                   '0' + Math.abs(tz_offset) :
+                   ''+Math.abs(tz_offset);
+    var tz_minutes_offset = now_str.getTimezoneOffset() % 60;
+    formated = formated + '' + (tz_minutes_offset !== 0 ? tz_minutes_offset : '00');
     if(tz_offset < 0){
         formated = '+'+formated;
     }else{
