@@ -1,6 +1,28 @@
 CHANGELOG
 =========
 
+Revision a0cd378 (18.06.2014, 15:39 UTC)
+----------------------------------------
+
+* LUN-1655
+
+  * Move help text on the left to avoid tooltip beeing cut off when window is too small
+
+* LUN-1665
+
+  * Add support for timezones that are not multiple of hours
+  * Fix calendar not beeing displyed in IE 10 - this occured when the user was set in Pacific Time and the offset wasn't included in   the date string (ex: Wed Jun 18 05:21:38 PDT 2014) so the regex failed - to fix this get timezone programaticaly using the Date object methods
+
+* LUN-1667
+
+  * should not allow titles that generate empty slug
+
+* Misc commits
+
+  * Minor css fix for font size
+  * Fix entry text on small break points
+  * Increase image max upload size to 2.5 MB
+
 Revision 99d6541 (16.06.2014, 14:40 UTC)
 ----------------------------------------
 
