@@ -771,12 +771,18 @@ class TestBlogEntryModel(TestCase):
     def test_draft(self):
         draft_entry = BlogEntryPage.objects.create(blog=self.blog)
         self.assertTrue(draft_entry.is_draft)
-        draft_entry.title = 'Sample title'
-        draft_entry.save()
-        self.assertTrue(draft_entry.is_draft)
-        draft_entry.short_description = 'desc'
-        draft_entry.save()
-        self.assertFalse(draft_entry.is_draft)
+        url = reverse('admin:cms_blogger_blogentrypage_change',
+                      args=(draft_entry.pk, ))
+        response = self.client.get(url)
+        data = response.context_data['adminform'].form.initial
+        data['title'] = '@@#@$$##%&&**(*(*^&(^&<>?<~~~!)'
+        response = self.client.post(url, data)
+        self.assertTrue(len(response.context_data['errors']) >= 1)
+        data['title'] = 'Sample title'
+        data['short_description'] = 'short_description'
+        response = self.client.post(url, data)
+        self.assertEquals(response.status_code, 302)
+        self.assertFalse(BlogEntryPage.objects.get(id=draft_entry.id).is_draft)
 
     def test_publication_date_changes(self):
         entry = BlogEntryPage.objects.create(**{
