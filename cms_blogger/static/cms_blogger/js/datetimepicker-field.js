@@ -71,3 +71,18 @@ function buildDatetimePickerField(picker_field, input_picker_field, initial){
         }
     });
 }
+
+function getTimezone(){
+    var now_str = new Date();
+    var tz_offset = (now_str.getTimezoneOffset() ) / 60;
+    var formated = Math.abs(tz_offset).toString().length < 2 ?
+                   '0' + Math.abs(tz_offset) + '00':
+                   ''+Math.abs(tz_offset) + '00';
+    if(tz_offset < 0){
+        formated = '+'+formated;
+    }else{
+        formated = '-'+formated;
+    }
+
+    return formated;
+}
