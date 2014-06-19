@@ -315,7 +315,7 @@ class BlogAdmin(AdminHelper):
             filename, extension = os.path.splitext(
                 os.path.basename(full_filename))
             # check if it's an image type we can handle
-            extension = imghdr.what(upload) or extension
+            extension = (imghdr.what(upload) or extension).lstrip('.')
             if extension not in ALLOWED_THUMBNAIL_IMAGE_TYPES:
                 displayed_extension = extension or "Unknown"
                 raise UploadException(
