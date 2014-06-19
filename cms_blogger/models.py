@@ -510,11 +510,10 @@ class BlogEntryPage(getCMSContentModel(content_attr='content'),
             Q(Q(publication_date=self.publication_date) &
               Q(slug__lt=self.slug)) |
             Q(publication_date__lt=self.publication_date))
-        prev_post = self.blog.get_entries().exclude(
-            id=self.id).filter(query_for_prev)[:1]
-        if prev_post:
-            return prev_post[0]
-        return None
+        ordering = ('-publication_date', '-slug')
+        siblings = self.blog.get_entries().exclude(id=self.id)
+        prev_post = siblings.filter(query_for_prev).order_by(*ordering)[:1]
+        return prev_post[0] if prev_post else None
 
     def next_post(self):
         if not self.blog:
@@ -523,11 +522,10 @@ class BlogEntryPage(getCMSContentModel(content_attr='content'),
             Q(Q(publication_date=self.publication_date) &
               Q(slug__gt=self.slug)) |
             Q(publication_date__gt=self.publication_date))
-        next_post = self.blog.get_entries().order_by(
-            'publication_date').exclude(id=self.id).filter(query_for_next)[:1]
-        if next_post:
-            return next_post[0]
-        return None
+        ordering = ('publication_date', 'slug')
+        siblings = self.blog.get_entries().exclude(id=self.id)
+        next_post = siblings.filter(query_for_next).order_by(*ordering)[:1]
+        return next_post[0] if next_post else None
 
     def delete(self, *args, **kwargs):
         path = self.poster_image.name
