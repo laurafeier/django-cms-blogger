@@ -431,7 +431,12 @@ class TestBlogModel(TestCase):
         self.assertEquals(blog.allowed_users.all().get().pk, self.user.pk)
         landing_url = reverse('cms_blogger.views.landing_page', kwargs={
             'blog_slug': 'one-title'})
+        landing_url2 = reverse('cms_blogger.views.landing_page')
         self.assertEquals(blog.get_absolute_url(), landing_url)
+        self.assertEquals(self.client.get(landing_url).status_code, 200)
+        # since theres only one blog
+        self.assertEquals(self.client.get(landing_url2).status_code, 200)
+        self.assertEquals(self.client.get('/aa_blogs/').status_code, 404)
 
     def _make_blog(self):
         form_data = {'title': 'one title', 'slug': 'one-title'}
