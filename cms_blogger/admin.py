@@ -15,6 +15,7 @@ from django.utils.translation import get_language, ugettext_lazy as _
 from django.utils.translation import ungettext
 from django.utils.safestring import mark_safe
 from django.views.decorators.csrf import csrf_exempt
+from django.contrib.sites.models import Site
 
 from cms.admin.placeholderadmin import PlaceholderAdmin
 from cms.models import Title, CMSPlugin
@@ -575,8 +576,26 @@ class BlogEntryPageAdmin(AdminHelper, PlaceholderAdmin):
             reverse('admin:cms_blogger-move-entries'),
             urllib.urlencode(entries))
         return redirect(url)
-
     move_entries.short_description = "Move entries to another blog"
+
+    def _is_allowed(self, request):
+        if request.user.is_superuser:
+            return True
+        return Blog.objects.filter(allowed_users=request.user).exists()
+
+    def has_add_permission(self, request):
+        can_add = super(BlogEntryPageAdmin, self).has_add_permission(request)
+        return can_add and self._is_allowed(request)
+
+    def has_change_permission(self, request, obj=None):
+        can_change = super(BlogEntryPageAdmin, self)\
+            .has_change_permission(request, obj)
+        return can_change and self._is_allowed(request)
+
+    def has_delete_permission(self, request, obj=None):
+        can_delete = super(BlogEntryPageAdmin, self)\
+            .has_delete_permission(request, obj)
+        return can_delete and self._is_allowed(request)
 
 
 def _move_entries(destination_blog, entries_ids, mirror_categories=True):
