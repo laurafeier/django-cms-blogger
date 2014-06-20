@@ -1,6 +1,30 @@
 CHANGELOG
 =========
 
+Revision 5f21b50 (20.06.2014, 11:53 UTC)
+----------------------------------------
+
+* LUN-1671
+
+  * , LUN-1676: fixed navigation between entries; re-fixed blog related url patterns
+  * fixed urls so they only match it it starts with blogs
+
+* LUN-1676
+
+  * LUN-1671, LUN-1676: fixed navigation between entries; re-fixed blog related url patterns
+
+* LUN-1678
+
+  * Fix Save button not working after alert is displayed
+
+* LUN-1680
+
+  * dot from filename extension should be stripped.
+
+* Misc commits
+
+  * Remove len(uploaded_poster_image)==CONTENT_LENGTH.
+
 Revision a0cd378 (18.06.2014, 15:39 UTC)
 ----------------------------------------
 
