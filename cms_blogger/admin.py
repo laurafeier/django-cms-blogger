@@ -306,12 +306,6 @@ class BlogAdmin(AdminHelper):
         upload = None
         try:
             upload, full_filename, _ = handle_upload(request)
-            # check if the file was fully uploaded
-            if ('CONTENT_LENGTH' in request.META and
-                    len(upload) != int(request.META.get('CONTENT_LENGTH'))):
-                raise UploadException(
-                    "File not uploaded completely. "
-                    "Only {0} bytes uploaded".format(len(upload)))
             filename, extension = os.path.splitext(
                 os.path.basename(full_filename))
             # check if it's an image type we can handle
