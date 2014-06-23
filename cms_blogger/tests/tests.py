@@ -422,6 +422,8 @@ class TestBlogModel(TestCase):
         blog = Blog.objects.all().get()
         resp_code = lambda x: self.client.get(x).status_code
         self.assertEquals(resp_code('/aa_blogs/'), 404)
+        self.assertEquals(resp_code('/proxied/blogs/'), 200)
+        self.assertEquals(resp_code('/i/am/proxied/too/blogs/'), 200)
         self.assertEquals(resp_code('/blogs/'), 200)
         self.assertEquals(resp_code('/blogs/one-title/'), 200)
         self.assertEquals(resp_code('/blogs/one-title/none/'), 404)
