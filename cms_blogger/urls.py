@@ -13,5 +13,5 @@ blogger_patterns = patterns(
 urlpatterns = patterns(
     '',
     url(r'^admin/blogs-select2/', include('django_select2.urls')),
-    url(r'^(.+/)?' + settings.BLOGS_URL_PREFIX, include(blogger_patterns)),
+    url(r'^' + settings.BLOGS_URL_PREFIX, include(blogger_patterns)),
 )
