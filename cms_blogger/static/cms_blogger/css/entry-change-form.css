@@ -328,7 +328,7 @@
   padding-top: 0;
 }
 /* line 319, ../sass/imports/entry_change_form/_layout.scss */
-.cms_blogger-blogentrypage #content .main-col .form-row label {
+.cms_blogger-blogentrypage #content .main-col .form-row label, .cms_blogger-blogentrypage #content .main-col .form-row textarea {
   white-space: normal;
 }
 /* line 324, ../sass/imports/entry_change_form/_layout.scss */
