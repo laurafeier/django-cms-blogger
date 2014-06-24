@@ -83,8 +83,9 @@ class BlogLayoutInline(GenericTabularInline):
             pattern = 'admin:%s_%s_change' % (obj._meta.app_label,
                                               obj._meta.module_name)
             url = reverse(pattern,  args=[obj.id])
-            url_tag = ("<a href='%s'>Customize Layout "
-                       "content</a>" % url)
+            url_tag = ("<a href='%s' id='add_layout_id_%s' "
+                       "onclick='return showAddAnotherPopup(this);'"
+                       ">Customize Layout</a>" % (url, obj.id))
             return url_tag
         else:
             return "(save to customize layout)"
