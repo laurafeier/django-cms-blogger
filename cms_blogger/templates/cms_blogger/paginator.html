@@ -1,0 +1,49 @@
+{% spaceless %}
+{% ifnotequal page.paginator.num_pages 1 %}
+<div class="pagination clearfix">
+   <table style="width:100%">
+      <tr>
+         <td class="prev">
+            {% if page.has_previous %}
+               <a class="page previous" href="?{{ page_param_name|default:'page' }}={{ page.previous_page_number }}{{extra_params|default:''}}">
+                  <img src="{{STATIC_URL}}cms_blogger/img/arrow-left.png">
+                  <span class="text">newer posts</span>
+               </a>
+            {% endif %}
+         </td>
+         <td>
+            {% if show_first %}
+               <span class="page"><a href="?{{ page_param_name|default:'page' }}=1{{extra_params|default:''}}">1</a></span>
+            {% endif %}
+            {% if show_first_ellipsis %}
+               <span class="ellipsis">...</span>
+            {% endif %}
+            {% for linkpage in page_numbers %}
+               {% ifequal linkpage page.number %}
+                  <span class="current link_color_text">{{ page.number }}</span>
+               {% else %}
+                  <span class="page"><a href="?{{ page_param_name|default:'page' }}={{ linkpage }}{{extra_params|default:''}}">{{ linkpage }}</a></span>
+               {% endifequal %}
+            {% endfor %}
+            {% if show_last_ellipsis %}
+               <span class="ellipsis">...</span>
+            {% endif %}
+            {% if show_last %}
+               <span class="page"><a href="?{{ page_param_name|default:'page' }}={{ page.paginator.num_pages }}{{extra_params|default:''}}">{{ page.paginator.num_pages }}</a></span>
+            {% endif %}
+            </td>
+         <td class="next">
+            {% if page.has_next %}
+               <a class="page next" href="?{{ page_param_name|default:'page' }}={{ page.next_page_number }}{{extra_params|default:''}}">
+                  <span class="text">older posts</span>
+                  <img src="{{STATIC_URL}}cms_blogger/img/arrow-right.png">
+               </a>
+            {% endif %}
+         </td>
+      </tr>
+   </table>
+</div>
+{% endifnotequal %}
+{% endspaceless %}
+
+

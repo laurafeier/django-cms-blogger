@@ -1,0 +1,101 @@
+@import "imports/blogger/_globals.scss";
+
+@mixin entryFooter($ns){
+    #{$ns}{
+        .entry-footer{
+            border-top:1px solid $entry-footer-border-color;
+            border-bottom:1px solid $entry-footer-border-color;
+            margin-bottom: 20px;
+            width: 100%;
+
+            .pull-left,
+            .pull-right{
+                padding:20px 0px 40px 0px;
+                a:hover{
+                    text-decoration: none;
+
+                    .arrow-left,
+                    .arrow-right{
+                        text-decoration: underline;
+                    }
+                }
+            }
+            .pull-left + .pull-right{
+                border-left:1px solid $entry-footer-border-color;
+                margin-left: -1px;
+            }
+
+            .pull-left{
+                padding-left: 2%;
+                padding-right: 2%;
+                float: left;
+                width: 46%;
+                @media (max-width:480px){
+                    padding-left: 0;
+                    padding-right: 0;
+                    width: 49%;
+                }
+                img{
+                    padding-right:10px;
+                    width: 12px;
+                    text-decoration: none;
+                }
+                .title,
+                .date{
+                    margin-left:22px;
+                }
+            }
+            .pull-right{
+                text-align: right;
+                padding-left: 2%;
+                padding-right: 2%;
+                float: right;
+                width: 46%;
+                @media (max-width:480px){
+                    padding-left: 0;
+                    padding-right: 0;
+                    width: 50%;
+                }
+                img{
+                    padding-left:10px;
+                    width: 12px;
+                    text-decoration: none;
+                }
+                .title,
+                .date{
+                    margin-right:22px;
+                }
+            }
+
+            .arrow-left,
+            .arrow-right{
+                font-size: 20px;
+                color: $entry-date-color;
+                line-height: 30px;
+                margin-bottom: 5px;
+                @media (max-width:480px){
+                    font-size: 15px;
+                    white-space: nowrap;
+                }
+            }
+
+            .title{
+                font-size: 14px;
+                @media (max-width:480px){
+                    display: none;
+                }
+            }
+
+            .date{
+                font-size: 12px;
+                color: $entry-subtitle-color;
+                margin:0;
+                @media (max-width:480px){
+                    display: none;
+                }
+            }
+        }
+    }
+}
+
+@include entryFooter($namespace);

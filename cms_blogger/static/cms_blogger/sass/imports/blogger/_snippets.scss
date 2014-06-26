@@ -1,0 +1,11 @@
+@import "imports/blogger/_globals.scss";
+
+@mixin snippets($ns){
+    #{$ns}{
+        .promo-container.horizontal .promo{
+            height: 100% !important;
+        }
+    }
+}
+
+@include snippets($namespace);

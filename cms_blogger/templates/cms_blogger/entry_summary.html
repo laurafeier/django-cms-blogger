@@ -1,0 +1,34 @@
+<div class="blog-entry clearfix">
+    <div class='left-col'>
+        <div class="date">
+            <div class="month">{{entry.publication_date|date:"M"}}</div>
+            <div class="day">{{entry.publication_date|date:"d"}}</div>
+        </div>
+        {% if not blog %}
+            {% with blog=entry.blog %}
+                {% include "cms_blogger/social_widgets.html" %}
+            {% endwith %}
+        {% else %}
+            {% include "cms_blogger/social_widgets.html" %}
+        {% endif %}
+    </div>
+    <div class='right-col clearfix'>
+        <h1 id='entry-title'><a href="{{PROXY_REWRITE_RULE}}{{entry.get_absolute_url}}">{{entry.title}}</a></h1>
+        <p class="subtitle">
+            Posted by <span class="author">{{entry.authors_display_name}}</span>
+        </p>
+        {% if entry.poster_image and not hide_entry_image %}
+            <div class='right-col'>
+                <a href="{{PROXY_REWRITE_RULE}}{{entry.get_absolute_url}}">
+                {% include "cms_blogger/poster_image.html" %}
+                </a>
+            </div>
+        {% endif %}
+        <div class='left-col'>
+            {% if entry.short_description and not hide_entry_description %}
+            <p class="entry-summary">{{entry.short_description|truncatechars:400}}</p>
+            <a class="entry-read-more" href="{{PROXY_REWRITE_RULE}}{{entry.get_absolute_url}}">Read More</a>
+            {% endif %}
+        </div>
+    </div>
+</div>

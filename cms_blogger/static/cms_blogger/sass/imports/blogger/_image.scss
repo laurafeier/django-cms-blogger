@@ -1,0 +1,40 @@
+@mixin image($ns){
+    #{$ns}{
+
+        .img-details {
+            background: #333333;
+            border: 0;
+            margin-top: 0 !important;
+            font-size: 11px;
+            line-height: 18px;
+            letter-spacing: 1px;
+            font-weight: 400;
+            display: inline-block;
+
+            .img-caption {
+                color: #efefef;
+                padding: 15px;
+                padding-bottom: 5px !important;
+                display: block;
+            }
+
+            .img-credit {
+                color: #999999;
+                padding: 15px;
+                display: block;
+            }
+            .img-caption + .img-credit {
+                padding: 0 15px 15px 15px;
+            }
+        }
+
+        .blog-plomotion-plugin,
+        .blog-entry{
+            .img-details{
+                display: none;
+            }
+        }
+    }
+}
+
+@include image($namespace)

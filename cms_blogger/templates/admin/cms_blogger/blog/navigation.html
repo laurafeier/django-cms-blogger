@@ -1,0 +1,119 @@
+{% extends "admin/base_site.html" %}
+{% load menu_tags blog_admin_tags %}
+
+{% block breadcrumbs %}
+{% endblock %}
+
+{% block pretitle %}<p class="help">Currently on site: {% current_site %}</p>{% endblock %}
+
+{% block extrastyle %}
+<link rel="stylesheet" type="text/css" href="{{STATIC_URL}}cms_blogger/css/jqtree.css">
+<link rel="stylesheet" type="text/css" href="{{STATIC_URL}}cms_blogger/css/jqtree-extension.css">
+{% endblock %}
+{% block extrahead %}
+<script type="text/javascript" src="{{STATIC_URL}}cms_blogger/js/jquery-1.9.1.min.js"></script>
+<script type="text/javascript" src="{{STATIC_URL}}cms_blogger/js/tree.jquery.js"></script>
+<script type="text/javascript" src="{{STATIC_URL}}cms_blogger/js/jquery.editinplace.js"></script>
+<script type="text/javascript">
+var data = [{% show_menu 0 1 1 100 'admin/cms_blogger/blog/menu_nodes.html' %}];
+var tree;
+var blog_item_id = {% if initial_blog_node %}{{initial_blog_node.id}} * -1{% else %}'blog_item_id'{% endif %};
+
+$(function() {
+    tree = $('#nav-tree').tree({
+        data: data,
+        dragAndDrop: true,
+        autoOpen: true,
+        onCanSelectNode: function(node) {
+            if(node.id === blog_item_id){
+                return true;
+            }
+            return false;
+        },
+        onCanMove: function(node) {
+            if(node.id === blog_item_id){
+                return true;
+            }
+            return false;
+        },
+        onCanMoveTo: function(moved_node, target_node, position) {
+            if (target_node.getLevel() == 2 && position == 'inside') {
+                return false;
+            }
+            return true;
+        },
+        onCreateLi: function(node, $li) {
+            if(node.id === blog_item_id){
+                $li.find('.jqtree-title').addClass('inplace-editor').editInPlace({
+                    callback: function(unused, enteredText) {
+                        if(enteredText.length > 15){
+                            alert('Max length is 15 characters');
+                            return unused;
+                        }
+                        node.setData({label: enteredText});
+                        return enteredText;
+                    },
+                    show_buttons: true,
+                    bg_over: "purple",
+                    bg_out: "transparent",
+                    hover_class: "inplace-hovered",
+                });
+            } else if (node.blogNode === true){
+                $li.find('.jqtree-element').addClass('blog-node');
+            }
+        }
+    });
+    var blog_node = tree.tree('getNodeById', blog_item_id);
+    if (!blog_node){
+        var text_label = {% if initial_blog_node and initial_blog_node.text %}'{{initial_blog_node.text}}'{% else %}'Click to edit text!'{% endif %};
+        tree.tree(
+            'appendNode', {
+                label: text_label,
+                id: blog_item_id});
+    }
+    blog_node = tree.tree('getNodeById', blog_item_id);
+    tree.tree('selectNode', blog_node);
+    tree.tree('scrollToNode', blog_node);
+    tree.bind( 'tree.select', function(event) {
+        if (!event.node) {
+            tree.tree('selectNode', event.previous_node)
+        }});
+});
+</script>
+{% endblock %}
+
+{% block content %}
+<div id='nav-tree'></div>
+<p class="help">Click on the green box to edit the text that will appear in your site's menu.</p>
+<p class="help">Click and hold on the green box to drag the blog into the desired spot in the menu.</p>
+<form action="." method="post">
+{% csrf_token %}
+{% if is_popup %}<input type="hidden" name="_popup" value="1" />{% endif %}
+<div class="submit-row">
+<input type="submit" value="Save" class="default" name="_save" id='submit-form'>
+</div>
+<script type="text/javascript">
+$(document).ready(function(){
+    $('#submit-form').click(function(){
+        var blog_node = tree.tree('getNodeById', blog_item_id);
+        var post_data = {
+            'parent_node_id': blog_node.parent.id,
+            'position': blog_node.parent.getChildIndex(blog_node),
+            'text': blog_node.name
+        }
+        $.each(post_data, function(key, value) {
+            $("<input>").attr({
+                'type': 'hidden', 'name': key
+            }).val(value).appendTo($('form'));
+        });
+        return true;
+    });
+});
+
+(function ($) {
+    var i = 0;
+    $('form').submit(function () { i++; if(i > 1) { return false; }});
+})($);
+</script>
+</form>
+{% endblock %}

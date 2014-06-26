@@ -1,0 +1,49 @@
+@mixin header($ns){
+    #{$ns}{
+        #blog-header{
+            background-color: $header-bg-color;
+            padding:5px 0;
+            border-bottom: 1px solid $header-border-color;
+
+            .blog-header{
+                width: $content-width;
+                margin: 0 auto;
+                position: relative;
+                padding:10px 0 55px 0;
+                #blog-title{
+                    font-size: 30px;
+                    text-transform: uppercase;
+                    .main_color_text{
+                        color: $header-text-color;
+
+                    }
+                }
+                #blog-tagline{
+                    *{
+                        color: #747474;
+
+                    }
+                }
+
+                #blog-title,
+                #blog-tagline{
+                    z-index: 1;
+                    position: relative;
+                    &:hover{
+                        text-decoration: underline;
+                    }
+                }
+
+                #blog-banding-image{
+                    position: absolute;
+                    bottom: 0;
+                    left: 0;
+                    z-index: 0;
+                    max-height: 100%;
+                }
+            }
+        }
+    }
+}
+
+@include header($namespace)

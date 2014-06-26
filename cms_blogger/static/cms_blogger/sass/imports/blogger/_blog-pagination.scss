@@ -1,0 +1,96 @@
+@import "imports/blogger/_globals.scss";
+
+@mixin blogPagination($ns){
+    #{$ns}{
+        .right-rail{
+            .pagination{
+                font-size: 16px;
+                td{
+                    width: 30%;
+                    &.prev{
+                        width: 35%;
+                    }
+                    &.next{
+                        width: 35%;
+                    }
+                }
+            }
+        }
+        .pagination{
+            border-top:1px solid $entry-border-color;
+            margin:0;
+            padding:25px 0;
+            text-align: center;
+            font-size: 20px;
+            line-height: 30px;
+            @media (max-width:600px){
+                font-size: 16px;
+            }
+            a{
+                color: $entry-date-color;
+                white-space: nowrap;
+                 @media (max-width:480px){
+                    .text{
+                        display: none;
+                    }
+                }
+            }
+            td{
+                width: 50%;
+                text-align: center;
+                @media (max-width:480px){
+                    width: auto;
+                }
+                &.prev{
+                    width: 25%;
+                    text-align: left;
+                    @media (max-width:480px){
+                        width: auto;
+                    }
+                }
+                &.next{
+                    width: 25%;
+                    text-align: right;
+                    @media (max-width:480px){
+                        width: auto;
+                    }
+                }
+            }
+            .current{
+                text-decoration: underline;
+            }
+            .page,
+            .ellipsis,
+            .current{
+                margin: 0 5px;
+                @media (max-width:480px){
+                    margin: 0 10px;
+                }
+            }
+            .previous,
+            .next{
+                margin:0;
+                img{
+                    text-decoration: none;
+                    width: 12px;
+                }
+            }
+
+            .previous{
+                float: none;
+                text-align: left;
+                img{
+                    padding-right:10px;
+                }
+            }
+            .next{
+                float: none;
+                img{
+                    padding-left:10px;
+                }
+            }
+        }
+    }
+}
+
+@include blogPagination($namespace);
