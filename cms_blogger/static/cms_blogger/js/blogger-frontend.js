@@ -1,4 +1,8 @@
+/*global _gaq */
+
 (function($){
+    "use strict";
+
     function Blogger(){
 
         this.init = function(){
