@@ -542,6 +542,11 @@ class BlogEntryPageChangeForm(forms.ModelForm):
             raise ValidationError(
                 "Cannot generate slug from this title. Enter a valid"
                 " title consisting of letters, numbers or underscores.")
+        if slug in settings.DISALLOWED_ENTRIES_SLUGS:
+            raise ValidationError(
+                "Cannot use slug generated from this title %s. This is a "
+                "system reserved slug. Change the title so that it can "
+                "generate a different slug.")
         return title
 
     def _set_publication_date(self):

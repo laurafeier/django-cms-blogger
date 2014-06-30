@@ -10,7 +10,7 @@ from .utils import paginate_queryset
 import re
 
 
-def get_blog(slug):
+def get_blog_or_404(slug):
     site = Site.objects.get_current()
     if not slug:
         blog_qs = list(Blog.objects.filter(site=site)[:2])
@@ -77,7 +77,7 @@ def _paginate_entries_on_blog(request, entries, blog):
 
 def landing_page(request, blog_slug):
     try:
-        blog = get_blog(blog_slug)
+        blog = get_blog_or_404(blog_slug)
     except Http404:
         return HttpResponseNotFound(
             "<h1>Blog not found for the given URL</h1>")

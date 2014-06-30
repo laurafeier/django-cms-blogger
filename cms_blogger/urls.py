@@ -1,6 +1,11 @@
 from django.conf.urls.defaults import patterns, url, include
 from cms_blogger import feeds, settings
 
+# WARNING: base on the following patterns, entries with slugs in
+#       DISALLOWED_ENTRIES_SLUGS are not available.
+# Whenever these patterns are changed and are affecting the
+#       entries slugs, DISALLOWED_ENTRIES_SLUGS needs to be updated in
+#       order to make sure that users will not create unavailable entries.
 
 blogger_patterns = patterns(
     'cms_blogger.views',

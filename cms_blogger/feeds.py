@@ -1,6 +1,7 @@
 from django.contrib.syndication.views import Feed
 from django.template.context import RequestContext
-from .views import get_blog
+from .views import get_blog_or_404
+from .settings import POSTS_ON_RSS
 import urlparse
 
 
@@ -10,14 +11,19 @@ class BlogFeed(Feed):
         super(BlogFeed, self).__init__(*args, **kwargs)
         self.original_url = ''
 
-    def get_object(self, request, blog_slug):
-        obj = get_blog(blog_slug)
-
+    def _set_original_url(self, request):
+        self.original_url = ''
         scheme, netloc = urlparse.urlparse(
             request.META.get("HTTP_X_ORIGINAL_URL", ""))[:2]
-        prefix = RequestContext(request).get('PROXY_REWRITE_RULE', '')
-        self.original_url = urlparse.urlunparse(
-            (scheme, netloc, prefix, '', '', '')) if netloc else ''
+        if netloc:
+            context = RequestContext(request)
+            proxy_prefix = context.get('PROXY_REWRITE_RULE', '')
+            self.original_url = urlparse.urlunparse(
+                (scheme, netloc, proxy_prefix, '', '', ''))
+
+    def get_object(self, request, blog_slug):
+        obj = get_blog_or_404(blog_slug)
+        self._set_original_url(request)
         return obj
 
     def title(self, obj):
@@ -30,7 +36,7 @@ class BlogFeed(Feed):
         return obj.tagline
 
     def items(self, obj):
-        return obj.get_entries()[:20]
+        return obj.get_entries()[:POSTS_ON_RSS]
 
     def item_title(self, item):
         return item.title
@@ -57,17 +63,9 @@ class BlogFeed(Feed):
     def item_enclosure_url(self, item):
         return item.poster_image.url if item.poster_image else ''
 
-    def item_enclosure_mime_type(self, item):
-        if not item.poster_image:
-            return ''
-        return 'image/png'
+    item_enclosure_mime_type = 'image/png'
 
     def item_enclosure_length(self, item):
-        """
-        Try to obtain the size of the enclosure
-        if the enclosure is present on the FS,
-        otherwise returns an hardcoded value.
-        """
         if item.poster_image:
             return str(item.poster_image.size)
         return '0'
