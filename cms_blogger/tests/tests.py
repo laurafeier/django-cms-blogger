@@ -5,6 +5,7 @@ from django.contrib.admin.util import flatten_fieldsets
 from django.contrib.admin.sites import AdminSite
 from django.core.urlresolvers import reverse
 from django.template import Template
+from django.utils import timezone
 from django.test.client import RequestFactory
 from dateutil import tz, parser
 
@@ -416,6 +417,29 @@ class TestBlogModel(TestCase):
         self.client.login(username='admin', password='secret')
         self.user = superuser
 
+    def test_urls(self):
+        self._make_blog()
+        blog = Blog.objects.all().get()
+        resp_code = lambda x: self.client.get(x).status_code
+        self.assertEquals(resp_code('/aa_blogs/'), 404)
+        # proxied sites need to have a rewrite rule similar to:
+        # ^/(<proxy-prefix>/blogs(|/.*))$ proxy:http://<site-hostname>/blogs$2
+        self.assertEquals(resp_code('/proxied/blogs/'), 404)
+        self.assertEquals(resp_code('/i/am/proxied/too/blogs/'), 404)
+        self.assertEquals(resp_code('/blogs/'), 200)
+        self.assertEquals(resp_code('/blogs/one-title/'), 200)
+        self.assertEquals(resp_code('/blogs/one-title/none/'), 404)
+        self.assertEquals(resp_code('/blogs/one-title/category/music/'), 404)
+        categ = BlogCategory.objects.create(blog=blog, name='music')
+        self.assertEquals(resp_code('/blogs/one-title/category/music/'), 200)
+        self.assertEquals(resp_code('/blogs/one-title/first-entry/'), 404)
+        entry = self._make_entry(blog)
+        self.assertEquals(resp_code('/blogs/one-title/first-entry/'), 404)
+        self.assertEquals(resp_code('/blogs/one-title/first-entry/?preview'), 200)
+        entry.is_published = True
+        entry.save()
+        self.assertEquals(resp_code('/blogs/one-title/first-entry/'), 200)
+
     def test_creation(self):
         # only title and slug are required fields
         # at least one page is required
@@ -424,14 +448,15 @@ class TestBlogModel(TestCase):
         data = {'title': 'one title', 'slug': 'one-title'}
         add_url = reverse('admin:cms_blogger_blog_add')
         self.client.post(add_url, data)
-        blog = Blog.objects.all().get()
         # blog site should be prepopulated with the current site
+        blog = Blog.objects.all().get()
         self.assertEquals(blog.site.pk, 1)
         # current user should be added
         self.assertEquals(blog.allowed_users.all().get().pk, self.user.pk)
         landing_url = reverse('cms_blogger.views.landing_page', kwargs={
             'blog_slug': 'one-title'})
         self.assertEquals(blog.get_absolute_url(), landing_url)
+        self.assertEquals(self.client.get(landing_url).status_code, 200)
 
     def _make_blog(self):
         form_data = {'title': 'one title', 'slug': 'one-title'}
@@ -754,29 +779,57 @@ class TestBlogEntryModel(TestCase):
         self.assertEquals(CMSPlugin.objects.count(), 0)
         self.assertTrue(Blog.objects.filter(pk=self.blog.pk).exists())
 
-    def test_next_prev_post(self):
+    def test_next_prev_post_even(self):
         for i in range(4):
             BlogEntryPage.objects.create(**{
                 'title': '%s' % i, 'blog': self.blog,
                 'short_description': 'desc', 'is_published': True})
+        BlogEntryPage.objects.update(publication_date=timezone.now())
         entries = {e.title: e for e in BlogEntryPage.objects.all()}
 
         self.assertEquals(entries["0"].previous_post(), None)
         self.assertEquals(entries["0"].next_post().pk, entries["1"].pk)
         self.assertEquals(entries["1"].previous_post().pk, entries["0"].pk)
         self.assertEquals(entries["1"].next_post().pk, entries["2"].pk)
+        self.assertEquals(entries["2"].previous_post().pk, entries["1"].pk)
+        self.assertEquals(entries["2"].next_post().pk, entries["3"].pk)
         self.assertEquals(entries["3"].previous_post().pk, entries["2"].pk)
         self.assertEquals(entries["3"].next_post(), None)
+
+    def test_next_prev_post_odd(self):
+        for i in range(5):
+            BlogEntryPage.objects.create(**{
+                'title': '%s' % i, 'blog': self.blog,
+                'short_description': 'desc', 'is_published': True})
+        BlogEntryPage.objects.update(publication_date=timezone.now())
+        entries = {e.title: e for e in BlogEntryPage.objects.all()}
+
+        self.assertEquals(entries["0"].previous_post(), None)
+        self.assertEquals(entries["0"].next_post().pk, entries["1"].pk)
+        self.assertEquals(entries["1"].previous_post().pk, entries["0"].pk)
+        self.assertEquals(entries["1"].next_post().pk, entries["2"].pk)
+        self.assertEquals(entries["2"].previous_post().pk, entries["1"].pk)
+        self.assertEquals(entries["2"].next_post().pk, entries["3"].pk)
+        self.assertEquals(entries["3"].previous_post().pk, entries["2"].pk)
+        self.assertEquals(entries["3"].next_post().pk, entries["4"].pk)
+        self.assertEquals(entries["4"].previous_post().pk, entries["3"].pk)
+        self.assertEquals(entries["4"].next_post(), None)
 
     def test_draft(self):
         draft_entry = BlogEntryPage.objects.create(blog=self.blog)
         self.assertTrue(draft_entry.is_draft)
-        draft_entry.title = 'Sample title'
-        draft_entry.save()
-        self.assertTrue(draft_entry.is_draft)
-        draft_entry.short_description = 'desc'
-        draft_entry.save()
-        self.assertFalse(draft_entry.is_draft)
+        url = reverse('admin:cms_blogger_blogentrypage_change',
+                      args=(draft_entry.pk, ))
+        response = self.client.get(url)
+        data = response.context_data['adminform'].form.initial
+        data['title'] = '@@#@$$##%&&**(*(*^&(^&<>?<~~~!)'
+        response = self.client.post(url, data)
+        self.assertTrue(len(response.context_data['errors']) >= 1)
+        data['title'] = 'Sample title'
+        data['short_description'] = 'short_description'
+        response = self.client.post(url, data)
+        self.assertEquals(response.status_code, 302)
+        self.assertFalse(BlogEntryPage.objects.get(id=draft_entry.id).is_draft)
 
     def test_publication_date_changes(self):
         entry = BlogEntryPage.objects.create(**{

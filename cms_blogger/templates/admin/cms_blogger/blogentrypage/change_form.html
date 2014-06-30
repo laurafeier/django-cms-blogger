@@ -56,10 +56,20 @@
 <a href="#" id='publish_form_bottom'></a>
 <script type="text/javascript">
 (function ($) {
-    var i = 0;
+    window.submitIndex = 0;
+
     $('form').submit(function () {
-        i++; if(i > 1) { return false; }
+      window.submitIndex++;
+
+      //reset index after 1 sec
+      setTimeout(function(){
+        window.submitIndex = 0;
+      }, 1000)
+      if( window.submitIndex > 1) {
+        return false;
+      }
     });
+
     $('#delete_form_bottom').button();
     $('#publish_form_bottom').replaceWith(
         $('#id_publish').clone(true).prop({'id': 'publish_form_bottom'}));

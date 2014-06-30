@@ -45,3 +45,6 @@ POSTS_ON_LANDING_PAGE = getattr(
 
 ALLOWED_SITES_FOR_USER = getattr(
     settings, 'BLOGGER_ALLOWED_SITES_FOR_USER', None)
+
+BLOGS_URL_PREFIX = getattr(
+    settings, 'BLOGGER_BLOGS_URL_PREFIX', 'blogs')

@@ -32,6 +32,7 @@ from .models import (
 from .widgets import (
     TagItWidget, ButtonWidget, DateTimeWidget, PosterImage, SpinnerWidget,
     JQueryUIMultiselect)
+from .slug import get_unique_slug
 from .utils import user_display_name
 from cms.templatetags.cms_admin import admin_static_url
 import json
@@ -534,7 +535,14 @@ class BlogEntryPageChangeForm(forms.ModelForm):
         return body
 
     def clean_title(self):
-        return self.cleaned_data.get('title').strip()
+        title = self.cleaned_data.get('title').strip()
+        empty_qs = BlogEntryPage.objects.get_empty_query_set()
+        slug = get_unique_slug(self.instance, title, empty_qs)
+        if not slug:
+            raise ValidationError(
+                "Cannot generate slug from this title. Enter a valid"
+                " title consisting of letters, numbers or underscores.")
+        return title
 
     def _set_publication_date(self):
         was_published = self.instance.is_published
