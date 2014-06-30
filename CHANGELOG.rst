@@ -1,6 +1,16 @@
 CHANGELOG
 =========
 
+Revision 71feeba (30.06.2014, 08:31 UTC)
+----------------------------------------
+
+* LUN-1684
+
+  * blog pages should only respond to urls that start with /blogs
+  * allow proxy prefixes in the blogs urls
+
+No other commits.
+
 Revision 5f21b50 (20.06.2014, 11:53 UTC)
 ----------------------------------------
 
