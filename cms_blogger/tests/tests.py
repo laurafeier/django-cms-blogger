@@ -825,11 +825,23 @@ class TestBlogEntryModel(TestCase):
         data['title'] = '@@#@$$##%&&**(*(*^&(^&<>?<~~~!)'
         response = self.client.post(url, data)
         self.assertTrue(len(response.context_data['errors']) >= 1)
+        data['title'] = 'rss'
+        response = self.client.post(url, data)
+        self.assertTrue(len(response.context_data['errors']) >= 1)
         data['title'] = 'Sample title'
         data['short_description'] = 'short_description'
         response = self.client.post(url, data)
         self.assertEquals(response.status_code, 302)
         self.assertFalse(BlogEntryPage.objects.get(id=draft_entry.id).is_draft)
+        # slug is generated only the first time
+        data['title'] = 'rss'
+        response = self.client.post(url, data)
+        self.assertTrue(response.status_code, 302)
+        data['title'] = '@@#@$$##%&&**(*(*^&(^&<>?<~~~!)'
+        response = self.client.post(url, data)
+        self.assertTrue(response.status_code, 302)
+        self.assertEquals(
+            BlogEntryPage.objects.get(id=draft_entry.id).slug, 'sample-title')
 
     def test_publication_date_changes(self):
         entry = BlogEntryPage.objects.create(**{
