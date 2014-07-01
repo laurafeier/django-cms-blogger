@@ -1,4 +1,8 @@
+/*global _gaq */
+
 (function($){
+    "use strict";
+
     function Blogger(){
 
         this.init = function(){
@@ -79,7 +83,7 @@
                 }else{
                     $(this).attr("href", href);
                 }
-                $(this).off('click');
+                $(this).unbind('click');
                 addClickHandlers($(this));
             });
         }
@@ -93,7 +97,7 @@
                 win.focus();
             }
 
-            elem.on('click', function(e){
+            elem.bind('click', function(e){
                 if($(this).hasClass('email')){
                     //set timeout to make sure request doesn't get canceled by the browser
                     setTimeout(social.email_share, 500);
