@@ -64,9 +64,6 @@ class BlogFeed(Feed):
         return item.poster_image.url if item.poster_image else ''
 
     item_enclosure_mime_type = 'image/png'
-
-    def item_enclosure_length(self, item):
-        if item.poster_image:
-            return str(item.poster_image.size)
-        return '0'
+    # for performance reasons
+    item_enclosure_length = 0
 
