@@ -34,6 +34,7 @@ from .widgets import (
     JQueryUIMultiselect)
 from .slug import get_unique_slug
 from .utils import user_display_name
+from .settings import DISALLOWED_ENTRIES_SLUGS
 from cms.templatetags.cms_admin import admin_static_url
 import json
 
@@ -537,16 +538,18 @@ class BlogEntryPageChangeForm(forms.ModelForm):
     def clean_title(self):
         title = self.cleaned_data.get('title').strip()
         empty_qs = BlogEntryPage.objects.get_empty_query_set()
-        slug = get_unique_slug(self.instance, title, empty_qs)
-        if not slug:
-            raise ValidationError(
-                "Cannot generate slug from this title. Enter a valid"
-                " title consisting of letters, numbers or underscores.")
-        if slug in settings.DISALLOWED_ENTRIES_SLUGS:
-            raise ValidationError(
-                "Cannot use slug generated from this title %s. This is a "
-                "system reserved slug. Change the title so that it can "
-                "generate a different slug.")
+        # slug is generated only the first time
+        if not self.instance.slug:
+            slug = get_unique_slug(self.instance, title, empty_qs)
+            if not slug:
+                raise ValidationError(
+                    "Cannot generate slug from this title. Enter a valid"
+                    " title consisting of letters, numbers or underscores.")
+            if slug in DISALLOWED_ENTRIES_SLUGS:
+                raise ValidationError(
+                    "Cannot use slug generated from this title %s. This is a "
+                    "system reserved slug. Change the title so that it can "
+                    "generate a different slug." % slug)
         return title
 
     def _set_publication_date(self):
