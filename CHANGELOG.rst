@@ -1,6 +1,32 @@
 CHANGELOG
 =========
 
+Revision 0e8196c (03.07.2014, 07:34 UTC)
+----------------------------------------
+
+* LUN-1668
+
+  * Remove entry title capitalization
+
+* LUN-1688
+
+  * Fix short desciption not wrapping in IE11
+
+* LUN-1692
+
+  * Add jshint globals
+  * fix sharing buttons on templates with jQuery < 1.8 (missing on/off functions)
+
+* LUN-1704
+
+  * RSS feed for blog + validation for entries slugs
+
+* Misc commits
+
+  * rss enclosures will have length 0 in order to not impact performance
+  * fixed validation for disallowed entry slugs
+  * rss feeds enabled for blogs.
+
 Revision 71feeba (30.06.2014, 08:31 UTC)
 ----------------------------------------
 
