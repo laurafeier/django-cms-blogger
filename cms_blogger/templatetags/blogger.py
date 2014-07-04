@@ -31,7 +31,7 @@ def publish_date_box(entry):
     else:
         as_utc = datetime_obj
     as_utc = as_utc.replace(tzinfo=None)
-    # entry was published for more than 3 months
+    # entry is published for more than 3 months
     is_older = as_utc < (datetime.datetime.utcnow() +
                          relativedelta.relativedelta(months=-3))
     return {
