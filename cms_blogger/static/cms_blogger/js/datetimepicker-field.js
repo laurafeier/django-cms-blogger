@@ -25,9 +25,10 @@ if (!$.datepicker.__super_updateDatepicker){
     };
 }
 
-function buildDatetimePickerField(picker_field, input_picker_field, initial){
+function buildDatetimePickerField(picker_field, input_picker_field, tz_offset_field, initial){
     var picker_field = $(picker_field);
     var input_picker_field = $(input_picker_field);
+    var tz_field = $(tz_offset_field);
     if(initial){
         //use moment.js to format date appropriately for IE8
         initial = new Date(moment(initial));
@@ -40,9 +41,12 @@ function buildDatetimePickerField(picker_field, input_picker_field, initial){
             // reset sliders first
             picker_field.datetimepicker('setDate', new Date(0,0,0,1,0,0));
             picker_field.datetimepicker('setDate', null);
-            input_picker_field.val('')
+            input_picker_field.val('');
+            tz_field.val(getTimezone());
         } else {
-            picker_field.datetimepicker('setDate', new Date(value));
+            var date_obj = new Date(value);
+            picker_field.datetimepicker('setDate', date_obj);
+            tz_field.val(getTimezone(date_obj));
         }
     }
 
@@ -51,7 +55,10 @@ function buildDatetimePickerField(picker_field, input_picker_field, initial){
         alwaysSetTime:false,
         altFieldTimeOnly: false,
         timeFormat: 'hh:mm TT',
-        buttons: {'Reset': function(){ _setDate(initial); return false;}}
+        buttons: {'Reset': function(){ _setDate(initial); return false;}},
+        onSelect: function (selectedDateTime){
+            tz_field.val(getTimezone(picker_field.datetimepicker('getDate')));
+        }
     });
 
     _setDate(initial);
@@ -72,8 +79,8 @@ function buildDatetimePickerField(picker_field, input_picker_field, initial){
     });
 }
 
-function getTimezone(){
-    var now_str = new Date();
+function getTimezone(date_obj){
+    var now_str = date_obj ? date_obj : new Date();
     var tz_offset = parseInt(now_str.getTimezoneOffset() / 60, 10);
     var formated = Math.abs(tz_offset).toString().length < 2 ?
                    '0' + Math.abs(tz_offset) :

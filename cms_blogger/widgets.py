@@ -147,10 +147,9 @@ class DateTimeWidget(forms.widgets.TextInput):
             u"<input type='hidden' name='_{name}_tzoffset' "
             u"id='_{name}_tzoffset'/>"
             u"<script type='text/javascript'>"
-            u"var offset_el = document.getElementById('_{name}_tzoffset');"
-            u"offset_el.value = getTimezone();"
             u"buildDatetimePickerField("
-            u"'#picker_id_{name}', '#id_{name}', '{initial}');"
+            u"'#picker_id_{name}', '#id_{name}', '#_{name}_tzoffset', "
+            u"'{initial}');"
             u"</script>"
         )
         return mark_safe(html.format(name=name, initial=value or ''))
