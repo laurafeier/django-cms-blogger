@@ -1,0 +1,16 @@
+{% spaceless %}
+<div class="date">
+    <script type="text/javascript">var {{date_var}} = new Date({{utc_millis}});</script>
+    <div class="month">
+        <script type="text/javascript">document.write({{date_var}}.toLocaleString('en-us', {month: 'short'}))</script>
+    </div>
+    <div class="day">
+        <script type="text/javascript">document.write({{date_var}}.toLocaleString('en-us', {day: '2-digit'}))</script>
+    </div>
+    {% if show_year %}
+    <div class="year">
+        <script type="text/javascript">document.write({{date_var}}.getYear() < (new Date()).getYear() ? {{date_var}}.getFullYear() : "")</script>
+    </div>
+    {% endif %}
+</div>
+{% endspaceless %}
