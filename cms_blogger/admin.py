@@ -390,6 +390,27 @@ class BlogAdmin(AdminHelper):
         return render_to_response(
             'admin/cms_blogger/blog/navigation.html', context)
 
+    def _is_allowed(self, request):
+        if request.user.is_superuser:
+            return True
+        from .utils import get_allowed_sites, get_current_site
+        current_site = get_current_site(request, Blog)
+        return current_site in get_allowed_sites(request, Blog)
+
+    def has_add_permission(self, request):
+        can_add = super(BlogAdmin, self).has_add_permission(request)
+        return can_add and self._is_allowed(request)
+
+    def has_change_permission(self, request, *args, **kwargs):
+        can_change = super(BlogAdmin, self)\
+            .has_change_permission(request, *args, **kwargs)
+        return can_change and self._is_allowed(request)
+
+    def has_delete_permission(self, request, *args, **kwargs):
+        can_delete = super(BlogAdmin, self)\
+            .has_delete_permission(request, *args, **kwargs)
+        return can_delete and self._is_allowed(request)
+
 
 class CurrentSiteBlogFilter(admin.filters.RelatedFieldListFilter):
 
@@ -502,7 +523,7 @@ class BlogEntryPageAdmin(AdminHelper, PlaceholderAdmin):
         return qs.filter(blog__allowed_users=request.user)
 
     def lookup_allowed(self, lookup, value):
-        if lookup == BlogEntryChangeList.site_lookup:
+        if lookup == BlogEntryPage.site_lookup:
             return True
         return super(BlogEntryPageAdmin, self).lookup_allowed(lookup, value)
 

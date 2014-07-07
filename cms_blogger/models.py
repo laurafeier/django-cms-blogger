@@ -140,6 +140,7 @@ def blog_page(cls):
 
 @contribute_with_title
 class AbstractBlog(models.Model):
+    site_lookup = 'site__exact'
 
     title = models.CharField(
         _('title'), max_length=50, blank=False, null=False,
@@ -295,6 +296,7 @@ class BlogRelatedPage(object):
     # any blog related pages needs to have a layout, a content and a header
     #   that can be rendered by the layout
     uses_layout_type = None
+    site_lookup = 'blog__site__exact'
 
     def get_layout(self):
         return self.blog.get_layout_for(self.uses_layout_type)

@@ -1,14 +1,57 @@
+from PIL import Image as PILImage
+from functools import wraps
+import StringIO
+import os
 from django.utils.encoding import smart_unicode
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.core.files.base import ContentFile
-from .settings import POSTER_IMAGE_WIDTH, POSTER_IMAGE_ASPECT_RATIO
-from PIL import Image as PILImage
-import StringIO
-import os
+from django.contrib.sites.models import Site
+from django.conf import settings as global_settings
+from filer.utils.loader import load_object
+from .settings import (
+    POSTER_IMAGE_WIDTH, POSTER_IMAGE_ASPECT_RATIO, ALLOWED_SITES_FOR_USER)
 
 
-POSTER_IMAGE_HEIGHT = int(round(
-    POSTER_IMAGE_WIDTH / POSTER_IMAGE_ASPECT_RATIO))
+def get_allowed_sites(request, model=None):
+    if ALLOWED_SITES_FOR_USER and request and model:
+        get_sites_for = load_object(ALLOWED_SITES_FOR_USER)
+        return get_sites_for(request.user, model)
+
+    if global_settings.CMS_PERMISSION and request:
+        from cms.utils.permissions import get_user_sites_queryset
+        return get_user_sites_queryset(request.user)
+
+    return Site.objects.all()
+
+
+def _set_cms_site(f):
+    @wraps(f)
+    def wrapper(request, *args, **kwds):
+        current_site = f(request, *args, **kwds)
+        request.session['cms_admin_site'] = current_site.pk
+        return current_site
+    return wrapper
+
+
+@_set_cms_site
+def get_current_site(request, model=None, site_lookup=None):
+    site_lookup = (site_lookup or
+                   (model and getattr(model, 'site_lookup', None)) or
+                   'site__exact')
+    if site_lookup in request.REQUEST:
+        site_pk = request.REQUEST[site_lookup]
+    else:
+        site_pk = request.session.get('cms_admin_site', None)
+
+    if site_pk:
+        allowed_sites = get_allowed_sites(request, model)
+        try:
+            return allowed_sites.get(pk=site_pk)
+        except Site.DoesNotExist:
+            if len(allowed_sites) > 0:
+                return allowed_sites[0]
+
+    return Site.objects.get_current()
 
 
 def user_display_name(user):
@@ -31,6 +74,10 @@ def paginate_queryset(queryset, page, max_per_page):
         # If page is out of range (e.g. 9999), deliver last page of results.
         paginated_items = paginator.page(paginator.num_pages)
     return paginated_items
+
+
+POSTER_IMAGE_HEIGHT = int(round(
+    POSTER_IMAGE_WIDTH / POSTER_IMAGE_ASPECT_RATIO))
 
 
 def resize_image(file_like_object):
