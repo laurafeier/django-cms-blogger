@@ -15,7 +15,6 @@ from django.utils.translation import get_language, ugettext_lazy as _
 from django.utils.translation import ungettext
 from django.utils.safestring import mark_safe
 from django.views.decorators.csrf import csrf_exempt
-from django.contrib.sites.models import Site
 
 from cms.admin.placeholderadmin import PlaceholderAdmin
 from cms.models import Title, CMSPlugin
