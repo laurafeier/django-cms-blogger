@@ -1,6 +1,40 @@
 CHANGELOG
 =========
 
+Revision 81ff82d (08.07.2014, 10:18 UTC)
+----------------------------------------
+
+* LUN-1619
+
+  * pub date box should not be applied on objects taht don't have publication_date
+  * added year to publish date time box
+
+* LUN-1657
+
+  * moving admin formfields fields around
+
+* LUN-1677
+
+  * layout chooser should open in a popup
+
+* LUN-1682
+
+  * fixed tests for admin entries permissions
+  * hide admin sections if user is not allowed in any blog
+
+* LUN-1708
+
+  * added current working site permission checks for blogs.
+
+* LUN-1717
+
+  * publish fields should be aware of DST.
+
+* Misc commits
+
+  * removed unused import
+  * comment change
+
 Revision 0e8196c (03.07.2014, 07:34 UTC)
 ----------------------------------------
 
