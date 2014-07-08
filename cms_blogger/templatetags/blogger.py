@@ -23,6 +23,8 @@ jsonify.is_safe = True
 
 @register.inclusion_tag('cms_blogger/entry_pub_date.html')
 def publish_date_box(entry):
+    if not hasattr(entry, 'publication_date'):
+        return {}
     datetime_obj = entry.publication_date
     is_aware = (datetime_obj.tzinfo is not None and
                 datetime_obj.tzinfo.utcoffset(datetime_obj) is not None)
