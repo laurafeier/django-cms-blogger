@@ -382,6 +382,9 @@ class TestMoveAction(TestCase):
     def test_attempt_move_by_sneaky_regularuser(self):
         self.regular_user()
         response = self.move_entries(self.blog2, [])
+        self.assertEquals(response.status_code, 403)
+        self.blog2.allowed_users.add(self.regularuser)
+        response = self.move_entries(self.blog2, [])
         messages = [m.message for m in response.context['messages']]
         self.assertTrue(messages)
         self.assertIn(
@@ -623,6 +626,7 @@ class TestChangeLists(TestCase):
             'regular', email='regular@cms_blogger.com', password='secret')
         self.regular_user.user_permissions = Permission.objects.all()
         self.regular_user.is_staff = True
+        self.regular_user.is_active = True
         self.regular_user.save()
         # regular users will not see new sites blogs since the rule from
         #   cms_blogger.tests.utils.get_allowed_sites is applied
@@ -695,7 +699,7 @@ class TestChangeLists(TestCase):
 
         self.client.login(username='regular', password='secret')
         response = self.client.get(url)
-        self.assertEquals(len(self._items(response)), 0)
+        self.assertEquals(response.status_code, 403)
         blog.allowed_users.add(self.regular_user)
         response = self.client.get(url)
         self.assertItemsEqual(self._items(response), [entry.pk])
@@ -714,8 +718,7 @@ class TestChangeLists(TestCase):
 
         self.client.login(username='regular', password='secret')
         response = self.client.get(url)
-        qs = response.context_data['adminform'].form.fields['blog'].queryset
-        self.assertEquals(len(qs), 0)
+        self.assertEquals(response.status_code, 403)
 
         blog.allowed_users.add(self.regular_user)
         response = self.client.get(url)
