@@ -27,7 +27,8 @@ from cms_layouts.models import Layout
 from cms_layouts.slot_finder import get_mock_placeholder
 
 from .changelists import BlogChangeList, BlogEntryChangeList
-from .models import Blog, BlogCategory, BlogEntryPage, BlogNavigationNode
+from .models import (
+    Blog, BlogCategory, BlogEntryPage, BlogNavigationNode, HomeBlog)
 from .forms import (
     BlogLayoutForm, BlogForm, BlogAddForm, BlogEntryPageAddForm,
     BlogEntryPageChangeForm, BlogLayoutInlineFormSet,
@@ -35,8 +36,7 @@ from .forms import (
 from .admin_helper import AdminHelper
 from .settings import ALLOWED_THUMBNAIL_IMAGE_TYPES
 from .widgets import ToggleWidget
-from .utils import resize_image
-
+from .utils import resize_image, get_allowed_sites, get_current_site
 import imghdr
 import json
 import os
@@ -92,7 +92,33 @@ class BlogLayoutInline(GenericTabularInline):
     layout_customization.allow_tags = True
 
 
-class BlogAdmin(AdminHelper):
+class AbstractBlogAdmin(AdminHelper):
+
+    def _is_allowed(self, request):
+        if request.user.is_superuser:
+            return True
+        current_site = self.get_current_site(request)
+        return current_site in get_allowed_sites(request, self.model)
+
+    def has_add_permission(self, request):
+        can_add = super(AbstractBlogAdmin, self).has_add_permission(request)
+        return can_add and self._is_allowed(request)
+
+    def has_change_permission(self, request, *args, **kwargs):
+        can_change = super(AbstractBlogAdmin, self)\
+            .has_change_permission(request, *args, **kwargs)
+        return can_change and self._is_allowed(request)
+
+    def has_delete_permission(self, request, *args, **kwargs):
+        can_delete = super(AbstractBlogAdmin, self)\
+            .has_delete_permission(request, *args, **kwargs)
+        return can_delete and self._is_allowed(request)
+
+    def get_current_site(self, request):
+        return get_current_site(request, self.model)
+
+
+class BlogAdmin(AbstractBlogAdmin):
     custom_changelist_class = BlogChangeList
     inlines = [BlogLayoutInline, ]
     add_form = BlogAddForm
@@ -392,26 +418,21 @@ class BlogAdmin(AdminHelper):
         return render_to_response(
             'admin/cms_blogger/blog/navigation.html', context)
 
-    def _is_allowed(self, request):
-        if request.user.is_superuser:
-            return True
-        from .utils import get_allowed_sites, get_current_site
-        current_site = get_current_site(request, Blog)
-        return current_site in get_allowed_sites(request, Blog)
 
-    def has_add_permission(self, request):
-        can_add = super(BlogAdmin, self).has_add_permission(request)
-        return can_add and self._is_allowed(request)
+class HomeBlogAdmin(AbstractBlogAdmin):
 
-    def has_change_permission(self, request, *args, **kwargs):
-        can_change = super(BlogAdmin, self)\
-            .has_change_permission(request, *args, **kwargs)
-        return can_change and self._is_allowed(request)
+    def get_site_home_blog(self, request):
+        instance = self.model.objects.filter(
+            site=self.get_current_site(request))[:1]
+        return instance[0] if instance else None
 
-    def has_delete_permission(self, request, *args, **kwargs):
-        can_delete = super(BlogAdmin, self)\
-            .has_delete_permission(request, *args, **kwargs)
-        return can_delete and self._is_allowed(request)
+    def changelist_view(self, request, extra_context=None):
+        info = "%s_%s" % (self.model._meta.app_label,
+                          self.model._meta.module_name)
+        instance = self.get_site_home_blog(request)
+        if not instance:
+            return redirect(reverse("admin:%s_add" % info))
+        return redirect(reverse("admin:%s_change" % info, args=[instance.pk]))
 
 
 class CurrentSiteBlogFilter(admin.filters.RelatedFieldListFilter):
@@ -668,4 +689,5 @@ def _move_entries(destination_blog, entries_ids, mirror_categories=True):
 
 
 admin.site.register(Blog, BlogAdmin)
+admin.site.register(HomeBlog, HomeBlogAdmin)
 admin.site.register(BlogEntryPage, BlogEntryPageAdmin)

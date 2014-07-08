@@ -21,7 +21,7 @@ from cms_layouts.layout_response import LayoutResponse
 from filer.fields.image import FilerImageField
 import filer
 
-from .settings import POSTER_IMAGE_STORAGE, UPLOAD_TO_PREFIX
+from .settings import POSTER_IMAGE_STORAGE, UPLOAD_TO_PREFIX, BLOGS_URL_PREFIX
 from .utils import user_display_name
 from .slug import get_unique_slug
 from .managers import EntriesManager
@@ -138,70 +138,6 @@ def blog_page(cls):
     return cls
 
 
-@contribute_with_title
-class AbstractBlog(models.Model):
-    site_lookup = 'site__exact'
-
-    title = models.CharField(
-        _('title'), max_length=50, blank=False, null=False,
-        help_text=_('Blog Title'))
-    slug = models.SlugField(
-        _("slug"), max_length=50, help_text=_('Blog Slug'))
-    site = models.ForeignKey(
-        Site, help_text=_('Blog Site'), verbose_name=_("site"))
-    entries_slugs_with_date = models.BooleanField(
-        _("Dates in blog entry URLs"),
-        help_text=_('Blog Entries With Slugs'))
-
-    layouts = GenericRelation(Layout)
-
-    allowed_users = models.ManyToManyField(User, verbose_name=_("Add Users"))
-
-    modified_at = models.DateTimeField(auto_now=True, db_index=True)
-
-    class Meta:
-        unique_together = (("slug", "site"),)
-        abstract = True
-
-    # values that are used distinguish layout types for this blog
-    ALL = 0  # layout type that will be used by default by all blog pages
-    LANDING_PAGE = 1
-    ENTRY_PAGE = 2
-    BIO_PAGE = 3
-
-    LAYOUTS_CHOICES = {
-        ALL: 'All Blog-related Page Layouts',
-        LANDING_PAGE: 'Blog Landing Page',
-        ENTRY_PAGE: 'Blog Entry Page',
-        # BIO_PAGE: 'Blog Bio Page'
-    }
-
-    def get_layout_for(self, layout_type):
-        if layout_type not in AbstractBlog.LAYOUTS_CHOICES.keys():
-            raise NotImplementedError
-        try:
-            return self.layouts.filter(layout_type__in=[
-                layout_type, AbstractBlog.ALL]).order_by('-layout_type')[0]
-        except IndexError:
-            return None
-
-    def get_title_obj(self):
-        title = LayoutTitle()
-        title.page_title = title.title = self.title
-        title.slug = self.slug
-        return title
-
-    def save(self, *args, **kwargs):
-        try:
-            self.site
-        except Site.DoesNotExist:
-            self.site = Site.objects.get_current()
-        super(AbstractBlog, self).save(*args, **kwargs)
-
-    def __unicode__(self):
-        return "%s - %s" % (self.title, self.site.name)
-
-
 class BlogNavigationNode(models.Model):
     # menu text button
     text = models.CharField(max_length=15)
@@ -224,9 +160,19 @@ class BlogNavigationNode(models.Model):
         return self.blog.in_navigation if self.blog else False
 
 
-class Blog(AbstractBlog):
-    # definitions of the blog model features go here
+@contribute_with_title
+class AbstractBlog(models.Model):
+    site_lookup = 'site__exact'
+    is_home = False
 
+    title = models.CharField(
+        _('title'), max_length=50, blank=False, null=False,
+        help_text=_('Blog Title'))
+    site = models.ForeignKey(
+        Site, help_text=_('Blog Site'), verbose_name=_("site"))
+    modified_at = models.DateTimeField(auto_now=True, db_index=True)
+
+    layouts = GenericRelation(Layout)
     # header metadata
     tagline = models.CharField(
         _('tagline'), max_length=70, blank=True, null=True,
@@ -243,6 +189,96 @@ class Blog(AbstractBlog):
     navigation_node = models.ForeignKey(
         BlogNavigationNode, null=True, blank=True, on_delete=models.SET_NULL)
 
+    class Meta:
+        abstract = True
+
+    def get_absolute_url(self):
+        raise NotImplementedError
+
+    def get_layout(self):
+        raise NotImplementedError
+
+    def render_header(self, request, context):
+        return get_template("cms_blogger/blog_header.html").render(context)
+
+    def render_content(self, request, context):
+        # landing page view passes entries, blog to the context
+        return get_template("cms_blogger/blog_content.html").render(context)
+
+    def get_entries(self):
+        return BlogEntryPage.objects.none()
+
+    @property
+    def attached_image(self):
+        try:
+            return self.branding_image
+        except filer.models.Image.DoesNotExist:
+            return None
+
+    def get_title_obj(self):
+        title = LayoutTitle()
+        title.page_title = title.title = self.title
+        title.slug = getattr(self, 'slug', '')
+        return title
+
+    def save(self, *args, **kwargs):
+        try:
+            site = self.site
+        except Site.DoesNotExist:
+            site = None
+        self.site = site or Site.objects.get_current()
+        super(AbstractBlog, self).save(*args, **kwargs)
+
+    def __unicode__(self):
+        return "%s - %s" % (self.title, self.site.name)
+
+
+class HomeBlog(AbstractBlog):
+    slug = BLOGS_URL_PREFIX
+    is_home = True
+
+    def get_layout(self):
+        try:
+            return self.layouts.all()[0]
+        except IndexError:
+            return None
+
+    def get_entries(self):
+        ordering = ('-publication_date', 'slug')
+        site_entries = BlogEntryPage.objects.on_site(self.site)
+        return site_entries.published().order_by(*ordering)
+
+    @models.permalink
+    def get_absolute_url(self):
+        return ('cms_blogger.views.landing_page', (), {})
+
+    class Meta:
+        verbose_name = "Super Landing Page"
+        verbose_name_plural = "Super Landing Page"
+
+
+class Blog(AbstractBlog):
+    # values that are used distinguish layout types for this blog
+    ALL = 0  # layout type that will be used by default by all blog pages
+    LANDING_PAGE = 1
+    ENTRY_PAGE = 2
+    BIO_PAGE = 3
+
+    LAYOUTS_CHOICES = {
+        ALL: 'All Blog-related Page Layouts',
+        LANDING_PAGE: 'Blog Landing Page',
+        ENTRY_PAGE: 'Blog Entry Page',
+        # BIO_PAGE: 'Blog Bio Page'
+    }
+
+    slug = models.SlugField(
+        _("slug"), max_length=50, help_text=_('Blog Slug'))
+
+    entries_slugs_with_date = models.BooleanField(
+        _("Dates in blog entry URLs"),
+        help_text=_('Blog Entries With Slugs'))
+    # permission system
+    allowed_users = models.ManyToManyField(User, verbose_name=_("Add Users"))
     # social media integration
     enable_facebook = models.BooleanField(
         _('Facebook integration'), default=True,
@@ -265,23 +301,18 @@ class Blog(AbstractBlog):
         help_text=_(
             'Select ON to hide comments on phone sized mobile devices.'))
 
-    @property
-    def attached_image(self):
+    def get_layout_for(self, layout_type):
+        if layout_type not in Blog.LAYOUTS_CHOICES.keys():
+            raise NotImplementedError
         try:
-            return self.branding_image
-        except filer.models.Image.DoesNotExist:
+            return self.layouts.filter(layout_type__in=[
+                layout_type, Blog.ALL]).order_by('-layout_type')[0]
+        except IndexError:
             return None
-
-    def render_header(self, request, context):
-        return get_template("cms_blogger/blog_header.html").render(context)
 
     def get_entries(self):
         ordering = ('-publication_date', 'slug')
         return self.blogentrypage_set.published().order_by(*ordering)
-
-    def render_content(self, request, context):
-        # landing page view passes entries, blog to the context
-        return get_template("cms_blogger/blog_content.html").render(context)
 
     @models.permalink
     def get_absolute_url(self):
@@ -290,6 +321,9 @@ class Blog(AbstractBlog):
 
     def get_layout(self):
         return self.get_layout_for(Blog.LANDING_PAGE)
+
+    class Meta:
+        unique_together = (("slug", "site"),)
 
 
 class BlogRelatedPage(object):
