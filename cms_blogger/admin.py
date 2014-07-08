@@ -83,8 +83,7 @@ class BlogLayoutInline(GenericTabularInline):
             pattern = 'admin:%s_%s_change' % (obj._meta.app_label,
                                               obj._meta.module_name)
             url = reverse(pattern,  args=[obj.id])
-            url_tag = ("<a href='%s'>Customize Layout "
-                       "content</a>" % url)
+            url_tag = ("<a href='%s'>Customize Layout</a>" % url)
             return url_tag
         else:
             return "(save to customize layout)"
@@ -111,7 +110,7 @@ class BlogAdmin(AdminHelper):
     change_form_fieldsets = (
         ('Blog setup', {
             'fields': ['site', 'title', 'slug', 'tagline', 'branding_image',
-                       'entries_slugs_with_date', 'categories'],
+                       'categories'],
             'classes': ('extrapretty', ),
             'description': _('Blog Setup Description')
         }),
@@ -120,9 +119,10 @@ class BlogAdmin(AdminHelper):
             'classes': ('extrapretty', ),
             'description': _('Blog Allowed Users')
         }),
-        ('Navigation', {
-            'fields': [('in_navigation', 'location_in_navigation'), ],
-            'classes': ('extrapretty',),
+        ('Advanced Settings', {
+            'fields': ['entries_slugs_with_date',
+                       ('in_navigation', 'location_in_navigation'), ],
+            'classes': ('extrapretty', 'collapse'),
         }),
         ('Social media integration', {
             'fields': ['enable_facebook', 'enable_twitter',
