@@ -112,7 +112,7 @@ class BlogAdmin(AdminHelper):
     change_form_fieldsets = (
         ('Blog setup', {
             'fields': ['site', 'title', 'slug', 'tagline', 'branding_image',
-                       'entries_slugs_with_date', 'categories'],
+                       'categories'],
             'classes': ('extrapretty', ),
             'description': _('Blog Setup Description')
         }),
@@ -121,9 +121,10 @@ class BlogAdmin(AdminHelper):
             'classes': ('extrapretty', ),
             'description': _('Blog Allowed Users')
         }),
-        ('Navigation', {
-            'fields': [('in_navigation', 'location_in_navigation'), ],
-            'classes': ('extrapretty',),
+        ('Advanced Settings', {
+            'fields': ['entries_slugs_with_date',
+                       ('in_navigation', 'location_in_navigation'), ],
+            'classes': ('extrapretty', 'collapse'),
         }),
         ('Social media integration', {
             'fields': ['enable_facebook', 'enable_twitter',
@@ -576,8 +577,26 @@ class BlogEntryPageAdmin(AdminHelper, PlaceholderAdmin):
             reverse('admin:cms_blogger-move-entries'),
             urllib.urlencode(entries))
         return redirect(url)
-
     move_entries.short_description = "Move entries to another blog"
+
+    def _is_allowed(self, request):
+        if request.user.is_superuser:
+            return True
+        return Blog.objects.filter(allowed_users=request.user).exists()
+
+    def has_add_permission(self, request):
+        can_add = super(BlogEntryPageAdmin, self).has_add_permission(request)
+        return can_add and self._is_allowed(request)
+
+    def has_change_permission(self, request, obj=None):
+        can_change = super(BlogEntryPageAdmin, self)\
+            .has_change_permission(request, obj)
+        return can_change and self._is_allowed(request)
+
+    def has_delete_permission(self, request, obj=None):
+        can_delete = super(BlogEntryPageAdmin, self)\
+            .has_delete_permission(request, obj)
+        return can_delete and self._is_allowed(request)
 
 
 def _move_entries(destination_blog, entries_ids, mirror_categories=True):

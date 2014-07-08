@@ -43,6 +43,11 @@ POSTER_IMAGE_ASPECT_RATIO = getattr(
 POSTS_ON_LANDING_PAGE = getattr(
     settings, 'BLOGGER_POSTS_ON_LANDING_PAGE', 15)
 
+POSTS_ON_RSS = getattr(
+    settings, 'BLOGGER_POSTS_ON_RSS', 20)
+
+DISALLOWED_ENTRIES_SLUGS = ['rss', 'category']
+
 ALLOWED_SITES_FOR_USER = getattr(
     settings, 'BLOGGER_ALLOWED_SITES_FOR_USER', None)
 

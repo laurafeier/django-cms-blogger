@@ -10,6 +10,16 @@ from .utils import paginate_queryset
 import re
 
 
+def get_blog_or_404(slug):
+    site = Site.objects.get_current()
+    if not slug:
+        blog_qs = list(Blog.objects.filter(site=site)[:2])
+        if len(blog_qs) == 1:
+            return blog_qs[0]
+        raise Http404
+    return get_object_or_404(Blog, slug=slug, site=site)
+
+
 def get_entries_queryset(request):
     preview = 'preview' in request.GET and request.user.is_staff
     entry_qs = BlogEntryPage.objects.on_site()
@@ -66,19 +76,13 @@ def _paginate_entries_on_blog(request, entries, blog):
 
 
 def landing_page(request, blog_slug):
-    if not blog_slug:
-        site = Site.objects.get_current()
-        if Blog.objects.filter(site=site).count() == 1:
-            blog = Blog.objects.filter(site=site)[0]
-        else:
-            return HttpResponseNotFound(
-                "<h1>The blog slug is missing from the URL</h1>")
-    else:
-        blog = get_object_or_404(
-            Blog, slug=blog_slug, site=Site.objects.get_current())
+    try:
+        blog = get_blog_or_404(blog_slug)
+    except Http404:
+        return HttpResponseNotFound(
+            "<h1>Blog not found for the given URL</h1>")
 
     layout = blog.get_layout()
-
     if not layout:
         return HttpResponseNotFound(
             "<h1>This Blog Landing Page does not have a "
