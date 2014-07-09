@@ -1,5 +1,10 @@
 (function($){
     window['tinyMCESetup'] = function(ed) {
+        
+        function stripHTMLTags(html){
+            return $("<div/>").html(html).text();
+        }
+
         ed.onInit.add(function(ed) {
             var HTML = "";
             HTML += "<td class='more' ><table style='border-collapse:collapse' class='mceListBox mceListBoxEnabled mce_formatselect'>"
@@ -30,6 +35,26 @@
                 $('.mceToolbar:gt(1)').show();
                 $(this).find('.mceText').html("Simple")
             }
+
+            // Add blur event to set back the 'Sample content' placeholder
+            // TinyMCE 3.x doesn't have this by default
+            tinymce.dom.Event.add(ed.getDoc().body, 'blur', function(e) {
+                var content = ed.getContent({format: 'raw'});
+                var plainText = stripHTMLTags(content);
+
+                if(plainText === ''){
+                    ed.setContent('Sample content');
+                }
+            });
+
+            ed.onClick.add(function(ed, e) {
+                var content = ed.getContent({format: 'raw'});
+                var plainText = stripHTMLTags(content);
+
+                if(plainText === 'Sample content'){
+                    ed.setContent('');
+                }
+            });
         });
     }
 }(django.jQuery || jQuery))
