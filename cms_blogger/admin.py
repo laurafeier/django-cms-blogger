@@ -322,8 +322,13 @@ class HomeBlogAdmin(AbstractBlogAdmin):
     def _is_allowed(self, request, obj=None):
         if request.user.is_superuser:
             return True
-        return get_allowed_sites(request, self.model)\
-            .filter(homeblog=obj).exists()
+        return get_allowed_sites(request, self.model).exists()
+
+    def has_add_permission(self, request):
+        can_add = super(AbstractBlogAdmin, self).has_add_permission(request)
+        sites_without_home_blog = get_allowed_sites(request, self.model)\
+            .filter(homeblog__isnull=True).exists()
+        return can_add and sites_without_home_blog
 
 
 class CurrentSiteBlogFilter(admin.filters.RelatedFieldListFilter):
