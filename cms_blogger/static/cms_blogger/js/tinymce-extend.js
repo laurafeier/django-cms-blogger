@@ -1,9 +1,40 @@
 (function($){
+
     window['tinyMCESetup'] = function(ed) {
-        
-        function stripHTMLTags(html){
-            return $("<div/>").html(html).text();
+
+        function removePlaceholder(content){
+            var regexp = /<p.*>Sample content|<.*br.*><\/p>/;
+            if(regexp.test(content)){
+                //don't use setContet('') to avoid triggering beforeSetContent
+                //and get an endless loop
+                ed.getDoc().body.innerHTML = '';
+            }
         }
+
+        function addPlaceholder(content){
+            if(content === ''){
+                ed.setContent('<p>Sample content</p>');
+            }
+        }
+
+        if(typeof dismissEditPluginPopup === 'function' &&
+           typeof window._super_dismissEditPluginPopup === 'undefined'){
+
+            //extend the default edit plugin callback (dismissEditPluginPopup)
+            //this is a global function and gets called whne the user finishes 
+            //to edit the plugin
+            //this is the only way to receive a callback when adding pluggins 
+            //because they don't trigger any event on TinyMCE
+            window._super_dismissEditPluginPopup = window.dismissEditPluginPopup;
+            window.dismissEditPluginPopup = function(){
+                
+                removePlaceholder(ed.getContent({format: 'raw'}))
+                //call super
+                window._super_dismissEditPluginPopup.apply(this, arguments);
+            };
+
+        }
+        
 
         ed.onInit.add(function(ed) {
             var HTML = "";
@@ -40,20 +71,29 @@
             // TinyMCE 3.x doesn't have this by default
             tinymce.dom.Event.add(ed.getDoc().body, 'blur', function(e) {
                 var content = ed.getContent({format: 'raw'});
-                var plainText = stripHTMLTags(content);
-
-                if(plainText === ''){
-                    ed.setContent('Sample content');
-                }
+                addPlaceholder(content)
             });
 
             ed.onClick.add(function(ed, e) {
                 var content = ed.getContent({format: 'raw'});
-                var plainText = stripHTMLTags(content);
 
-                if(plainText === 'Sample content'){
-                    ed.setContent('');
-                }
+                removePlaceholder(content)
+            });
+
+            ed.onBeforeSetContent.add(function(ed, o) {
+                var content = ed.getContent({format: 'raw'});
+                removePlaceholder(content)       
+            });
+
+            ed.onBeforeExecCommand.add(function(ed, cmd, ui, val) {
+                ed.oldContent = ed.getContent({format: 'raw'})
+                removePlaceholder(ed.oldContent)
+            });
+
+            ed.onExecCommand.add(function(ed, cmd, ui, val) {
+                var content = ed.getContent({format: 'raw'});
+
+                addPlaceholder(content)
             });
         });
     }
