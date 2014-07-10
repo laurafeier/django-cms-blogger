@@ -80,6 +80,18 @@ class BlogLayoutInlineFormSet(BaseGenericInlineFormSet):
                     "a layout for all the rest layout types: %s" % (
                         Blog.LAYOUTS_CHOICES[Blog.ALL],
                         ', '.join(pretty_specific_layout_types)))
+        return self.cleaned_data
+
+
+class HomeBlogLayoutInlineFormSet(BaseGenericInlineFormSet):
+
+    def clean(self):
+        if any(self.errors):
+            return
+        data = filter(lambda x: not x.get('DELETE', False), self.cleaned_data)
+        if len(data) != 1:
+            raise ValidationError('One layout is required.')
+        return self.cleaned_data
 
 
 def is_valid_for_layout(page):
@@ -99,26 +111,9 @@ def is_valid_for_layout(page):
             "You need to fix this manually." % (page, page_exception))
 
 
-class BlogLayoutForm(forms.ModelForm):
-    layout_type = forms.IntegerField(
-        label='Layout Type',
-        widget=forms.Select(choices=Blog.LAYOUTS_CHOICES.items()))
+class LayoutForm(forms.ModelForm):
     from_page = forms.IntegerField(
         label='Inheriting layout from page', widget=forms.Select())
-
-    class Meta:
-        model = Layout
-        fields = ('layout_type', 'from_page')
-
-    def clean_layout_type(self):
-        layout_type = self.cleaned_data.get('layout_type', None)
-        if layout_type is None:
-            raise ValidationError("Layout Type required")
-        if layout_type not in Blog.LAYOUTS_CHOICES.keys():
-            raise ValidationError(
-                "Not a valid Layout Type. Valid choices are: %s" % (
-                    ', '.join(Blog.LAYOUTS_CHOICES.values())))
-        return layout_type
 
     def clean_from_page(self):
         from_page_id = self.cleaned_data.get('from_page', None)
@@ -132,6 +127,29 @@ class BlogLayoutForm(forms.ModelForm):
                 'existing page.')
         is_valid_for_layout(page)
         return page
+
+    class Meta:
+        model = Layout
+        fields = ('from_page', )
+
+
+class BlogLayoutForm(LayoutForm):
+    layout_type = forms.IntegerField(
+        label='Layout Type',
+        widget=forms.Select(choices=Blog.LAYOUTS_CHOICES.items()))
+
+    class Meta:
+        fields = ('layout_type', 'from_page', )
+
+    def clean_layout_type(self):
+        layout_type = self.cleaned_data.get('layout_type', None)
+        if layout_type is None:
+            raise ValidationError("Layout Type required")
+        if layout_type not in Blog.LAYOUTS_CHOICES.keys():
+            raise ValidationError(
+                "Not a valid Layout Type. Valid choices are: %s" % (
+                    ', '.join(Blog.LAYOUTS_CHOICES.values())))
+        return layout_type
 
 
 class MultipleUserField(AutoModelSelect2MultipleField):

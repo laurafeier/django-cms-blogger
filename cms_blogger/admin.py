@@ -39,19 +39,16 @@ import os
 import urllib
 
 
-class BlogLayoutInline(GenericTabularInline):
-    form = forms.BlogLayoutForm
+class AbstractBlogLayoutInline(GenericTabularInline):
     readonly_fields = ('layout_customization', )
     model = Layout
     extra = 0
-    max_num = len(Blog.LAYOUTS_CHOICES.items())
-    formset = forms.BlogLayoutInlineFormSet
     description = _("Blog Layouts description")
     verbose_name = _("Blog Layouts Chooser")
     verbose_name_plural = _("Blog Layouts Chooser")
 
     def get_formset(self, request, obj=None, **kwargs):
-        formSet = super(BlogLayoutInline, self).get_formset(
+        formSet = super(AbstractBlogLayoutInline, self).get_formset(
             request, obj, **kwargs)
         # show one form if there are no layouts
         if obj and obj.layouts.count() == 0:
@@ -86,6 +83,18 @@ class BlogLayoutInline(GenericTabularInline):
         else:
             return "(save to customize layout)"
     layout_customization.allow_tags = True
+
+
+class BlogLayoutInline(AbstractBlogLayoutInline):
+    form = forms.BlogLayoutForm
+    formset = forms.BlogLayoutInlineFormSet
+    max_num = len(Blog.LAYOUTS_CHOICES.items())
+
+
+class HomeBlogLayoutInline(AbstractBlogLayoutInline):
+    form = forms.LayoutForm
+    formset = forms.HomeBlogLayoutInlineFormSet
+    max_num = 1
 
 
 class AbstractBlogAdmin(AdminHelper):
@@ -287,6 +296,7 @@ class BlogAdmin(AbstractBlogAdmin):
 class HomeBlogAdmin(AbstractBlogAdmin):
     list_display = ('title', 'site', )
     search_fields = ['title', 'site__name']
+    inlines = [HomeBlogLayoutInline, ]
     add_form = forms.HomeBlogAddForm
     change_form = forms.HomeBlogForm
     add_form_fieldsets = (
