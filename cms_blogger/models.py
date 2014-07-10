@@ -151,13 +151,24 @@ class BlogNavigationNode(models.Model):
     @property
     def blog(self):
         attached_blog = self.blog_set.all()[:1]
-        return attached_blog[0] if attached_blog else None
+        if attached_blog:
+            return attached_blog[0]
+        attached_home_blog = self.homeblog_set.all()[:1]
+        return attached_home_blog[0] if attached_home_blog else None
 
     def get_absolute_url(self):
         return self.blog.get_absolute_url() if self.blog else ''
 
     def is_visible(self):
         return self.blog.in_navigation if self.blog else False
+
+    @property
+    def menu_id(self):
+        if self.blog.is_home:
+            return 0
+        if not self.id:
+            return None
+        return self.id * -1
 
 
 @contribute_with_title
@@ -251,6 +262,10 @@ class HomeBlog(AbstractBlog):
     @models.permalink
     def get_absolute_url(self):
         return ('cms_blogger.views.landing_page', (), {})
+
+    def save(self, *args, **kwargs):
+        self.title = self.title or 'Latest blog posts'
+        super(HomeBlog, self).save(*args, **kwargs)
 
     class Meta:
         verbose_name = "Super Landing Page"
