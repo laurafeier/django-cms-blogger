@@ -187,8 +187,12 @@ def _save_related(form, commit, model_obj, *form_functions):
 
 class AbstractBlogForm(forms.ModelForm):
     requires_request = True
+    help_text = {}
 
     def __init__(self, *args, **kwargs):
+        for field_name, text in self.help_text.items():
+            if field_name in self.base_fields:
+                self.base_fields[field_name].help_text = text
         if not hasattr(self, 'request'):
             self.request = kwargs.pop('request', None)
         super(AbstractBlogForm, self).__init__(*args, **kwargs)
@@ -311,8 +315,17 @@ class BlogForm(AbstractBlogForm):
 
 
 class HomeBlogForm(AbstractBlogForm):
+    help_text = {
+        'title': _('Super Landing Page title'),
+        'tagline': _('Super Landing Page tagline'),
+        'branding_image': _('Super Landing Page branding image'),
+        'in_navigation': _('Super Landing Page in navigation'),
+        'site': _('Super Landing Page site')
+    }
+    labels = {'in_navigation': _('Super Landing Page label in navigation')}
 
     def __init__(self, *args, **kwargs):
+        self.base_fields['in_navigation'].label = self.labels['in_navigation']
         super(HomeBlogForm, self).__init__(*args, **kwargs)
         self.set_site(self.instance.site)
         if 'title' not in self.initial:
@@ -350,6 +363,10 @@ class BlogAddForm(AbstractBlogForm):
 
 
 class HomeBlogAddForm(AbstractBlogForm):
+    help_text = {
+        'title': _('Super Landing Page title'),
+        'site': _('Super Landing Page site')
+    }
 
     def __init__(self, *args, **kwargs):
         self.request = kwargs.pop('request', None)

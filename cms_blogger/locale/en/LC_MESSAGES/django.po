@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2014-06-13 09:34+0000\n"
+"POT-Creation-Date: 2014-07-10 12:29-0400\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -15,27 +15,39 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: admin.py:53
+#: admin.py:89
 msgid "Blog Layouts description"
 msgstr ""
 "This blogging tool allows you to select the layouts - header, footer, and "
 "right rail - for blog landing pages and blog entry pages. You may choose one "
 "layout for both types of pages, or separate layouts for blog landing pages "
-"and blog entry pages. "
-"<span class='help-tooltip' title='<p>Blog Landing Pages have a "
-"reverse-chronological list of blog entries, displaying the title, "
-"short description, and image.</p><p>Blog Entry Pages are the individual "
-"blog post pages.</p>'>What are these?</span>"
-"<br/><b>NOTE</b>: Because of the way blogs work, you "
-"must select a page that has a template with the extra-page-content and main-"
-"content placeholders. Those two placeholders will be used by all blog-"
-"related pages and will not be available for non-programmatic blog content. "
+"and blog entry pages. <span class='help-tooltip' title='<p>Blog Landing "
+"Pages have a reverse-chronological list of blog entries, displaying the "
+"title, short description, and image.</p><p>Blog Entry Pages are the "
+"individual blog post pages.</p>'>What are these?</span><br/><b>NOTE</b>: "
+"Because of the way blogs work, you must select a page that has a template "
+"with the extra-page-content and main-content placeholders. Those two "
+"placeholders will be used by all blog-related pages and will not be "
+"available for non-programmatic blog content. "
 
-#: admin.py:54 admin.py:55
+#: admin.py:90 admin.py:91
 msgid "Blog Layouts Chooser"
 msgstr ""
 
-#: admin.py:116
+#: admin.py:98
+msgid "Super Landing Page Layout description"
+msgstr ""
+"Select a layout for the Super Landing Page. A layouts is comprised of the "
+"smart snippet and plugins used in the header, footer, and right rail. Select "
+"a page from which to inherit these smart snippets and plugins, and then open "
+"the 'Customize Layout Content' section to override or add to the existing "
+"smart snippets and plugins in the page."
+
+#: admin.py:99 admin.py:100
+msgid "Super Landing Page Layout Chooser"
+msgstr ""
+
+#: admin.py:272
 msgid "Blog Setup Description"
 msgstr ""
 "The Blog setup admin allows you to create and customize a blog for your "
@@ -49,14 +61,14 @@ msgstr ""
 "page, and blog bio page; select whether the blog will appear in site "
 "navigation (menu); and integrate social media and Disqus commenting."
 
-#: admin.py:121
+#: admin.py:277
 msgid "Blog Allowed Users"
 msgstr ""
 "Begin typing to grant users permission to create or edit blog entries. Blog "
 "authors need to have a username associated with a site to appear in a blog "
 "byline. (Note: You must add yourself to have access.)"
 
-#: admin.py:136
+#: admin.py:293
 msgid "Blog Disqus commenting Description"
 msgstr ""
 "The following section will help you integrate Disqus's commenting tool with "
@@ -69,28 +81,38 @@ msgstr ""
 "Comment management, including approving, removing, and moderating comments, "
 "takes place via the Disqus admin."
 
-#: admin.py:267
+#: admin.py:310
+msgid "Home Blog Setup Description"
+msgstr ""
+"The Super Landing Page is an optional page that exists at [sitename].org/"
+"blogs/ on your site. It displays all blogs entries from all blogs on your "
+"site in reverse chronological order. Follow the steps on this setup page to "
+"create the Super Landing Page.<br />You make select a Headline, Tagline, and "
+"Branding Image; pick a layout for the Super Landing Page; and select whether "
+"the blog will appear in site navigation (menu)."
+
+#: admin.py:389
+msgid "Schedule Start Date description"
+msgstr "Select date and time for this blog entry to go live."
+
+#: admin.py:395
+msgid "Schedule End Date description"
+msgstr ""
+"Select date and time to remove post from site.<br /><span>(Will publish "
+"unpublished entries)</span>"
+
+#: admin.py:575
 #, python-format
 msgid "Entry %(entry)s was "
 msgid_plural "Entries %(entry)s were "
 msgstr[0] ""
 msgstr[1] ""
 
-#: admin.py:447
-msgid "Schedule Start Date description"
-msgstr "Select date and time for this blog entry to go live."
-
-#: admin.py:453
-msgid "Schedule End Date description"
-msgstr ""
-"Select date and time to remove post from site.<br /><span>(Will publish "
-"unpublished entries)</span>"
-
 #: cms_plugins.py:15
 msgid "Blog River Plugin"
 msgstr ""
 
-#: forms.py:143
+#: forms.py:239
 msgid "Categories help text"
 msgstr ""
 "Categories help organize blog content. Categories are unique to a blog and "
@@ -102,20 +124,56 @@ msgstr ""
 "healthy, recipes, or grilling. Every post that involves grilling should be "
 "categorized with grilling. That way, if a user goes to youresite.org/blogs/"
 "your-blog/category/grilling/, she will get a list of all grilling-specific "
-"blog entries.</p><p>Categories and tags differ from meta-keywords, which "
-"are blog entry-specific words used by search engines. Meta-keywords can be"
-" added to specific blogs entries in the advanced settings admin.</p>'>What"
-" are these?</span>"
+"blog entries.</p><p>Categories and tags differ from meta-keywords, which are "
+"blog entry-specific words used by search engines. Meta-keywords can be added "
+"to specific blogs entries in the advanced settings admin.</p>'>What are "
+"these?</span>"
 
-#: forms.py:377
+#: forms.py:319 forms.py:367
+msgid "Super Landing Page title"
+msgstr ""
+"Select a headline for the Super Landing Page. Remember that all blog entries "
+"from all blogs on your site will be listed on this page. The default text is "
+"'Latest blog posts'."
+
+#: forms.py:320
+msgid "Super Landing Page tagline"
+msgstr ""
+"Optional. Appears immediately below the Super Landing Page Headline, and "
+"over the Blog Branding Image (if one is used). Recommended: 60 characters or "
+"fewer."
+
+#: forms.py:321
+msgid "Super Landing Page branding image"
+msgstr ""
+"Upload or select an image that appears behind the Super Landing Page "
+"Headline and Super Landing Page Tagline at the top of the Blogs Super "
+"Landing Page. Size: 960 pixels wide and no more than 150 pixels tall."
+
+#: forms.py:322
+msgid "Super Landing Page in navigation"
+msgstr ""
+"Select ON to display this Super Landing Page in the navigation menu, and "
+"then select a location by clicking the 'Open Navigation Tool' button."
+
+#: forms.py:323 forms.py:368
+msgid "Super Landing Page site"
+msgstr ""
+"The site associated with this Super Landing Page."
+
+#: forms.py:325
+msgid "Super Landing Page label in navigation"
+msgstr "Add Super Landing Page to Navigation"
+
+#: forms.py:542
 msgid "Check all the categories to apply to this post. Uncheck to remove."
 msgstr ""
 
-#: models.py:145 models.py:387 models.py:602
+#: models.py:180 models.py:438 models.py:651
 msgid "title"
 msgstr ""
 
-#: models.py:146
+#: models.py:181
 msgid "Blog Title"
 msgstr ""
 "Please enter the blog's title. This title will be displayed at the top of "
@@ -123,201 +181,202 @@ msgstr ""
 "Branding Image (if one is used). Ideally, it should be no longer than 30 "
 "characters."
 
-#: models.py:148 models.py:326 models.py:389 models.py:564
+#: models.py:183
+msgid "Blog Site"
+msgstr "The site associated with this blog."
+
+#: models.py:183
+msgid "site"
+msgstr ""
+
+#: models.py:189
+msgid "tagline"
+msgstr "Blog Tagline"
+
+#: models.py:190
+msgid "Blog Tagline"
+msgstr ""
+"Optional. Appears immediately below the Blog Title, and over the Blog "
+"Branding Image (if one is used). Recommended: 60 characters or fewer."
+
+#: models.py:194
+msgid "Blog Branding Image"
+msgstr ""
+"Upload or select an image that appears behind the Blog Title and Blog "
+"Tagline at the top of all blog pages. Size: 960 pixels wide and no more than "
+"150 pixels tall. <span class='help-tooltip' title='<img width=700 "
+"src=STATIC_URLadmin/img/blog-banner-help.jpg>'>What's this?</span>"
+
+#: models.py:198
+msgid "Add blog to navigation"
+msgstr ""
+
+#: models.py:199
+msgid "Blog navigation"
+msgstr "ON allows users to display this blog in the navigation menu."
+
+#: models.py:290 models.py:377 models.py:440 models.py:613
 msgid "slug"
 msgstr ""
 
-#: models.py:148
+#: models.py:290
 msgid "Blog Slug"
 msgstr ""
 "The blog slug is the URL for the blog landing page, and will be present in "
 "ALL blog entry URLs. It is best to use a slug no more than 25 characters. It "
 "may not contain spaces or special characters."
 
-#: models.py:150
-msgid "Blog Site"
-msgstr "The site associated with this blog."
-
-#: models.py:150
-msgid "site"
-msgstr ""
-
-#: models.py:152
+#: models.py:293
 msgid "Dates in blog entry URLs"
 msgstr "Insert dates into blog entry URLs"
 
-#: models.py:153
+#: models.py:294
 msgid "Blog Entries With Slugs"
 msgstr ""
 "Blogs that are frequently updated, especially news-themed blogs, often "
 "insert dates [/2014/03/15/] into the URLs for blog entries. To insert a date-"
 "stamp into all blog entries for this blog, select ON."
 
-#: models.py:157
+#: models.py:296
 msgid "Add Users"
 msgstr ""
 
-#: models.py:231
-msgid "tagline"
-msgstr "Blog Tagline"
-
-#: models.py:232
-msgid "Blog Tagline"
-msgstr ""
-"Optional. Appears immediately below the Blog Title, and over the Blog "
-"Branding Image (if one is used). Recommended: 60 characters or fewer."
-
-#: models.py:236
-msgid "Blog Branding Image"
-msgstr ""
-"Upload or select an image that appears behind the Blog Title and Blog "
-"Tagline at the top of all blog pages. Size: 960 pixels wide and no more than "
-"150 pixels tall. <span class='help-tooltip' title='<img width=700 src="
-"STATIC_URLadmin/img/blog-banner-help.jpg>'>What's this?</span>"
-
-#: models.py:240
-msgid "Add blog to navigation"
-msgstr ""
-
-#: models.py:241
-msgid "Blog navigation"
-msgstr "ON allows users to display this blog in the navigation menu."
-
-#: models.py:247
+#: models.py:299
 msgid "Facebook integration"
 msgstr ""
 
-#: models.py:248
+#: models.py:300
 msgid "Blog Facebook integration"
 msgstr ""
 "ON allows users to share blog entries on Facebook. The post will pull the "
 "Open Graph information from the blog entry metadata."
 
-#: models.py:250
+#: models.py:302
 msgid "Twitter integration"
 msgstr ""
 
-#: models.py:251
+#: models.py:303
 msgid "Blog Twitter integration"
 msgstr ""
 "ON allows users to share blog entries via Twitter. The Tweet will derive "
 "information from the blog entry metadata."
 
-#: models.py:254
+#: models.py:306
 msgid "Blog Email integration"
 msgstr ""
 "ON allows users to email the post's short description and a link to it."
 
-#: models.py:260
+#: models.py:312
 msgid "Blog Disqus Shortname"
 msgstr ""
 "Tells Disqus which website account (called a forum on Disqus) this system "
 "belongs to."
 
-#: models.py:262
+#: models.py:314
 msgid "DISABLE Disqus commenting at mobile breakpoints (<480)"
 msgstr ""
 
-#: models.py:265
+#: models.py:317
 msgid "Select ON to hide comments on phone sized mobile devices."
-msgstr "Selecting ON hides comments on phone-sized mobile devices. This "
-"improves page load speed and prevents hanging issues for users relying on "
-"cellular data service."
+msgstr ""
+"Selecting ON hides comments on phone-sized mobile devices. This improves "
+"page load speed and prevents hanging issues for users relying on cellular "
+"data service."
 
-#: models.py:321 models.py:563
+#: models.py:372 models.py:612
 msgid "name"
 msgstr ""
 
-#: models.py:327
+#: models.py:378
 msgid "Used to build the author's URL."
 msgstr ""
 
-#: models.py:390 models.py:394
+#: models.py:441 models.py:445
 msgid "Used to build the entry's URL."
 msgstr ""
 
-#: models.py:392
+#: models.py:443
 msgid "publication date"
 msgstr ""
 
-#: models.py:397
+#: models.py:448
 msgid "Thumbnail Image"
 msgstr ""
 
-#: models.py:400
+#: models.py:451
 msgid "caption"
 msgstr ""
 
-#: models.py:402
+#: models.py:453
 msgid "credit"
 msgstr ""
 
-#: models.py:405
+#: models.py:456
 msgid "Blog Entry Authors"
 msgstr ""
 
-#: models.py:409
+#: models.py:460
 msgid "Short Description"
 msgstr ""
 
-#: models.py:409
+#: models.py:460
 msgid "400 characters or fewer"
 msgstr ""
 
-#: models.py:413
+#: models.py:464
 msgid "start publication"
 msgstr ""
 
-#: models.py:415
+#: models.py:466
 msgid "Start date of publication."
 msgstr ""
 
-#: models.py:417
+#: models.py:468
 msgid "end publication"
 msgstr ""
 
-#: models.py:419
+#: models.py:470
 msgid "End date of publication."
 msgstr ""
 
-#: models.py:420
+#: models.py:471
 msgid "is published"
 msgstr ""
 
-#: models.py:423
+#: models.py:474
 msgid "SEO Title"
 msgstr ""
 
-#: models.py:425
+#: models.py:476
 msgid "Keywords Meta"
 msgstr ""
 
-#: models.py:427
+#: models.py:478
 msgid "Disqus integration"
 msgstr ""
 
-#: models.py:428
+#: models.py:479
 msgid "Set OFF to disable commenting for this entry."
 msgstr ""
 
-#: models.py:430
+#: models.py:481
 msgid "Display thumbnail"
 msgstr ""
 
-#: models.py:431
+#: models.py:482
 msgid "Display thumbnail in blog entry"
 msgstr ""
 
-#: models.py:613
+#: models.py:662
 msgid "Entries to Display"
 msgstr ""
 
-#: templates/admin/cms_blogger/blog/change_form.html:75
+#: templates/admin/cms_blogger/blog/change_form.html:105
 #: templates/admin/cms_blogger/blogentrypage/change_form.html:22
 msgid "View on site"
 msgstr ""
 
-#: templates/admin/cms_blogger/blog/change_form.html:132
+#: templates/admin/cms_blogger/blog/change_form.html:162
 msgid "Next"
 msgstr ""
 

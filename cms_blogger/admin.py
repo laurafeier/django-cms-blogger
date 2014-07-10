@@ -43,9 +43,6 @@ class AbstractBlogLayoutInline(GenericTabularInline):
     readonly_fields = ('layout_customization', )
     model = Layout
     extra = 0
-    description = _("Blog Layouts description")
-    verbose_name = _("Blog Layouts Chooser")
-    verbose_name_plural = _("Blog Layouts Chooser")
 
     def get_formset(self, request, obj=None, **kwargs):
         formSet = super(AbstractBlogLayoutInline, self).get_formset(
@@ -89,12 +86,18 @@ class BlogLayoutInline(AbstractBlogLayoutInline):
     form = forms.BlogLayoutForm
     formset = forms.BlogLayoutInlineFormSet
     max_num = len(Blog.LAYOUTS_CHOICES.items())
+    description = _("Blog Layouts description")
+    verbose_name = _("Blog Layouts Chooser")
+    verbose_name_plural = _("Blog Layouts Chooser")
 
 
 class HomeBlogLayoutInline(AbstractBlogLayoutInline):
     form = forms.LayoutForm
     formset = forms.HomeBlogLayoutInlineFormSet
     max_num = 1
+    description = _("Super Landing Page Layout description")
+    verbose_name = _("Super Landing Page Layout Chooser")
+    verbose_name_plural = _("Super Landing Page Layout Chooser")
 
 
 class AbstractBlogAdmin(AdminHelper):
@@ -303,7 +306,8 @@ class HomeBlogAdmin(AbstractBlogAdmin):
         (None, {'fields': ['site', 'title', ], 'classes': ('general', )}), )
     change_form_fieldsets = (
         (None, {
-            'fields': ('site', 'title', 'tagline', 'branding_image')
+            'fields': ('site', 'title', 'tagline', 'branding_image'),
+            'description': _('Home Blog Setup Description')
         }),
         ('Advanced Settings', {
             'classes': ('extrapretty', 'collapse'),
