@@ -214,6 +214,9 @@ class AbstractBlogAdmin(AdminHelper):
         return url_patterns
 
     ### PERMISSIONS ###
+    def get_current_site(self, request):
+        return get_current_site(request, self.model)
+
     def _is_allowed(self, request, obj=None):
         if request.user.is_superuser:
             return True
@@ -279,154 +282,6 @@ class BlogAdmin(AbstractBlogAdmin):
         }),
     )
     prepopulated_fields = {"slug": ("title",)}
-
-    def get_urls(self):
-        urls = super(BlogAdmin, self).get_urls()
-        url_patterns = patterns(
-            '',
-            url(r'^(?P<blog_entry_id>\d+)/upload_file/$',
-                self.admin_site.admin_view(self.upload_thumbnail),
-                name='cms_blogger-upload-thumbnail'),
-
-            url(r'^(?P<blog_entry_id>\d+)/delete_file/$',
-                self.admin_site.admin_view(self.delete_thumbnail),
-                name='cms_blogger-delete-thumbnail'),
-
-            url(r'^move-entries/$',
-                self.admin_site.admin_view(self.move_entries),
-                name='cms_blogger-move-entries'),
-        )
-        url_patterns.extend(urls)
-        return url_patterns
-
-    def move_entries(self, request):
-        if not request.user.is_superuser:
-            messages.error(
-                request, "Only superusers are allowed to move blog entries")
-            return redirect(
-                reverse('admin:cms_blogger_blogentrypage_changelist'))
-
-        def response(form):
-            return render_to_response(
-                "admin/cms_blogger/blog/move_entries.html",
-                {'move_form': form, 'title': 'Move entries'},
-                context_instance=RequestContext(request))
-
-        qs = BlogEntryPage.objects.filter(id__in=request.GET.keys())
-        if request.method == "GET":
-            form = forms.MoveEntriesForm(entries=qs, checked=qs)
-            return response(form)
-
-        form = forms.MoveEntriesForm(request.POST, entries=qs, checked=qs)
-        if not form.is_valid():
-            return response(form)
-
-        post_data = request.POST.copy()
-        entries = form.cleaned_data['entries']
-        if not entries:
-            form = forms.MoveEntriesForm(post_data, entries=qs)
-            messages.error(request, "There are no entries selected.")
-            return response(form)
-
-        destination_blog = form.cleaned_data['destination_blog']
-        valid_entries = entries.exclude(blog=destination_blog)
-        valid_entries_ids = list(valid_entries.values_list('id', flat=True))
-        redundant_entries = entries.filter(blog=destination_blog)
-        post_data.setlist('entries', map(unicode, valid_entries_ids))
-        form = forms.MoveEntriesForm(post_data, entries=qs)
-
-        def f(entries, msg, length=100):
-            entries_list = ', '.join(entries.values_list('title', flat=True))
-            if len(entries_list) > length:
-                entries_list = "%s ..." % entries_list[:(length - 4)]
-            message = "%s%s%s" % (
-                ungettext(
-                    'Entry %(entry)s was ', 'Entries %(entry)s were ',
-                    entries.count()),
-                msg,
-                " blog %(blog)s")
-            return message % {
-                'entry': entries_list,
-                'blog': destination_blog}
-
-        if redundant_entries.exists():
-            message = f(redundant_entries, 'already present in')
-            messages.warning(request, message)
-            return response(form)
-
-        _move_entries(
-            destination_blog,
-            valid_entries_ids,
-            'mirror_categories' in form.data)
-        message = f(BlogEntryPage.objects.filter(
-            id__in=valid_entries_ids),
-            'successfully moved to')
-        messages.success(request, message)
-        return redirect(reverse('admin:cms_blogger_blogentrypage_changelist'))
-
-    @csrf_exempt
-    def upload_thumbnail(self, request, blog_entry_id=None):
-        try:
-            blog_entry = BlogEntryPage.objects.get(id=blog_entry_id)
-            # hold the initial file name in order to delete it after the
-            #   uploaded file is saved. Deletion takes place in the model's
-            #   save method
-            blog_entry._old_poster_image = blog_entry.poster_image.name
-        except BlogEntryPage.DoesNotExist:
-            raise UploadException(
-                "Blog entry with id %s does not exist" % blog_entry_id)
-
-        mimetype = "application/json" if request.is_ajax() else "text/html"
-        upload = None
-        try:
-            upload, full_filename, _ = handle_upload(request)
-            filename, extension = os.path.splitext(
-                os.path.basename(full_filename))
-            # check if it's an image type we can handle
-            extension = (imghdr.what(upload) or extension).lstrip('.')
-            if extension not in ALLOWED_THUMBNAIL_IMAGE_TYPES:
-                displayed_extension = extension or "Unknown"
-                raise UploadException(
-                    displayed_extension + " file type not allowed."
-                    " Please upload one of the following file types: " +
-                    ", ".join(ALLOWED_THUMBNAIL_IMAGE_TYPES))
-
-            if not all(get_image_dimensions(upload)):
-                raise UploadException(
-                    "Image width and height should be greater than 0px")
-            try:
-                upload.name = ''.join((filename, os.path.extsep, extension))
-                blog_entry.poster_image = resize_image(upload)
-            except Exception, e:
-                raise UploadException("Cannot resize image: %s" % e.message)
-            # save new image
-            blog_entry.save()
-            json_response = {
-                'label': unicode(blog_entry.poster_image.name),
-                'url': blog_entry.poster_image.url,
-            }
-            return HttpResponse(
-                json.dumps(json_response), mimetype=mimetype)
-        except UploadException, e:
-            return HttpResponse(
-                json.dumps({'error': unicode(e)}), mimetype=mimetype)
-        finally:
-            if upload:
-                upload.close()
-
-    @csrf_exempt
-    def delete_thumbnail(self, request, blog_entry_id=None):
-        try:
-            blog_entry = BlogEntryPage.objects.get(id=blog_entry_id)
-        except BlogEntryPage.DoesNotExist:
-            return HttpResponseNotFound("BlogEntry does not exist")
-        if blog_entry.poster_image and blog_entry.poster_image.name:
-            blog_entry.poster_image.delete()
-            return HttpResponse("OK")
-        return HttpResponseNotFound("No file to delete")
-
-    def get_current_site(self, request):
-        return get_current_site(request, self.model)
 
 
 class HomeBlogAdmin(AbstractBlogAdmin):
@@ -531,23 +386,6 @@ class BlogEntryPageAdmin(AdminHelper, PlaceholderAdmin):
     class Media:
         js = ("cms_blogger/js/moment.min.js",)
 
-    def get_urls(self):
-        urls = super(BlogEntryPageAdmin, self).get_urls()
-        url_patterns = patterns(
-            '',
-            url(r'^(?P<entry_id>\d+)/preview/$',
-                self.admin_site.admin_view(self.preview),
-                name='cms_blogger-entry-preview'), )
-        url_patterns.extend(urls)
-        return url_patterns
-
-    def preview(self, request, entry_id):
-        entry = get_object_or_404(self.model, id=entry_id)
-        if 'body' in request.POST:
-            entry.content = get_mock_placeholder(
-                get_language(), request.POST.get('body') or 'Sample Content')
-        return entry.render_to_response(request)
-
     def get_changelist_form(self, request, **kwargs):
         return forms.EntryChangelistForm
 
@@ -570,6 +408,169 @@ class BlogEntryPageAdmin(AdminHelper, PlaceholderAdmin):
             return True
         return super(BlogEntryPageAdmin, self).lookup_allowed(lookup, value)
 
+    def get_actions(self, request):
+        actions = super(BlogEntryPageAdmin, self).get_actions(request)
+        if not request.user.is_superuser:
+            del actions['move_entries']
+        return actions
+
+    def get_urls(self):
+        urls = super(BlogEntryPageAdmin, self).get_urls()
+        url_patterns = patterns(
+            '',
+            url(r'^(?P<blog_entry_id>\d+)/upload_file/$',
+                self.admin_site.admin_view(self.upload_thumbnail),
+                name='cms_blogger-upload-thumbnail'),
+
+            url(r'^(?P<blog_entry_id>\d+)/delete_file/$',
+                self.admin_site.admin_view(self.delete_thumbnail),
+                name='cms_blogger-delete-thumbnail'),
+
+            url(r'^move-entries/$',
+                self.admin_site.admin_view(self.move_entries_view),
+                name='cms_blogger-move-entries'),
+
+            url(r'^(?P<entry_id>\d+)/preview/$',
+                self.admin_site.admin_view(self.preview),
+                name='cms_blogger-entry-preview'), )
+        url_patterns.extend(urls)
+        return url_patterns
+
+    ### CUSTOM VIEWS ###
+    def preview(self, request, entry_id):
+        entry = get_object_or_404(self.model, id=entry_id)
+        if 'body' in request.POST:
+            entry.content = get_mock_placeholder(
+                get_language(), request.POST.get('body') or 'Sample Content')
+        return entry.render_to_response(request)
+
+    @csrf_exempt
+    def upload_thumbnail(self, request, blog_entry_id=None):
+        try:
+            blog_entry = BlogEntryPage.objects.get(id=blog_entry_id)
+            # hold the initial file name in order to delete it after the
+            #   uploaded file is saved. Deletion takes place in the model's
+            #   save method
+            blog_entry._old_poster_image = blog_entry.poster_image.name
+        except BlogEntryPage.DoesNotExist:
+            raise UploadException(
+                "Blog entry with id %s does not exist" % blog_entry_id)
+
+        mimetype = "application/json" if request.is_ajax() else "text/html"
+        upload = None
+        try:
+            upload, full_filename, _ = handle_upload(request)
+            filename, extension = os.path.splitext(
+                os.path.basename(full_filename))
+            # check if it's an image type we can handle
+            extension = (imghdr.what(upload) or extension).lstrip('.')
+            if extension not in ALLOWED_THUMBNAIL_IMAGE_TYPES:
+                displayed_extension = extension or "Unknown"
+                raise UploadException(
+                    displayed_extension + " file type not allowed."
+                    " Please upload one of the following file types: " +
+                    ", ".join(ALLOWED_THUMBNAIL_IMAGE_TYPES))
+
+            if not all(get_image_dimensions(upload)):
+                raise UploadException(
+                    "Image width and height should be greater than 0px")
+            try:
+                upload.name = ''.join((filename, os.path.extsep, extension))
+                blog_entry.poster_image = resize_image(upload)
+            except Exception, e:
+                raise UploadException("Cannot resize image: %s" % e.message)
+            # save new image
+            blog_entry.save()
+            json_response = {
+                'label': unicode(blog_entry.poster_image.name),
+                'url': blog_entry.poster_image.url,
+            }
+            return HttpResponse(
+                json.dumps(json_response), mimetype=mimetype)
+        except UploadException, e:
+            return HttpResponse(
+                json.dumps({'error': unicode(e)}), mimetype=mimetype)
+        finally:
+            if upload:
+                upload.close()
+
+    @csrf_exempt
+    def delete_thumbnail(self, request, blog_entry_id=None):
+        try:
+            blog_entry = BlogEntryPage.objects.get(id=blog_entry_id)
+        except BlogEntryPage.DoesNotExist:
+            return HttpResponseNotFound("BlogEntry does not exist")
+        if blog_entry.poster_image and blog_entry.poster_image.name:
+            blog_entry.poster_image.delete()
+            return HttpResponse("OK")
+        return HttpResponseNotFound("No file to delete")
+
+    def move_entries_view(self, request):
+        if not request.user.is_superuser:
+            messages.error(
+                request, "Only superusers are allowed to move blog entries")
+            return redirect(
+                reverse('admin:cms_blogger_blogentrypage_changelist'))
+
+        def response(form):
+            return render_to_response(
+                "admin/cms_blogger/blog/move_entries.html",
+                {'move_form': form, 'title': 'Move entries'},
+                context_instance=RequestContext(request))
+
+        qs = BlogEntryPage.objects.filter(id__in=request.GET.keys())
+        if request.method == "GET":
+            form = forms.MoveEntriesForm(entries=qs, checked=qs)
+            return response(form)
+
+        form = forms.MoveEntriesForm(request.POST, entries=qs, checked=qs)
+        if not form.is_valid():
+            return response(form)
+
+        post_data = request.POST.copy()
+        entries = form.cleaned_data['entries']
+        if not entries:
+            form = forms.MoveEntriesForm(post_data, entries=qs)
+            messages.error(request, "There are no entries selected.")
+            return response(form)
+
+        destination_blog = form.cleaned_data['destination_blog']
+        valid_entries = entries.exclude(blog=destination_blog)
+        valid_entries_ids = list(valid_entries.values_list('id', flat=True))
+        redundant_entries = entries.filter(blog=destination_blog)
+        post_data.setlist('entries', map(unicode, valid_entries_ids))
+        form = forms.MoveEntriesForm(post_data, entries=qs)
+
+        def f(entries, msg, length=100):
+            entries_list = ', '.join(entries.values_list('title', flat=True))
+            if len(entries_list) > length:
+                entries_list = "%s ..." % entries_list[:(length - 4)]
+            message = "%s%s%s" % (
+                ungettext(
+                    'Entry %(entry)s was ', 'Entries %(entry)s were ',
+                    entries.count()),
+                msg,
+                " blog %(blog)s")
+            return message % {
+                'entry': entries_list,
+                'blog': destination_blog}
+
+        if redundant_entries.exists():
+            message = f(redundant_entries, 'already present in')
+            messages.warning(request, message)
+            return response(form)
+
+        _move_entries(
+            destination_blog,
+            valid_entries_ids,
+            'mirror_categories' in form.data)
+        message = f(BlogEntryPage.objects.filter(
+            id__in=valid_entries_ids),
+            'successfully moved to')
+        messages.success(request, message)
+        return redirect(reverse('admin:cms_blogger_blogentrypage_changelist'))
+
+    ### PLACEHOLDER ADMIN VIEWS ###
     def add_plugin(self, request):
         """
         Adds a plugin the the hidded placeholder of the blog entry.
@@ -591,6 +592,7 @@ class BlogEntryPageAdmin(AdminHelper, PlaceholderAdmin):
         setattr(request, 'current_page', entry.get_layout().from_page)
         return super(BlogEntryPageAdmin, self).edit_plugin(request, plugin_id)
 
+    ### BULK ACTIONS ###
     def make_published(self, request, queryset):
         # cannot publish draft entries
         draft_entries = Q(Q(title__isnull=True) | Q(title__exact='') |
@@ -606,15 +608,19 @@ class BlogEntryPageAdmin(AdminHelper, PlaceholderAdmin):
             is_published=False, publication_date=timezone.now())
     make_unpublished.short_description = "Unpublish entries"
 
+    def move_entries(self, request, queryset):
+        entries = {x: "" for x in request.POST.getlist(
+            admin.helpers.ACTION_CHECKBOX_NAME)}
+        url = "%s?%s" % (
+            reverse('admin:cms_blogger-move-entries'),
+            urllib.urlencode(entries))
+        return redirect(url)
+    move_entries.short_description = "Move entries to another blog"
+
+    ### CUSTOM ADMIN COLUMNS ###
     def entry_authors(self, entry):
         return entry.authors_display_name
     entry_authors.allow_tags = True
-
-    def get_actions(self, request):
-        actions = super(BlogEntryPageAdmin, self).get_actions(request)
-        if not request.user.is_superuser:
-            del actions['move_entries']
-        return actions
 
     def published_at(self, entry):
         return (
@@ -631,15 +637,6 @@ class BlogEntryPageAdmin(AdminHelper, PlaceholderAdmin):
         max_len = 70
         return text if len(text) <= max_len else (text[:max_len-3] + '...')
     categories_assigned.short_description = 'Categories'
-
-    def move_entries(self, request, queryset):
-        entries = {x: "" for x in request.POST.getlist(
-            admin.helpers.ACTION_CHECKBOX_NAME)}
-        url = "%s?%s" % (
-            reverse('admin:cms_blogger-move-entries'),
-            urllib.urlencode(entries))
-        return redirect(url)
-    move_entries.short_description = "Move entries to another blog"
 
     ### PERMISSIONS ###
     def _is_allowed(self, request):
