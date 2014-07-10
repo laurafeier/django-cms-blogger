@@ -313,6 +313,12 @@ class HomeBlogAdmin(AbstractBlogAdmin):
     readonly_in_change_form = ['site', 'location_in_navigation']
 
     ### PERMISSIONS ###
+    def queryset(self, request):
+        qs = super(HomeBlogAdmin, self).queryset(request)
+        if request.user.is_superuser:
+            return qs
+        return qs.filter(site__in=get_allowed_sites(request, self.model))
+
     def _is_allowed(self, request, obj=None):
         if request.user.is_superuser:
             return True
