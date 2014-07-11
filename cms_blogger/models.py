@@ -213,7 +213,7 @@ class AbstractBlog(models.Model):
         return get_template("cms_blogger/blog_header.html").render(context)
 
     def render_content(self, request, context):
-        # landing page view passes entries, blog to the context
+        # landing page view passes paginated entries and blog to the context
         return get_template("cms_blogger/blog_content.html").render(context)
 
     def get_entries(self):

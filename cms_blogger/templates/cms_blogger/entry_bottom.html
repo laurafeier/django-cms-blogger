@@ -19,12 +19,12 @@
     </tr>
 </table>
 {% endif %}
-{% if blog.enable_disqus and entry.disqus_enabled %}
+{% if entry.blog.enable_disqus and entry.disqus_enabled %}
 <div id='disqus_thread'></div>
 <script type='text/javascript'>
-var disable_on_mobile = '{{blog.disable_disqus_for_mobile}}';
+var disable_on_mobile = '{{entry.blog.disable_disqus_for_mobile}}';
 if(!(disable_on_mobile === 'True' && document.getElementsByTagName('body')[0].offsetWidth < 480)) {
-    var disqus_shortname = '{{blog.disqus_shortname}}';
+    var disqus_shortname = '{{entry.blog.disqus_shortname}}';
     (function() {
     var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
     dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';

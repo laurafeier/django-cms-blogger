@@ -4,7 +4,7 @@ from django.shortcuts import get_object_or_404
 from django.contrib.sites.models import Site
 from django.db.models import Q
 from cms_layouts.layout_response import LayoutResponse
-from .models import BlogEntryPage, Blog, BlogCategory
+from .models import BlogEntryPage, Blog, HomeBlog, BlogCategory
 from .settings import POSTS_ON_LANDING_PAGE
 from .utils import paginate_queryset
 import re
@@ -13,10 +13,7 @@ import re
 def get_blog_or_404(slug):
     site = Site.objects.get_current()
     if not slug:
-        blog_qs = list(Blog.objects.filter(site=site)[:2])
-        if len(blog_qs) == 1:
-            return blog_qs[0]
-        raise Http404
+        return get_object_or_404(HomeBlog, site=site)
     return get_object_or_404(Blog, slug=slug, site=site)
 
 
@@ -85,7 +82,7 @@ def landing_page(request, blog_slug):
     layout = blog.get_layout()
     if not layout:
         return HttpResponseNotFound(
-            "<h1>This Blog Landing Page does not have a "
+            "<h1>This Landing Page does not have a "
             "layout to render.</h1>")
 
     extra_params, entries = _paginate_entries_on_blog(

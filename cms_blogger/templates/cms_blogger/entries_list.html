@@ -1,9 +1,7 @@
 {% spaceless %}
 {% for entry in entries %}
     {% if forloop.last %}<div class="last">{% endif %}
-    {% with blog=blog|default:entry.blog %}
-        {% include 'cms_blogger/entry_summary.html'%}
-    {% endwith %}
+    {% include 'cms_blogger/entry_summary.html'%}
     {% if forloop.last %}</div>{% endif %}
 {% empty %}
 No posts available
