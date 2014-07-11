@@ -32,6 +32,9 @@ class BlogFeed(Feed):
     def link(self, obj):
         return self.original_url + obj.get_absolute_url()
 
+    def feed_url(self, obj):
+        return self.link(obj) + "rss/"
+
     def description(self, obj):
         return obj.tagline
 
