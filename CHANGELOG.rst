@@ -1,6 +1,20 @@
 CHANGELOG
 =========
 
+Revision 8112de7 (15.07.2014, 12:06 UTC)
+----------------------------------------
+
+* LUN-1659
+
+  * Make 'sample text' disappear on any editing action in text plugin
+  * Make 'Sample content' text disappear when a user clicks into the blog text editor
+
+* LUN-1724
+
+  * feed url now works with proxied sites
+
+No other commits.
+
 Revision 81ff82d (08.07.2014, 10:18 UTC)
 ----------------------------------------
 
