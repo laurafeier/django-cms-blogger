@@ -1,11 +1,23 @@
 {% spaceless %}
 <div class="date">
-    <script type="text/javascript">var {{date_var}} = new Date({{utc_millis}});</script>
+    <script type="text/javascript">
+        if (Date._short_months === undefined){
+            Date._short_months = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
+            Date.prototype.getShortMonthString = function () {
+                return Date._short_months[this.getMonth()];
+            };
+            Date.prototype.get2DigitDayString = function () {
+                var day = this.getDate();
+                return day > 9 ? "" + day: "0" + day;
+            };
+        }
+        var {{date_var}} = new Date({{utc_millis}});
+    </script>
     <div class="month">
-        <script type="text/javascript">document.write({{date_var}}.toLocaleString('en-us', {month: 'short'}))</script>
+        <script type="text/javascript">document.write({{date_var}}.getShortMonthString())</script>
     </div>
     <div class="day">
-        <script type="text/javascript">document.write({{date_var}}.toLocaleString('en-us', {day: '2-digit'}))</script>
+        <script type="text/javascript">document.write({{date_var}}.get2DigitDayString())</script>
     </div>
     {% if show_year %}
     <div class="year">
