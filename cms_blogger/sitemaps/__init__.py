@@ -30,9 +30,9 @@ class BloggerSitemap(Sitemap):
         chained = itertools.chain(
             home_blog,
             blogs,
-            # bio_pages,
-            entry_pages,
-            blog_categories,
+            # bio_pages.select_related('blog'),
+            entry_pages.select_related('blog'),
+            blog_categories.select_related('blog'),
         )
         return list(chained)
 
