@@ -157,6 +157,14 @@ $(function() {
 
 {% block submit_buttons_bottom %}
 {% if adminform and add %}
+<script type="text/javascript">
+(function ($) {
+    var i = 0;
+    $('form').submit(function () {
+        i++; if(i > 1) { return false; }
+    });
+})(django.jQuery);
+</script>
 <div class="submit-row">
 <input type="submit" value="{% trans 'Next' %}" name="_continue" {{ onclick_attrib }}/>
 </div>
