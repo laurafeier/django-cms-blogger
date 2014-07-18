@@ -24,7 +24,7 @@ def get_allowed_sites(request, model=None):
     return Site.objects.all()
 
 
-def _set_cms_site(f):
+def set_cms_site(f):
     @wraps(f)
     def wrapper(request, *args, **kwds):
         current_site = f(request, *args, **kwds)
@@ -33,7 +33,7 @@ def _set_cms_site(f):
     return wrapper
 
 
-@_set_cms_site
+@set_cms_site
 def get_current_site(request, model=None, site_lookup=None):
     site_lookup = (site_lookup or
                    (model and getattr(model, 'site_lookup', None)) or

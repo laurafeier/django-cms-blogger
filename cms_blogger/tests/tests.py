@@ -429,6 +429,14 @@ class TestBlogModel(TestCase):
         # ^/(<proxy-prefix>/blogs(|/.*))$ proxy:http://<site-hostname>/blogs$2
         self.assertEquals(resp_code('/proxied/blogs/'), 404)
         self.assertEquals(resp_code('/i/am/proxied/too/blogs/'), 404)
+        self.assertEquals(resp_code('/blogs/'), 404)
+        HomeBlog().save()
+        self.assertEquals(resp_code('/blogs/'), 404)
+        # add a layout
+        layout = blog.get_layout()
+        layout.pk = None
+        layout.content_object = HomeBlog.objects.all().get()
+        layout.save()
         self.assertEquals(resp_code('/blogs/'), 200)
         self.assertEquals(resp_code('/blogs/one-title/'), 200)
         self.assertEquals(resp_code('/blogs/one-title/none/'), 404)

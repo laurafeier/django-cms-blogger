@@ -1,19 +1,19 @@
 {% spaceless %}
-    {% if blog.enable_facebook or blog.enable_twitter or blog.email_account_link %}
+    {% if entry.blog.enable_facebook or entry.blog.enable_twitter or entry.blog.email_account_link %}
     <div class="social">
-    {% if blog.enable_facebook %}
+    {% if entry.blog.enable_facebook %}
         <a href="javascript:void(0)" data-href="https://www.facebook.com/sharer/sharer.php?s=100&amp;p[url]={{PROXY_REWRITE_RULE}}{{entry.get_absolute_url}}&amp;p[title]={{entry.title|urlencode}}{% if entry.poster_image %}&amp;p[images][0]={{entry.poster_image.url}}{% endif %}{% if entry.short_description %}&amp;p[summary]={{entry.short_description|urlencode}}{% endif %}" class="facebook social" title="Share on Facebook" target="_blank" >
             <img src="{{STATIC_URL}}cms_blogger/img/facebook.png" alt="Share on Facebook" />
         </a>
     {% endif %}
 
-    {% if blog.enable_twitter %}
+    {% if entry.blog.enable_twitter %}
         <a href="javascript:void(0)" data-href="https://twitter.com/intent/tweet?url={{PROXY_REWRITE_RULE}}{{entry.get_absolute_url}}&amp;text={{entry.title|urlencode}}%0a" class="twitter social" title="Tweet this post" target="_blank" >
             <img src="{{STATIC_URL}}cms_blogger/img/twitter.png" alt="Tweet this post" />
         </a>
     {% endif %}
 
-    {% if blog.email_account_link %}
+    {% if entry.blog.email_account_link %}
         <a href="mailto:?subject={{entry.title|urlencode}}&amp;body={{PROXY_REWRITE_RULE}}{{entry.get_absolute_url}}" class="email social" title="Share by Email" >
             <img src="{{STATIC_URL}}cms_blogger/img/email.png" alt="Share by Email" />
         </a>

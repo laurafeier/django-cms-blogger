@@ -27,13 +27,14 @@ from django_select2.fields import (
     AutoModelSelect2MultipleField, AutoModelSelect2TagField)
 
 from .models import (
-    Blog, BlogEntryPage, BlogCategory, Author, RiverPlugin,
+    Blog, BlogEntryPage, BlogCategory, Author, RiverPlugin, HomeBlog,
     MAX_CATEGORIES_IN_PLUGIN)
 from .widgets import (
     TagItWidget, ButtonWidget, DateTimeWidget, PosterImage, SpinnerWidget,
     JQueryUIMultiselect)
 from .slug import get_unique_slug
-from .utils import user_display_name
+from .utils import (
+    user_display_name, get_allowed_sites, set_cms_site, get_current_site)
 from .settings import DISALLOWED_ENTRIES_SLUGS
 from cms.templatetags.cms_admin import admin_static_url
 import json
@@ -79,6 +80,18 @@ class BlogLayoutInlineFormSet(BaseGenericInlineFormSet):
                     "a layout for all the rest layout types: %s" % (
                         Blog.LAYOUTS_CHOICES[Blog.ALL],
                         ', '.join(pretty_specific_layout_types)))
+        return self.cleaned_data
+
+
+class HomeBlogLayoutInlineFormSet(BaseGenericInlineFormSet):
+
+    def clean(self):
+        if any(self.errors):
+            return
+        data = filter(lambda x: not x.get('DELETE', False), self.cleaned_data)
+        if len(data) != 1:
+            raise ValidationError('One layout is required.')
+        return self.cleaned_data
 
 
 def is_valid_for_layout(page):
@@ -98,26 +111,9 @@ def is_valid_for_layout(page):
             "You need to fix this manually." % (page, page_exception))
 
 
-class BlogLayoutForm(forms.ModelForm):
-    layout_type = forms.IntegerField(
-        label='Layout Type',
-        widget=forms.Select(choices=Blog.LAYOUTS_CHOICES.items()))
+class LayoutForm(forms.ModelForm):
     from_page = forms.IntegerField(
         label='Inheriting layout from page', widget=forms.Select())
-
-    class Meta:
-        model = Layout
-        fields = ('layout_type', 'from_page')
-
-    def clean_layout_type(self):
-        layout_type = self.cleaned_data.get('layout_type', None)
-        if layout_type is None:
-            raise ValidationError("Layout Type required")
-        if layout_type not in Blog.LAYOUTS_CHOICES.keys():
-            raise ValidationError(
-                "Not a valid Layout Type. Valid choices are: %s" % (
-                    ', '.join(Blog.LAYOUTS_CHOICES.values())))
-        return layout_type
 
     def clean_from_page(self):
         from_page_id = self.cleaned_data.get('from_page', None)
@@ -131,6 +127,29 @@ class BlogLayoutForm(forms.ModelForm):
                 'existing page.')
         is_valid_for_layout(page)
         return page
+
+    class Meta:
+        model = Layout
+        fields = ('from_page', )
+
+
+class BlogLayoutForm(LayoutForm):
+    layout_type = forms.IntegerField(
+        label='Layout Type',
+        widget=forms.Select(choices=Blog.LAYOUTS_CHOICES.items()))
+
+    class Meta:
+        fields = ('layout_type', 'from_page', )
+
+    def clean_layout_type(self):
+        layout_type = self.cleaned_data.get('layout_type', None)
+        if layout_type is None:
+            raise ValidationError("Layout Type required")
+        if layout_type not in Blog.LAYOUTS_CHOICES.keys():
+            raise ValidationError(
+                "Not a valid Layout Type. Valid choices are: %s" % (
+                    ', '.join(Blog.LAYOUTS_CHOICES.values())))
+        return layout_type
 
 
 class MultipleUserField(AutoModelSelect2MultipleField):
@@ -166,7 +185,54 @@ def _save_related(form, commit, model_obj, *form_functions):
     setattr(form.save_m2m, '_save_related_attached', True)
 
 
-class BlogForm(forms.ModelForm):
+class AbstractBlogForm(forms.ModelForm):
+    requires_request = True
+    help_text = {}
+
+    def __init__(self, *args, **kwargs):
+        for field_name, text in self.help_text.items():
+            if field_name in self.base_fields:
+                self.base_fields[field_name].help_text = text
+        if not hasattr(self, 'request'):
+            self.request = kwargs.pop('request', None)
+        super(AbstractBlogForm, self).__init__(*args, **kwargs)
+
+    def set_site(self, site):
+
+        @set_cms_site
+        def change_session_site(request):
+            return site
+
+        change_session_site(self.request)
+
+    def _clean_home_page(self, site):
+        try:
+            home_page = Page.objects.get_home(site)
+        except NoHomeFound:
+            raise ValidationError(
+                "The site you are working on does not have a valid layout "
+                "page. You need to have a root published page before you can"
+                " add a blog.")
+        is_valid_for_layout(home_page)
+
+    def _add_default_layout(self, blog):
+        if blog.layouts.count() == 0:
+            home_page = Page.objects.get_home(blog.site)
+            article_layout = Layout()
+            article_layout.from_page = home_page
+            article_layout.content_object = blog
+            article_layout.save()
+
+    def clean_in_navigation(self):
+        in_navigation = self.cleaned_data.get('in_navigation', False)
+        if in_navigation:
+            if not self.instance.navigation_node:
+                raise ValidationError(
+                    "Choose a location in the navigation menu")
+        return in_navigation
+
+
+class BlogForm(AbstractBlogForm):
     categories = forms.CharField(
         widget=TagItWidget(
             attrs={'tagit': '{allowSpaces: true, caseSensitive: false}'}),
@@ -211,13 +277,6 @@ class BlogForm(forms.ModelForm):
                 " must have between 3 and 30 characters." % invalid_names)
         return categories_names
 
-    def clean_in_navigation(self):
-        in_navigation = self.cleaned_data.get('in_navigation', False)
-        if in_navigation:
-            if not self.instance.navigation_node:
-                raise ValidationError(
-                    "Choose a location in the navigation menu")
-        return in_navigation
 
     def clean_slug(self):
         slug = slugify(self.cleaned_data.get('slug', '').strip())
@@ -255,12 +314,28 @@ class BlogForm(forms.ModelForm):
         return saved_instance
 
 
-class BlogAddForm(forms.ModelForm):
-    requires_request = True
+class HomeBlogForm(AbstractBlogForm):
+    help_text = {
+        'title': _('Super Landing Page title'),
+        'tagline': _('Super Landing Page tagline'),
+        'branding_image': _('Super Landing Page branding image'),
+        'in_navigation': _('Super Landing Page in navigation'),
+        'site': _('Super Landing Page site')
+    }
+    labels = {'in_navigation': _('Super Landing Page label in navigation')}
 
     def __init__(self, *args, **kwargs):
-        self.request = kwargs.pop('request', None)
-        super(BlogAddForm, self).__init__(*args, **kwargs)
+        self.base_fields['in_navigation'].label = self.labels['in_navigation']
+        super(HomeBlogForm, self).__init__(*args, **kwargs)
+        self.set_site(self.instance.site)
+        if 'title' not in self.initial:
+            self.initial['title'] = 'Latest blog posts'
+
+    class Meta:
+        model = HomeBlog
+
+
+class BlogAddForm(AbstractBlogForm):
 
     def clean(self):
         site = Site.objects.get_current()
@@ -268,28 +343,13 @@ class BlogAddForm(forms.ModelForm):
         slug = self.cleaned_data.get('slug', None)
         if Blog.objects.filter(site=self.instance.site, slug=slug).exists():
             raise ValidationError("Blog with this slug already exists.")
-        try:
-            home_page = Page.objects.get_home(site)
-        except NoHomeFound:
-            raise ValidationError(
-                "The site you are working on does not have a valid layout "
-                "page. You need to have a root published page before you can"
-                " add a blog.")
-        is_valid_for_layout(home_page)
+        self._clean_home_page(site)
         return self.cleaned_data
 
     def _allow_current_user(self, blog):
         if (blog.allowed_users.count() == 0
                 and self.request and self.request.user):
             blog.allowed_users.add(self.request.user)
-
-    def _add_default_layout(self, blog):
-        if blog.layouts.count() == 0:
-            home_page = Page.objects.get_home(Site.objects.get_current())
-            article_layout = Layout()
-            article_layout.from_page = home_page
-            article_layout.content_object = blog
-            article_layout.save()
 
     def save(self, commit=True):
         saved = super(BlogAddForm, self).save(commit=commit)
@@ -300,6 +360,58 @@ class BlogAddForm(forms.ModelForm):
     class Meta:
         model = Blog
         fields = ('title', 'slug',)
+
+
+class HomeBlogAddForm(AbstractBlogForm):
+    help_text = {
+        'title': _('Super Landing Page title'),
+        'site': _('Super Landing Page site')
+    }
+
+    def __init__(self, *args, **kwargs):
+        self.request = kwargs.pop('request', None)
+        if self.request and not self.request.user.is_superuser:
+            allowed_sites = get_allowed_sites(self.request, HomeBlog)
+        else:
+            allowed_sites = Site.objects.all()
+        site_field = self.base_fields['site']
+        site_field.queryset = allowed_sites.filter(homeblog=None)
+        site_field.widget.can_add_related = False
+        super(HomeBlogAddForm, self).__init__(*args, **kwargs)
+        if 'title' not in self.initial:
+            self.initial['title'] = 'Latest blog posts'
+        current_site = get_current_site(self.request, HomeBlog)
+        if ('site' not in self.initial and
+                current_site in site_field.queryset):
+            self.initial['site'] = current_site
+
+    def clean_site(self):
+        site = self.cleaned_data.get('site')
+        if not site:
+            raise ValidationError("Site is required.")
+        if site not in get_allowed_sites(self.request, HomeBlog):
+            raise ValidationError("You do not have permissions on this site.")
+        if HomeBlog.objects.filter(site=site).exists():
+            raise ValidationError(
+                "This site already has a %s. You may only have one %s per"
+                " site. You may change it from the list view." % (
+                    (HomeBlog._meta.verbose_name.lower(), ) * 2))
+        return site
+
+    def clean(self):
+        self._clean_home_page(self.cleaned_data.get('site'))
+        return self.cleaned_data
+
+    def save(self, commit=True):
+        saved = super(HomeBlogAddForm, self).save(commit=commit)
+        _save_related(self, commit, saved, self._add_default_layout)
+        # current site is required in the navigation tool from the change form
+        self.set_site(self.instance.site)
+        return saved
+
+    class Meta:
+        model = HomeBlog
+        fields = ('site', 'title')
 
 
 _ADD_HIDDEN_VAR_TO_FORM = (

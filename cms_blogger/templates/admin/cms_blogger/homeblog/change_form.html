@@ -1,0 +1,7 @@
+{% extends 'admin/cms_blogger/blog/change_form.html' %}
+{% block content_title %}
+{% comment %}hide current site{% endcomment %}
+{% with add=False %}
+{{ block.super }}
+{% endwith %}
+{% endblock %}

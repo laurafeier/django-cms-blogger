@@ -1,20 +1,21 @@
 # -*- coding: utf-8 -*-
 from django.template.context import RequestContext
 from django.contrib.sites.models import Site
+from django.core.urlresolvers import reverse
+from django.conf import settings
+from django.db.models import Q
 from menus.base import NavigationNode, Modifier
 from menus.menu_pool import menu_pool
 from .models import BlogNavigationNode
 from collections import OrderedDict
 from itertools import ifilter
-from django.core.urlresolvers import reverse
-from django.conf import settings
 
 
 def _make_navigation_node(blog_node, parent, proxy_prefix, visible=None):
     nav_node = NavigationNode(
         blog_node.text,
         "%s%s" % (proxy_prefix, blog_node.get_absolute_url()),
-        blog_node.id * -1,
+        blog_node.menu_id,
         attr={'blogNode': True},
         visible=visible or blog_node.is_visible())
     if parent:
@@ -49,11 +50,14 @@ class BlogNavigationExtender(Modifier):
         #   same position in the menu we are relying on the fact that they
         #   will get inserted in the menu in the order of their modification
         #   date(from the oldest node to the newest node)
+        current_site = Site.objects.get_current()
         blog_nodes = BlogNavigationNode.objects.filter(
-            blog__site=Site.objects.get_current()).order_by('modified_at')
+            Q(blog__site=current_site) | Q(homeblog__site=current_site)
+        ).order_by('modified_at')
 
         if not node_visible:
-            blog_nodes = blog_nodes.filter(blog__in_navigation=True)
+            blog_nodes = blog_nodes.filter(
+                Q(blog__in_navigation=True) | Q(homeblog__in_navigation=True))
 
         # save all new added nodes in order to mark the selected one
         new_nodes = []
