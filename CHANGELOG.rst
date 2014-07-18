@@ -1,6 +1,38 @@
 CHANGELOG
 =========
 
+Revision e0bc55b (18.07.2014, 12:12 UTC)
+----------------------------------------
+
+* LUN-1687
+
+  * fixed entry template so that they use their blogs settings and not the blog passed in the context; Added home blog to default /blogs/ view.
+  * added help text for new forms
+  * fixed home blog admin permissions
+  * users should see home blogs only for sites they have permissions on.
+  * layout inline is now availble for super landing page
+  * moved entry-related actions from blog admin to blog entry admin.
+  * - implemented * home blog admin permissions * nav tool enabled * showing home blog nav nodes * home blog add & change forms
+  * added new abstract blog that will respond to /blogs/. + refactored code so that we can reuse common pieces from abstract blog.
+
+* LUN-1730
+
+  * fixed toLocaleString entry pub date display issue.
+
+* LUN-1731
+
+  * customize layout should be a button, not a link
+
+* LUN-1735
+
+  * Fix long error message not wrapping
+
+* Misc commits
+
+  * sitemap perf improvement: select-related on blog since all blog related pages use the associated blog slug in their absolute url
+  * super landing page url should be displayed in sitemaps
+  * fixed tests
+
 Revision 8112de7 (15.07.2014, 12:06 UTC)
 ----------------------------------------
 
