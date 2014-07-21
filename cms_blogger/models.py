@@ -206,6 +206,13 @@ class AbstractBlog(models.Model):
     def get_absolute_url(self):
         raise NotImplementedError
 
+    def get_feed_url(self):
+        from django.core.urlresolvers import reverse
+        url_kwargs = {}
+        if not self.is_home and self.slug:
+            url_kwargs = {'blog_slug': self.slug}
+        return reverse('blog_feed', args=(), kwargs=url_kwargs)
+
     def get_layout(self):
         raise NotImplementedError
 
