@@ -3,7 +3,7 @@
     window['tinyMCESetup'] = function(ed) {
 
         function removePlaceholder(content){
-            var regexp = /<p.*>Sample content|<.*br.*><\/p>/;
+            var regexp = /<p[^>]*>Sample content<\/p>/;
             if(regexp.test(content)){
                 //don't use setContet('') to avoid triggering beforeSetContent
                 //and get an endless loop
