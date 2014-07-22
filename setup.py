@@ -15,7 +15,7 @@ DEPENDENCIES = [
 ]
 
 DEPENDENCY_LINKS = [
-    'http://github.com/pbs/django-cms-layouts/tarball/master#egg=django-cms-layouts-0.1'
+    'http://github.com/laurafeier/django-cms-layouts/tarball/master#egg=django-cms-layouts-0.1'
 ]
 
 setup(
