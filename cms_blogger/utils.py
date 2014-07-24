@@ -102,7 +102,7 @@ def resize_image(file_like_object):
     file_like_object.seek(0)
     try:
         pil_img = PILImage.open(file_like_object)
-    except Exception, e:
+    except Exception as e:
         raise Exception('Cannot open image %s. Error occured: %s' % (
             full_file_name, e))
 
