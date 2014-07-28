@@ -1,6 +1,24 @@
 CHANGELOG
 =========
 
+Revision d59a7e6 (28.07.2014, 09:22 UTC)
+----------------------------------------
+
+* LUN-1737
+
+  * prevent multiple form submissions.
+
+* LUN-1739
+
+  * url for blogs feed is now named + helper that returns the rss url for a blog.
+
+* LUN-1741
+
+  * Match only the placeholder exactly
+  * Fix removing all content when the text ends with '<br>'
+
+No other commits.
+
 Revision e0bc55b (18.07.2014, 12:12 UTC)
 ----------------------------------------
 
