@@ -29,7 +29,7 @@ from cms_layouts.slot_finder import get_mock_placeholder
 from cms_blogger import forms, changelists
 from .models import (
     Blog, BlogCategory, BlogEntryPage, BlogNavigationNode, HomeBlog)
-from .admin_helper import AdminHelper
+from .admin_helper import AdminHelper, CustomForm
 from .settings import ALLOWED_THUMBNAIL_IMAGE_TYPES
 from .widgets import ToggleWidget
 from .utils import resize_image, get_allowed_sites, get_current_site
@@ -255,8 +255,15 @@ class AbstractBlogAdmin(AdminHelper):
 class BlogAdmin(AbstractBlogAdmin):
     custom_changelist_class = changelists.BlogChangeList
     inlines = [BlogLayoutInline, ]
-    add_form = forms.BlogAddForm
-    change_form = forms.BlogForm
+    custom_forms = (
+        CustomForm(form=forms.BlogAddForm,
+                   fieldsets='add_form_fieldsets',
+                   readonly=None,
+                   when=lambda obj: True if not obj else False),
+        CustomForm(form=forms.BlogForm,
+                   fieldsets='change_form_fieldsets',
+                   readonly='readonly_in_change_form',
+                   when=lambda obj: True if obj else False))
     search_fields = ['title', 'site__name']
     list_display = ('title', 'slug', 'site')
     readonly_in_change_form = ['site', 'location_in_navigation']
