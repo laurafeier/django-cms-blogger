@@ -251,7 +251,9 @@ class BlogAdmin(AbstractBlogAdmin):
                    when=lambda obj: True if not obj else False,
                    show_next=True),
         WizardForm(form=forms.BlogLayoutMissingForm,
-                   fieldsets=((None, {'fields': ['layout_page', ]}), ),
+                   fieldsets=((None, {
+                        'fields': ['layout_page', ],
+                        'classes': ('wide', 'extrapretty',)}), ),
                    when=lambda obj: obj and not obj.layouts.exists(),
                    show_next=True),
         WizardForm(form=forms.BlogForm,
@@ -304,8 +306,21 @@ class HomeBlogAdmin(AbstractBlogAdmin):
     list_display = ('title', 'site', )
     search_fields = ['title', 'site__name']
     inlines = [HomeBlogLayoutInline, ]
-    add_form = forms.HomeBlogAddForm
-    change_form = forms.HomeBlogForm
+    wizard_forms = (
+        WizardForm(form=forms.HomeBlogAddForm,
+                   fieldsets='add_form_fieldsets',
+                   when=lambda obj: True if not obj else False,
+                   show_next=True),
+        WizardForm(form=forms.BlogLayoutMissingForm,
+                   fieldsets=((None, {
+                        'fields': ['layout_page', ],
+                        'classes': ('wide', 'extrapretty',)}), ),
+                   when=lambda obj: obj and not obj.layouts.exists(),
+                   show_next=True),
+        WizardForm(form=forms.HomeBlogForm,
+                   fieldsets='change_form_fieldsets',
+                   readonly= ['site', 'location_in_navigation'],
+                   when=lambda obj: True if obj else False))
     add_form_fieldsets = (
         (None, {'fields': ['site', 'title', ], 'classes': ('general', )}), )
     change_form_fieldsets = (
@@ -318,7 +333,6 @@ class HomeBlogAdmin(AbstractBlogAdmin):
             'fields': (('in_navigation', 'location_in_navigation'), )
         }),
     )
-    readonly_in_change_form = ['site', 'location_in_navigation']
 
     ### PERMISSIONS ###
     def queryset(self, request):
