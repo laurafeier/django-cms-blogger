@@ -25,18 +25,20 @@ class AdminHelper(admin.ModelAdmin):
     def __init__(self, *args, **kwargs):
         super(AdminHelper, self).__init__(*args, **kwargs)
         self._wizard_forms = []
-        admin_cls = self.__class__
 
-        def from_cls(custom_form, attr):
-            val = getattr(custom_form, attr, None)
+        def lazy_attr(cls, val):
             if isinstance(val, basestring):
-                return getattr(admin_cls, val)
+                return getattr(cls, val)
             return val
 
+        admin = self.__class__
+
         for _form in self.wizard_forms:
+            get_val = lambda field_name: getattr(_form, field_name)
+            as_property = lambda field: (field,
+                                         lazy_attr(admin, get_val(field)))
             self._wizard_forms.append(
-                WizardForm(**dict(map(lambda f: (f, from_cls(_form, f)),
-                                  _form._fields))))
+                WizardForm(**dict(map(as_property, _form._fields))))
         if self._wizard_forms:
             return
 
@@ -53,8 +55,10 @@ class AdminHelper(admin.ModelAdmin):
                 WizardForm(
                     form=getattr(self, form_attr, None),
                     fieldsets=getattr(self, '%s_fieldsets' % form_attr, None),
-                    readonly=getattr(self, 'readonly_in_%s' % form_attr, None),
-                    prepopulated=getattr(self, 'prepopulated_in_%s' % form_attr, None),
+                    readonly=getattr(
+                        self, 'readonly_in_%s' % form_attr, None),
+                    prepopulated=getattr(
+                        self, 'prepopulated_in_%s' % form_attr, None),
                     when=when
                 ))
 
@@ -91,18 +95,22 @@ class AdminHelper(admin.ModelAdmin):
             super(AdminHelper, self).get_changelist(request, **kwargs))
 
     def get_readonly_fields(self, request, obj=None):
-        custom = self._get_wizard_form(obj) or WizardForm()
-        self.readonly_fields = list(set(ro for ro in custom.readonly))
+        if self._is_wizard_like():
+            custom = self._get_wizard_form(obj) or WizardForm()
+            self.readonly_fields = list(set(ro for ro in custom.readonly))
         return super(AdminHelper, self).get_readonly_fields(request, obj)
 
     def get_prepopulated_fields(self, request, obj=None):
-        custom = self._get_wizard_form(obj) or WizardForm()
-        self.prepopulated_fields = dict(custom.prepopulated)
+        if self._is_wizard_like():
+            custom = self._get_wizard_form(obj) or WizardForm()
+            self.prepopulated_fields = dict(custom.prepopulated)
         return super(AdminHelper, self).get_prepopulated_fields(request, obj)
 
+    def _is_wizard_like(self):
+        return len(self._wizard_forms) > 0
+
     def _get_wizard_form(self, obj):
-        return next(
-            (f for f in self._wizard_forms if f.when(obj)), None)
+        return next((f for f in self._wizard_forms if f.when(obj)), None)
 
     def _reset_custom_form(self, request, obj=None, **kwargs):
         custom = self._get_wizard_form(obj) or WizardForm()
@@ -111,7 +119,8 @@ class AdminHelper(admin.ModelAdmin):
         self.fieldsets = tuple(list(custom.fieldsets))
 
     def get_form(self, request, obj=None, **kwargs):
-        self._reset_custom_form(request, obj, **kwargs)
+        if self._is_wizard_like():
+            self._reset_custom_form(request, obj, **kwargs)
         formCls = super(AdminHelper, self).get_form(request, obj, **kwargs)
 
         requires_request = getattr(formCls, 'requires_request', False)
