@@ -6,8 +6,9 @@ from django.template.defaultfilters import slugify
 from django.forms.util import ErrorList
 from django.contrib.contenttypes.generic import BaseGenericInlineFormSet
 from django.contrib.sites.models import Site
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import get_language, ugettext_lazy as _
 from django.utils import timezone
+from django.utils.safestring import mark_safe
 from django.contrib.auth.models import User
 from django.db import router
 from django.db.models.query import EmptyQuerySet
@@ -16,7 +17,7 @@ from cms.plugin_pool import plugin_pool
 from cms.plugins.text.settings import USE_TINYMCE
 from cms.plugins.text.widgets.wymeditor_widget import WYMEditor
 from cms.utils.plugins import get_placeholders
-from cms.models import Page
+from cms.models import Page, Title
 from cms.exceptions import NoHomeFound
 
 from cms_layouts.models import Layout
@@ -94,6 +95,19 @@ class HomeBlogLayoutInlineFormSet(BaseGenericInlineFormSet):
         return self.cleaned_data
 
 
+def get_page_choices(blog):
+    if not blog:
+        return []
+    available_choices = Title.objects.filter(
+        page__site=blog.site,
+        language=get_language()).values_list(
+            'page', 'page__level', 'title').order_by(
+                'page__tree_id', 'page__lft')
+    return [
+        (page, mark_safe('%s%s' % ('&nbsp;' * level * 2, title)))
+        for page, level, title in available_choices]
+
+
 def is_valid_for_layout(page):
     """
     Checks if a page can be used for a layout
@@ -111,22 +125,26 @@ def is_valid_for_layout(page):
             "You need to fix this manually." % (page, page_exception))
 
 
+def validate_for_layout(page_id):
+    if not page_id:
+        raise ValidationError('Select a page for this layout.')
+    try:
+        page = Page.objects.get(id=page_id)
+    except Page.DoesNotExist:
+        raise ValidationError(
+            'This page does not exist. Refresh this form and select an '
+            'existing page.')
+    is_valid_for_layout(page)
+    return page
+
+
 class LayoutForm(forms.ModelForm):
     from_page = forms.IntegerField(
         label='Inheriting layout from page', widget=forms.Select())
 
     def clean_from_page(self):
         from_page_id = self.cleaned_data.get('from_page', None)
-        if not from_page_id:
-            raise ValidationError('Select a page for this layout.')
-        try:
-            page = Page.objects.get(id=from_page_id)
-        except Page.DoesNotExist:
-            raise ValidationError(
-                'This page does not exist. Refresh this form and select an '
-                'existing page.')
-        is_valid_for_layout(page)
-        return page
+        return validate_for_layout(from_page_id)
 
     class Meta:
         model = Layout
@@ -218,7 +236,7 @@ class AbstractBlogForm(forms.ModelForm):
     def _add_default_layout(self, blog):
         if blog.layouts.count() == 0:
             from_page = self.cleaned_data.get(
-                'from_page', Page.objects.get_home(blog.site))
+                'layout_page', Page.objects.get_home(blog.site))
             article_layout = Layout()
             article_layout.from_page = from_page
             article_layout.content_object = blog
@@ -336,7 +354,19 @@ class HomeBlogForm(AbstractBlogForm):
         model = HomeBlog
 
 
-class BlogLayoutMissingForm(AbstractBlogForm, LayoutForm):
+class BlogLayoutMissingForm(AbstractBlogForm):
+
+    layout_page = forms.IntegerField(
+        label='Inheriting layout from page', widget=forms.Select())
+
+    def __init__(self, *args, **kwargs):
+        super(BlogLayoutMissingForm, self).__init__(*args, **kwargs)
+        choices = get_page_choices(self.instance)
+        self.fields['layout_page'].widget.choices = choices
+
+    def clean_layout_page(self):
+        layout_page_id = self.cleaned_data.get('layout_page', None)
+        return validate_for_layout(layout_page_id)
 
     def save(self, commit=True):
         saved = super(BlogLayoutMissingForm, self).save(commit=commit)
@@ -345,7 +375,7 @@ class BlogLayoutMissingForm(AbstractBlogForm, LayoutForm):
 
     class Meta:
         model = Blog
-        fields = ('from_page', )
+        fields = ('layout_page', )
 
 
 class BlogAddForm(AbstractBlogForm):

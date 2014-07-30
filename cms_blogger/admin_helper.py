@@ -6,6 +6,7 @@ from collections import namedtuple
 _wizard_opts = namedtuple(
     'WizardForm', 'form fieldsets readonly prepopulated when show_next')
 
+
 class WizardForm(_wizard_opts):
 
     def __new__(cls, form=None, fieldsets=None,
@@ -39,12 +40,12 @@ class AdminHelper(admin.ModelAdmin):
         if self._wizard_forms:
             return
 
-        other_wizard_forms = {
-            'add': lambda obj: True if not obj else False,
-            'change': lambda obj: True if obj else False
-        }
+        other_wizard_forms = (
+            ('add', lambda obj: True if not obj else False),
+            ('change', lambda obj: True if obj else False)
+        )
 
-        for attr, when in other_wizard_forms.items():
+        for attr, when in other_wizard_forms:
             form_attr = '%s_form' % attr
             if not hasattr(self, form_attr):
                 continue

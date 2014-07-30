@@ -17,7 +17,7 @@ from django.utils.translation import ungettext
 from django.utils.safestring import mark_safe
 from django.views.decorators.csrf import csrf_exempt
 from cms.admin.placeholderadmin import PlaceholderAdmin
-from cms.models import Title, CMSPlugin
+from cms.models import CMSPlugin
 from menus.menu_pool import menu_pool
 from menus.templatetags.menu_tags import cut_levels
 
@@ -53,19 +53,8 @@ class AbstractBlogLayoutInline(GenericTabularInline):
         else:
             formSet.extra = 0
 
-        if obj:
-            available_choices = Title.objects.filter(
-                page__site=obj.site,
-                language=get_language()).values_list(
-                    'page', 'page__level', 'title').order_by(
-                        'page__tree_id', 'page__lft')
-            available_choices = [
-                (page, mark_safe('%s%s' % ('&nbsp;' * level * 2, title)))
-                for page, level, title in available_choices]
-        else:
-            available_choices = Title.objects.get_empty_query_set()
         page_field = formSet.form.base_fields['from_page']
-        page_field.widget.choices = available_choices
+        page_field.widget.choices = forms.get_page_choices(obj)
         return formSet
 
     def layout_customization(self, obj):
@@ -262,7 +251,7 @@ class BlogAdmin(AbstractBlogAdmin):
                    when=lambda obj: True if not obj else False,
                    show_next=True),
         WizardForm(form=forms.BlogLayoutMissingForm,
-                   fieldsets=((None, {'fields': ['from_page', ]}), ),
+                   fieldsets=((None, {'fields': ['layout_page', ]}), ),
                    when=lambda obj: obj and not obj.layouts.exists(),
                    show_next=True),
         WizardForm(form=forms.BlogForm,
