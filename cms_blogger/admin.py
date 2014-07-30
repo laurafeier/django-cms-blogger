@@ -29,7 +29,7 @@ from cms_layouts.slot_finder import get_mock_placeholder
 from cms_blogger import forms, changelists
 from .models import (
     Blog, BlogCategory, BlogEntryPage, BlogNavigationNode, HomeBlog)
-from .admin_helper import AdminHelper, CustomForm
+from .admin_helper import AdminHelper, WizardForm
 from .settings import ALLOWED_THUMBNAIL_IMAGE_TYPES
 from .widgets import ToggleWidget
 from .utils import resize_image, get_allowed_sites, get_current_site
@@ -171,7 +171,7 @@ class AbstractBlogAdmin(AdminHelper):
 
     def get_formsets(self, request, obj=None):
         # don't show layout inline in add view
-        if obj and obj.pk:
+        if self.form in (forms.BlogForm, forms.HomeBlogForm):
             # set request for navigation_preview
             obj._request_for_navigation_preview = request
             return super(AbstractBlogAdmin, self).get_formsets(request, obj)
@@ -255,14 +255,20 @@ class AbstractBlogAdmin(AdminHelper):
 class BlogAdmin(AbstractBlogAdmin):
     custom_changelist_class = changelists.BlogChangeList
     inlines = [BlogLayoutInline, ]
-    custom_forms = (
-        CustomForm(form=forms.BlogAddForm,
+    wizard_forms = (
+        WizardForm(form=forms.BlogAddForm,
                    fieldsets='add_form_fieldsets',
-                   readonly=None,
-                   when=lambda obj: True if not obj else False),
-        CustomForm(form=forms.BlogForm,
+                   prepopulated='prepopulated_fields',
+                   when=lambda obj: True if not obj else False,
+                   show_next=True),
+        WizardForm(form=forms.BlogLayoutMissingForm,
+                   fieldsets=((None, {'fields': ['from_page', ]}), ),
+                   when=lambda obj: obj and not obj.layouts.exists(),
+                   show_next=True),
+        WizardForm(form=forms.BlogForm,
                    fieldsets='change_form_fieldsets',
                    readonly='readonly_in_change_form',
+                   prepopulated='prepopulated_fields',
                    when=lambda obj: True if obj else False))
     search_fields = ['title', 'site__name']
     list_display = ('title', 'slug', 'site')

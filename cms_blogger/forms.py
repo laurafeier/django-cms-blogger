@@ -217,9 +217,10 @@ class AbstractBlogForm(forms.ModelForm):
 
     def _add_default_layout(self, blog):
         if blog.layouts.count() == 0:
-            home_page = Page.objects.get_home(blog.site)
+            from_page = self.cleaned_data.get(
+                'from_page', Page.objects.get_home(blog.site))
             article_layout = Layout()
-            article_layout.from_page = home_page
+            article_layout.from_page = from_page
             article_layout.content_object = blog
             article_layout.save()
 
@@ -333,6 +334,18 @@ class HomeBlogForm(AbstractBlogForm):
 
     class Meta:
         model = HomeBlog
+
+
+class BlogLayoutMissingForm(AbstractBlogForm, LayoutForm):
+
+    def save(self, commit=True):
+        saved = super(BlogLayoutMissingForm, self).save(commit=commit)
+        _save_related(self, commit, saved, self._add_default_layout)
+        return saved
+
+    class Meta:
+        model = Blog
+        fields = ('from_page', )
 
 
 class BlogAddForm(AbstractBlogForm):
