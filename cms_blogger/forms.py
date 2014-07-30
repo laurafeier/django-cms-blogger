@@ -108,7 +108,7 @@ def get_page_choices(blog):
         for page, level, title in available_choices]
 
 
-def is_valid_for_layout(page):
+def is_valid_for_layout(page, raise_errors=True):
     """
     Checks if a page can be used for a layout
     """
@@ -116,14 +116,18 @@ def is_valid_for_layout(page):
         slots = get_placeholders(page.get_template())
         get_fixed_section_slots(slots)
     except MissingRequiredPlaceholder, e:
+        if not raise_errors:
+            return False
         raise ValidationError(
             "Page %s is missing a required placeholder named %s. Add this "
             "placeholder in the page template." % (page, e.slot, ))
     except Exception, page_exception:
+        if not raise_errors:
+            return False
         raise ValidationError(
             "Error found while scanning template from page %s: %s. "
             "You need to fix this manually." % (page, page_exception))
-
+    return True
 
 def validate_for_layout(page_id):
     if not page_id:
@@ -214,6 +218,7 @@ class AbstractBlogForm(forms.ModelForm):
         if not hasattr(self, 'request'):
             self.request = kwargs.pop('request', None)
         super(AbstractBlogForm, self).__init__(*args, **kwargs)
+        self._has_valid_root = False
 
     def set_site(self, site):
 
@@ -223,20 +228,26 @@ class AbstractBlogForm(forms.ModelForm):
 
         change_session_site(self.request)
 
+    def _get_default_layout_page(self, site):
+        page = Page.objects.on_site(site).all_root().order_by("tree_id")[:1]
+        if page:
+            return page[0]
+        return None
+
     def _clean_home_page(self, site):
-        try:
-            home_page = Page.objects.get_home(site)
-        except NoHomeFound:
+        first_root = self._get_default_layout_page(site)
+        if not first_root:
             raise ValidationError(
                 "The site you are working on does not have a valid layout "
-                "page. You need to have a root published page before you can"
+                "page. You need to have at least a root page before you can"
                 " add a blog.")
-        is_valid_for_layout(home_page)
+        if is_valid_for_layout(first_root, raise_errors=False):
+            self._has_valid_root = True
 
     def _add_default_layout(self, blog):
         if blog.layouts.count() == 0:
             from_page = self.cleaned_data.get(
-                'layout_page', Page.objects.get_home(blog.site))
+                'layout_page', self._get_default_layout_page(blog.site))
             article_layout = Layout()
             article_layout.from_page = from_page
             article_layout.content_object = blog
@@ -396,8 +407,10 @@ class BlogAddForm(AbstractBlogForm):
 
     def save(self, commit=True):
         saved = super(BlogAddForm, self).save(commit=commit)
-        _save_related(self, commit, saved,
-            self._allow_current_user, self._add_default_layout)
+        _call = [self._allow_current_user]
+        if self._has_valid_root:
+            _call.append(self._add_default_layout)
+        _save_related(self, commit, saved, *_call)
         return saved
 
     class Meta:
@@ -447,7 +460,8 @@ class HomeBlogAddForm(AbstractBlogForm):
 
     def save(self, commit=True):
         saved = super(HomeBlogAddForm, self).save(commit=commit)
-        _save_related(self, commit, saved, self._add_default_layout)
+        if self._has_valid_root:
+            _save_related(self, commit, saved, self._add_default_layout)
         # current site is required in the navigation tool from the change form
         self.set_site(self.instance.site)
         return saved
