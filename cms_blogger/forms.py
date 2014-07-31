@@ -374,6 +374,10 @@ class BlogLayoutMissingForm(AbstractBlogForm):
         super(BlogLayoutMissingForm, self).__init__(*args, **kwargs)
         choices = get_page_choices(self.instance)
         self.fields['layout_page'].widget.choices = choices
+        if not self.errors:
+            self.missing_layouts = ErrorList([_('Blog Form Missing Layout')])
+        else:
+            self.missing_layouts = False
 
     def clean_layout_page(self):
         layout_page_id = self.cleaned_data.get('layout_page', None)
