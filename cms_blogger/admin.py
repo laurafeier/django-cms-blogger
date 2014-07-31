@@ -669,7 +669,10 @@ class BlogEntryPageAdmin(AdminHelper, PlaceholderAdmin):
     def _is_allowed(self, request):
         if request.user.is_superuser:
             return True
-        return Blog.objects.filter(allowed_users=request.user).exists()
+        return Blog.objects.filter(
+            site__in=get_allowed_sites(request, self.model),
+            allowed_users=request.user
+        ).exists()
 
     def has_add_permission(self, request):
         can_add = super(BlogEntryPageAdmin, self).has_add_permission(request)
