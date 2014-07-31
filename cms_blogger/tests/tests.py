@@ -605,13 +605,22 @@ class TestBlogModel(TestCase):
         response = self.client.get(add_url)
         form = response.context_data['adminform'].form
         self.assertItemsEqual(sorted(form.fields.keys()), ['title', 'slug'])
-        create_page('master', 'page_template.html',
-                    language='en', published=True)
+        create_page('root_invalid', '404.html', language='en',)
+        valid = create_page('root_valid', 'page_template.html', language='en')
+        # step 1: add form tries to autogenerate from first root page
         response = self.client.post(add_url, {
             'title': 'one title', 'slug': 'one-title'})
         self.assertEqual(response.status_code, 302)
+        # step 2: layout chooser since the first root was invalid
         change_url = reverse('admin:cms_blogger_blog_change', args=(
             Blog.objects.all()[0].pk, ))
+        response = self.client.get(change_url)
+        form = response.context_data['adminform'].form
+        self.assertEquals(len(form.fields.keys()), 1)
+        # set the valid page as layout
+        response = self.client.post(change_url, {'layout_page': valid.pk})
+        self.assertEqual(response.status_code, 302)
+        # step 3: valid blog form
         response = self.client.get(change_url)
         form = response.context_data['adminform'].form
         change_fields = flatten_fieldsets(

@@ -41,7 +41,8 @@ INSTALLED_APPS = [
     'cms_blogger',
 ]
 
-CMS_TEMPLATES = [('page_template.html', 'page_template.html'), ]
+CMS_TEMPLATES = [('page_template.html', 'page_template.html'),
+                 ('404.html', '404.html'),]
 CMS_MODERATOR = False
 CMS_PERMISSION = True
 STATIC_ROOT = ''
