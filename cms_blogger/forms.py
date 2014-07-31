@@ -282,6 +282,7 @@ class BlogForm(AbstractBlogForm):
                 "Add one in the Layouts section."])
         else:
             self.missing_layouts = False
+        self.set_site(self.instance.site)
 
     def _init_categories_field(self, blog):
         categories_field = self.fields.get('categories', None)
