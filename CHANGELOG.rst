@@ -1,6 +1,21 @@
 CHANGELOG
 =========
 
+Revision 897e0b8 (05.08.2014, 12:23 UTC)
+----------------------------------------
+
+* LUN-1689
+
+  * IE does not allow '-' character in window name
+
+* LUN-1755
+
+  * fixed IE javascript date parse for formatting.
+
+* Misc commits
+
+  * users that are not allowed on a blog's site should not have access to entries even if they are listed in the allowed users section
+
 Revision d59a7e6 (28.07.2014, 09:22 UTC)
 ----------------------------------------
 
