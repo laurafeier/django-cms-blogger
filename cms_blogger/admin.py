@@ -650,11 +650,11 @@ class BlogEntryPageAdmin(AdminHelper, PlaceholderAdmin):
     entry_authors.allow_tags = True
 
     def published_at(self, entry):
+        from cms_blogger.templatetags.blogger import publish_date_box
         return (
             '<script type="text/javascript">'
-            'var str_date = (new Date(moment("%s"))).toString();'
-            'document.write(/(.*)GMT|UTC[+-]\d*/g.exec(str_date)[1]);'
-            '</script>' % entry.publication_date)
+            'document.write(moment(%s).format("DD MMM YYYY hh:mm A"));'
+            '</script>' % publish_date_box(entry).get('utc_millis'))
     published_at.allow_tags = True
 
     def categories_assigned(self, entry):
