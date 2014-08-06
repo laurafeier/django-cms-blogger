@@ -101,11 +101,11 @@ def is_valid_for_layout(page):
     try:
         slots = get_placeholders(page.get_template())
         get_fixed_section_slots(slots)
-    except MissingRequiredPlaceholder, e:
+    except MissingRequiredPlaceholder as e:
         raise ValidationError(
             "Page %s is missing a required placeholder named %s. Add this "
             "placeholder in the page template." % (page, e.slot, ))
-    except Exception, page_exception:
+    except Exception as page_exception:
         raise ValidationError(
             "Error found while scanning template from page %s: %s. "
             "You need to fix this manually." % (page, page_exception))

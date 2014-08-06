@@ -504,7 +504,7 @@ class BlogEntryPageAdmin(AdminHelper, PlaceholderAdmin):
             try:
                 upload.name = ''.join((filename, os.path.extsep, extension))
                 blog_entry.poster_image = resize_image(upload)
-            except Exception, e:
+            except Exception as e:
                 raise UploadException("Cannot resize image: %s" % e.message)
             # save new image
             blog_entry.save()
@@ -514,7 +514,7 @@ class BlogEntryPageAdmin(AdminHelper, PlaceholderAdmin):
             }
             return HttpResponse(
                 json.dumps(json_response), mimetype=mimetype)
-        except UploadException, e:
+        except UploadException as e:
             return HttpResponse(
                 json.dumps({'error': unicode(e)}), mimetype=mimetype)
         finally:
