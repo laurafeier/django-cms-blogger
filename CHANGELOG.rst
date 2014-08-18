@@ -1,6 +1,16 @@
 CHANGELOG
 =========
 
+Revision 87990de (18.08.2014, 12:40 UTC)
+----------------------------------------
+
+* LUN-1754
+
+  * changed except clause syntax to be forward compatible with Python 3.x
+  * let django handle 404s
+
+No other commits.
+
 Revision 897e0b8 (05.08.2014, 12:23 UTC)
 ----------------------------------------
 
