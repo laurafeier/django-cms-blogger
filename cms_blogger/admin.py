@@ -522,7 +522,7 @@ class BlogEntryPageAdmin(AdminHelper, PlaceholderAdmin):
             try:
                 upload.name = ''.join((filename, os.path.extsep, extension))
                 blog_entry.poster_image = resize_image(upload)
-            except Exception, e:
+            except Exception as e:
                 raise UploadException("Cannot resize image: %s" % e.message)
             # save new image
             blog_entry.save()
@@ -532,7 +532,7 @@ class BlogEntryPageAdmin(AdminHelper, PlaceholderAdmin):
             }
             return HttpResponse(
                 json.dumps(json_response), mimetype=mimetype)
-        except UploadException, e:
+        except UploadException as e:
             return HttpResponse(
                 json.dumps({'error': unicode(e)}), mimetype=mimetype)
         finally:
@@ -668,11 +668,11 @@ class BlogEntryPageAdmin(AdminHelper, PlaceholderAdmin):
     entry_authors.allow_tags = True
 
     def published_at(self, entry):
+        from cms_blogger.templatetags.blogger import publish_date_box
         return (
             '<script type="text/javascript">'
-            'var str_date = (new Date(moment("%s"))).toString();'
-            'document.write(/(.*)GMT|UTC[+-]\d*/g.exec(str_date)[1]);'
-            '</script>' % entry.publication_date)
+            'document.write(moment(%s).format("DD MMM YYYY hh:mm A"));'
+            '</script>' % publish_date_box(entry).get('utc_millis'))
     published_at.allow_tags = True
 
     def categories_assigned(self, entry):
@@ -687,7 +687,10 @@ class BlogEntryPageAdmin(AdminHelper, PlaceholderAdmin):
     def _is_allowed(self, request):
         if request.user.is_superuser:
             return True
-        return Blog.objects.filter(allowed_users=request.user).exists()
+        return Blog.objects.filter(
+            site__in=get_allowed_sites(request, self.model),
+            allowed_users=request.user
+        ).exists()
 
     def has_add_permission(self, request):
         can_add = super(BlogEntryPageAdmin, self).has_add_permission(request)

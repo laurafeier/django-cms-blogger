@@ -73,11 +73,7 @@ def _paginate_entries_on_blog(request, entries, blog):
 
 
 def landing_page(request, blog_slug):
-    try:
-        blog = get_blog_or_404(blog_slug)
-    except Http404:
-        return HttpResponseNotFound(
-            "<h1>Blog not found for the given URL</h1>")
+    blog = get_blog_or_404(blog_slug)
 
     layout = blog.get_layout()
     if not layout:
