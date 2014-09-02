@@ -248,7 +248,7 @@ class BlogAdmin(AbstractBlogAdmin):
         WizardForm(form=forms.BlogAddForm,
                    fieldsets='add_form_fieldsets',
                    prepopulated='prepopulated_fields',
-                   when=lambda obj: True if not obj else False,
+                   when=lambda obj: bool(not obj),
                    show_next=True),
         WizardForm(form=forms.BlogLayoutMissingForm,
                    fieldsets=((None, {
@@ -260,7 +260,8 @@ class BlogAdmin(AbstractBlogAdmin):
                    fieldsets='change_form_fieldsets',
                    readonly='readonly_in_change_form',
                    prepopulated='prepopulated_fields',
-                   when=lambda obj: True if obj else False))
+                   when=lambda obj: bool(obj))
+    )
     search_fields = ['title', 'site__name']
     list_display = ('title', 'slug', 'site')
     readonly_in_change_form = ['site', 'location_in_navigation']
@@ -309,7 +310,7 @@ class HomeBlogAdmin(AbstractBlogAdmin):
     wizard_forms = (
         WizardForm(form=forms.HomeBlogAddForm,
                    fieldsets='add_form_fieldsets',
-                   when=lambda obj: True if not obj else False,
+                   when=lambda obj: bool(not obj),
                    show_next=True),
         WizardForm(form=forms.BlogLayoutMissingForm,
                    fieldsets=((None, {
@@ -320,7 +321,8 @@ class HomeBlogAdmin(AbstractBlogAdmin):
         WizardForm(form=forms.HomeBlogForm,
                    fieldsets='change_form_fieldsets',
                    readonly= ['site', 'location_in_navigation'],
-                   when=lambda obj: True if obj else False))
+                   when=lambda obj: bool(obj))
+    )
     add_form_fieldsets = (
         (None, {'fields': ['site', 'title', ], 'classes': ('general', )}), )
     change_form_fieldsets = (

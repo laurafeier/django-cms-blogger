@@ -116,7 +116,7 @@ class AdminHelper(admin.ModelAdmin):
         custom = self._get_wizard_form(obj) or WizardForm()
         self.form = custom.form
         setattr(self.form, 'show_next_button', custom.show_next)
-        self.fieldsets = tuple(list(custom.fieldsets))
+        self.fieldsets = tuple(custom.fieldsets)
 
     def get_form(self, request, obj=None, **kwargs):
         if self._is_wizard_like():

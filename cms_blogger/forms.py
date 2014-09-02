@@ -104,7 +104,7 @@ def get_page_choices(blog):
             'page', 'page__level', 'title').order_by(
                 'page__tree_id', 'page__lft')
     return [
-        (page, mark_safe('%s%s' % ('&nbsp;' * level * 2, title)))
+        (page, mark_safe('%s%s' % (2 * level * '&nbsp;', title)))
         for page, level, title in available_choices]
 
 
