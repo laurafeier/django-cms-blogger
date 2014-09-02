@@ -28,7 +28,8 @@ def set_cms_site(f):
     @wraps(f)
     def wrapper(request, *args, **kwds):
         current_site = f(request, *args, **kwds)
-        request.session['cms_admin_site'] = current_site.pk
+        if hasattr(request, 'session'):
+            request.session['cms_admin_site'] = current_site.pk
         return current_site
     return wrapper
 
@@ -40,7 +41,7 @@ def get_current_site(request, model=None, site_lookup=None):
                    'site__exact')
     if site_lookup in request.REQUEST:
         site_pk = request.REQUEST[site_lookup]
-    else:
+    elif hasattr(request, 'session'):
         site_pk = request.session.get('cms_admin_site', None)
 
     if site_pk:
