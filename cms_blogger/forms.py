@@ -6,8 +6,9 @@ from django.template.defaultfilters import slugify
 from django.forms.util import ErrorList
 from django.contrib.contenttypes.generic import BaseGenericInlineFormSet
 from django.contrib.sites.models import Site
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import get_language, ugettext_lazy as _
 from django.utils import timezone
+from django.utils.safestring import mark_safe
 from django.contrib.auth.models import User
 from django.db import router
 from django.db.models.query import EmptyQuerySet
@@ -16,7 +17,7 @@ from cms.plugin_pool import plugin_pool
 from cms.plugins.text.settings import USE_TINYMCE
 from cms.plugins.text.widgets.wymeditor_widget import WYMEditor
 from cms.utils.plugins import get_placeholders
-from cms.models import Page
+from cms.models import Page, Title
 from cms.exceptions import NoHomeFound
 
 from cms_layouts.models import Layout
@@ -94,7 +95,20 @@ class HomeBlogLayoutInlineFormSet(BaseGenericInlineFormSet):
         return self.cleaned_data
 
 
-def is_valid_for_layout(page):
+def get_page_choices(blog):
+    if not blog:
+        return []
+    available_choices = Title.objects.filter(
+        page__site=blog.site,
+        language=get_language()).values_list(
+            'page', 'page__level', 'title').order_by(
+                'page__tree_id', 'page__lft')
+    return [
+        (page, mark_safe('%s%s' % (2 * level * '&nbsp;', title)))
+        for page, level, title in available_choices]
+
+
+def is_valid_for_layout(page, raise_errors=True):
     """
     Checks if a page can be used for a layout
     """
@@ -102,13 +116,30 @@ def is_valid_for_layout(page):
         slots = get_placeholders(page.get_template())
         get_fixed_section_slots(slots)
     except MissingRequiredPlaceholder as e:
+        if not raise_errors:
+            return False
         raise ValidationError(
             "Page %s is missing a required placeholder named %s. Add this "
             "placeholder in the page template." % (page, e.slot, ))
     except Exception as page_exception:
+        if not raise_errors:
+            return False
         raise ValidationError(
             "Error found while scanning template from page %s: %s. "
             "You need to fix this manually." % (page, page_exception))
+    return True
+
+def validate_for_layout(page_id):
+    if not page_id:
+        raise ValidationError('Select a page for this layout.')
+    try:
+        page = Page.objects.get(id=page_id)
+    except Page.DoesNotExist:
+        raise ValidationError(
+            'This page does not exist. Refresh this form and select an '
+            'existing page.')
+    is_valid_for_layout(page)
+    return page
 
 
 class LayoutForm(forms.ModelForm):
@@ -117,16 +148,7 @@ class LayoutForm(forms.ModelForm):
 
     def clean_from_page(self):
         from_page_id = self.cleaned_data.get('from_page', None)
-        if not from_page_id:
-            raise ValidationError('Select a page for this layout.')
-        try:
-            page = Page.objects.get(id=from_page_id)
-        except Page.DoesNotExist:
-            raise ValidationError(
-                'This page does not exist. Refresh this form and select an '
-                'existing page.')
-        is_valid_for_layout(page)
-        return page
+        return validate_for_layout(from_page_id)
 
     class Meta:
         model = Layout
@@ -196,6 +218,7 @@ class AbstractBlogForm(forms.ModelForm):
         if not hasattr(self, 'request'):
             self.request = kwargs.pop('request', None)
         super(AbstractBlogForm, self).__init__(*args, **kwargs)
+        self._has_valid_root = False
 
     def set_site(self, site):
 
@@ -205,21 +228,28 @@ class AbstractBlogForm(forms.ModelForm):
 
         change_session_site(self.request)
 
+    def _get_default_layout_page(self, site):
+        page = Page.objects.on_site(site).all_root().order_by("tree_id")[:1]
+        if page:
+            return page[0]
+        return None
+
     def _clean_home_page(self, site):
-        try:
-            home_page = Page.objects.get_home(site)
-        except NoHomeFound:
+        first_root = self._get_default_layout_page(site)
+        if not first_root:
             raise ValidationError(
                 "The site you are working on does not have a valid layout "
-                "page. You need to have a root published page before you can"
+                "page. You need to have at least a root page before you can"
                 " add a blog.")
-        is_valid_for_layout(home_page)
+        if is_valid_for_layout(first_root, raise_errors=False):
+            self._has_valid_root = True
 
     def _add_default_layout(self, blog):
         if blog.layouts.count() == 0:
-            home_page = Page.objects.get_home(blog.site)
+            from_page = self.cleaned_data.get(
+                'layout_page', self._get_default_layout_page(blog.site))
             article_layout = Layout()
-            article_layout.from_page = home_page
+            article_layout.from_page = from_page
             article_layout.content_object = blog
             article_layout.save()
 
@@ -252,6 +282,7 @@ class BlogForm(AbstractBlogForm):
                 "Add one in the Layouts section."])
         else:
             self.missing_layouts = False
+        self.set_site(self.instance.site)
 
     def _init_categories_field(self, blog):
         categories_field = self.fields.get('categories', None)
@@ -335,6 +366,34 @@ class HomeBlogForm(AbstractBlogForm):
         model = HomeBlog
 
 
+class BlogLayoutMissingForm(AbstractBlogForm):
+
+    layout_page = forms.IntegerField(
+        label='Inheriting layout from page', widget=forms.Select())
+
+    def __init__(self, *args, **kwargs):
+        super(BlogLayoutMissingForm, self).__init__(*args, **kwargs)
+        choices = get_page_choices(self.instance)
+        self.fields['layout_page'].widget.choices = choices
+        if not self.errors:
+            self.missing_layouts = ErrorList([_('Blog Form Missing Layout')])
+        else:
+            self.missing_layouts = False
+
+    def clean_layout_page(self):
+        layout_page_id = self.cleaned_data.get('layout_page', None)
+        return validate_for_layout(layout_page_id)
+
+    def save(self, commit=True):
+        saved = super(BlogLayoutMissingForm, self).save(commit=commit)
+        _save_related(self, commit, saved, self._add_default_layout)
+        return saved
+
+    class Meta:
+        model = Blog
+        fields = ('layout_page', )
+
+
 class BlogAddForm(AbstractBlogForm):
 
     def clean(self):
@@ -353,8 +412,10 @@ class BlogAddForm(AbstractBlogForm):
 
     def save(self, commit=True):
         saved = super(BlogAddForm, self).save(commit=commit)
-        _save_related(self, commit, saved,
-            self._allow_current_user, self._add_default_layout)
+        _call = [self._allow_current_user]
+        if self._has_valid_root:
+            _call.append(self._add_default_layout)
+        _save_related(self, commit, saved, *_call)
         return saved
 
     class Meta:
@@ -404,7 +465,8 @@ class HomeBlogAddForm(AbstractBlogForm):
 
     def save(self, commit=True):
         saved = super(HomeBlogAddForm, self).save(commit=commit)
-        _save_related(self, commit, saved, self._add_default_layout)
+        if self._has_valid_root:
+            _save_related(self, commit, saved, self._add_default_layout)
         # current site is required in the navigation tool from the change form
         self.set_site(self.instance.site)
         return saved

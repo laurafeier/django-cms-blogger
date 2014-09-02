@@ -17,7 +17,7 @@ from django.utils.translation import ungettext
 from django.utils.safestring import mark_safe
 from django.views.decorators.csrf import csrf_exempt
 from cms.admin.placeholderadmin import PlaceholderAdmin
-from cms.models import Title, CMSPlugin
+from cms.models import CMSPlugin
 from menus.menu_pool import menu_pool
 from menus.templatetags.menu_tags import cut_levels
 
@@ -29,7 +29,7 @@ from cms_layouts.slot_finder import get_mock_placeholder
 from cms_blogger import forms, changelists
 from .models import (
     Blog, BlogCategory, BlogEntryPage, BlogNavigationNode, HomeBlog)
-from .admin_helper import AdminHelper
+from .admin_helper import AdminHelper, WizardForm
 from .settings import ALLOWED_THUMBNAIL_IMAGE_TYPES
 from .widgets import ToggleWidget
 from .utils import resize_image, get_allowed_sites, get_current_site
@@ -53,19 +53,8 @@ class AbstractBlogLayoutInline(GenericTabularInline):
         else:
             formSet.extra = 0
 
-        if obj:
-            available_choices = Title.objects.filter(
-                page__site=obj.site,
-                language=get_language()).values_list(
-                    'page', 'page__level', 'title').order_by(
-                        'page__tree_id', 'page__lft')
-            available_choices = [
-                (page, mark_safe('%s%s' % ('&nbsp;' * level * 2, title)))
-                for page, level, title in available_choices]
-        else:
-            available_choices = Title.objects.get_empty_query_set()
         page_field = formSet.form.base_fields['from_page']
-        page_field.widget.choices = available_choices
+        page_field.widget.choices = forms.get_page_choices(obj)
         return formSet
 
     def layout_customization(self, obj):
@@ -171,7 +160,7 @@ class AbstractBlogAdmin(AdminHelper):
 
     def get_formsets(self, request, obj=None):
         # don't show layout inline in add view
-        if obj and obj.pk:
+        if self.form in (forms.BlogForm, forms.HomeBlogForm):
             # set request for navigation_preview
             obj._request_for_navigation_preview = request
             return super(AbstractBlogAdmin, self).get_formsets(request, obj)
@@ -255,8 +244,24 @@ class AbstractBlogAdmin(AdminHelper):
 class BlogAdmin(AbstractBlogAdmin):
     custom_changelist_class = changelists.BlogChangeList
     inlines = [BlogLayoutInline, ]
-    add_form = forms.BlogAddForm
-    change_form = forms.BlogForm
+    wizard_forms = (
+        WizardForm(form=forms.BlogAddForm,
+                   fieldsets='add_form_fieldsets',
+                   prepopulated='prepopulated_fields',
+                   when=lambda obj: bool(not obj),
+                   show_next=True),
+        WizardForm(form=forms.BlogLayoutMissingForm,
+                   fieldsets=((None, {
+                        'fields': ['layout_page', ],
+                        'classes': ('wide', 'extrapretty',)}), ),
+                   when=lambda obj: obj and not obj.layouts.exists(),
+                   show_next=True),
+        WizardForm(form=forms.BlogForm,
+                   fieldsets='change_form_fieldsets',
+                   readonly='readonly_in_change_form',
+                   prepopulated='prepopulated_fields',
+                   when=lambda obj: bool(obj))
+    )
     search_fields = ['title', 'site__name']
     list_display = ('title', 'slug', 'site')
     readonly_in_change_form = ['site', 'location_in_navigation']
@@ -302,8 +307,22 @@ class HomeBlogAdmin(AbstractBlogAdmin):
     list_display = ('title', 'site', )
     search_fields = ['title', 'site__name']
     inlines = [HomeBlogLayoutInline, ]
-    add_form = forms.HomeBlogAddForm
-    change_form = forms.HomeBlogForm
+    wizard_forms = (
+        WizardForm(form=forms.HomeBlogAddForm,
+                   fieldsets='add_form_fieldsets',
+                   when=lambda obj: bool(not obj),
+                   show_next=True),
+        WizardForm(form=forms.BlogLayoutMissingForm,
+                   fieldsets=((None, {
+                        'fields': ['layout_page', ],
+                        'classes': ('wide', 'extrapretty',)}), ),
+                   when=lambda obj: obj and not obj.layouts.exists(),
+                   show_next=True),
+        WizardForm(form=forms.HomeBlogForm,
+                   fieldsets='change_form_fieldsets',
+                   readonly= ['site', 'location_in_navigation'],
+                   when=lambda obj: bool(obj))
+    )
     add_form_fieldsets = (
         (None, {'fields': ['site', 'title', ], 'classes': ('general', )}), )
     change_form_fieldsets = (
@@ -316,7 +335,6 @@ class HomeBlogAdmin(AbstractBlogAdmin):
             'fields': (('in_navigation', 'location_in_navigation'), )
         }),
     )
-    readonly_in_change_form = ['site', 'location_in_navigation']
 
     ### PERMISSIONS ###
     def queryset(self, request):

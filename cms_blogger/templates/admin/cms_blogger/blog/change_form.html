@@ -156,7 +156,7 @@ $(function() {
 
 
 {% block submit_buttons_bottom %}
-{% if adminform and add %}
+{% if adminform and add or adminform.form.show_next_button %}
 <script type="text/javascript">
 (function ($) {
     var i = 0;
