@@ -1,6 +1,26 @@
 CHANGELOG
 =========
 
+Revision c4f9f88 (04.09.2014, 09:39 UTC)
+----------------------------------------
+
+* LUN-1706
+
+  * added intermediary form for blogs with missing layouts
+
+* Misc commits
+
+  * "fixed tests"
+  * small code changes
+  * set session site for blog forms that are accesed directly from the url
+  * added assertions for the intermediary blog form
+  * added missing layout help text
+  * added wizard forms for home blog
+  * bypass page validation errors for blog add form
+  * allow admin helper to be used without wizard forms
+  * added missing blog layout validation for intermediate form
+  * added capability to add multiple admin forms - wizard like
+
 Revision 87990de (18.08.2014, 12:40 UTC)
 ----------------------------------------
 
