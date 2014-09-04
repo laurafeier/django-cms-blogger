@@ -304,7 +304,7 @@ class BlogAdmin(AbstractBlogAdmin):
 
 
 class HomeBlogAdmin(AbstractBlogAdmin):
-    list_display = ('title', 'site', )
+    list_display = ('displayed_title', 'site', )
     search_fields = ['title', 'site__name']
     inlines = [HomeBlogLayoutInline, ]
     wizard_forms = (
@@ -335,6 +335,12 @@ class HomeBlogAdmin(AbstractBlogAdmin):
             'fields': (('in_navigation', 'location_in_navigation'), )
         }),
     )
+
+    def displayed_title(self, home_blog):
+        if not home_blog.title.strip():
+            return "(no title)"
+        return home_blog.title
+    displayed_title.short_description = 'Title'
 
     ### PERMISSIONS ###
     def queryset(self, request):
