@@ -216,6 +216,12 @@ class AbstractBlogAdmin(AdminHelper):
         url_patterns.extend(urls)
         return url_patterns
 
+    def displayed_title(self, blog_obj):
+        if not blog_obj.title.strip():
+            return "(no title)"
+        return blog_obj.title
+    displayed_title.short_description = 'Title'
+
     ### PERMISSIONS ###
     def get_current_site(self, request):
         return get_current_site(request, self.model)
@@ -263,7 +269,7 @@ class BlogAdmin(AbstractBlogAdmin):
                    when=lambda obj: bool(obj))
     )
     search_fields = ['title', 'site__name']
-    list_display = ('title', 'slug', 'site')
+    list_display = ('displayed_title', 'slug', 'site')
     readonly_in_change_form = ['site', 'location_in_navigation']
     add_form_fieldsets = (
         (None, {
@@ -335,12 +341,6 @@ class HomeBlogAdmin(AbstractBlogAdmin):
             'fields': (('in_navigation', 'location_in_navigation'), )
         }),
     )
-
-    def displayed_title(self, home_blog):
-        if not home_blog.title.strip():
-            return "(no title)"
-        return home_blog.title
-    displayed_title.short_description = 'Title'
 
     ### PERMISSIONS ###
     def queryset(self, request):
