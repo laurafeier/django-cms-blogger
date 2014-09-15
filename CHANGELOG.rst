@@ -1,6 +1,19 @@
 CHANGELOG
 =========
 
+Revision 4cc4f3a (15.09.2014, 08:17 UTC)
+----------------------------------------
+
+* LUN-1802
+
+  * users should be able to add super landing pages with no title.
+
+* LUN-1834
+
+  * blogs with no titles should have a way to be accessed from the admin
+
+No other commits.
+
 Revision c4f9f88 (04.09.2014, 09:39 UTC)
 ----------------------------------------
 
