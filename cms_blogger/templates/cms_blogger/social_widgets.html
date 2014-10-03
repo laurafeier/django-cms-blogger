@@ -2,7 +2,7 @@
     {% if entry.blog.enable_facebook or entry.blog.enable_twitter or entry.blog.email_account_link %}
     <div class="social">
     {% if entry.blog.enable_facebook %}
-        <a href="javascript:void(0)" data-href="https://www.facebook.com/sharer/sharer.php?s=100&amp;p[url]={{PROXY_REWRITE_RULE}}{{entry.get_absolute_url}}&amp;p[title]={{entry.title|urlencode}}{% if entry.poster_image %}&amp;p[images][0]={{entry.poster_image.url}}{% endif %}{% if entry.short_description %}&amp;p[summary]={{entry.short_description|urlencode}}{% endif %}" class="facebook social" title="Share on Facebook" target="_blank" >
+        <a href="javascript:void(0)" data-href="https://www.facebook.com/sharer/sharer.php?s=100&amp;p[url]={{PROXY_REWRITE_RULE}}{{entry.get_absolute_url}}&amp;u={{PROXY_REWRITE_RULE}}{{entry.get_absolute_url}}&amp;t={{entry.title|urlencode}}&amp;p[title]={{entry.title|urlencode}}{% if entry.poster_image %}&amp;p[images][0]={{entry.poster_image.url}}{% endif %}{% if entry.short_description %}&amp;p[summary]={{entry.short_description|urlencode}}{% endif %}" class="facebook social" title="Share on Facebook" target="_blank" >
             <img src="{{STATIC_URL}}cms_blogger/img/facebook.png" alt="Share on Facebook" />
         </a>
     {% endif %}
