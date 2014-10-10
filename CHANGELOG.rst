@@ -1,6 +1,19 @@
 CHANGELOG
 =========
 
+Revision 610a704 (10.10.2014, 09:14 UTC)
+----------------------------------------
+
+* LUN-1766
+
+  * Fix facebook sharing on mobile
+
+* LUN-1845
+
+  * Better namespace global styles for blog to avoid conflicts with page's style
+
+No other commits.
+
 Revision 4cc4f3a (15.09.2014, 08:17 UTC)
 ----------------------------------------
 
