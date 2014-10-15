@@ -18,13 +18,8 @@ $(function(){
     var tagit_el = $('input[name="categories"]:first');
     var original_categories = new Array();
     var slug_preview = $('<p id="category-slug"></p>')
-        .addClass('ui-widget-content ui-corner-all').css({
-            'padding': '5px',
-            'color': '#2e6e9e',
-            'display': 'none',
-            'margin-left': '105px'
-        }).insertAfter(tagit_el);
-
+        .addClass('ui-widget-content ui-corner-all')
+        .insertAfter(tagit_el);
 
     function prevSlug(slug) {
 
@@ -94,12 +89,7 @@ $(function(){
     }
 
     function set_tag_active(who) {
-        var tag;
-        if (!who) {
-            tag = tagit_el.tagitX('lastTag');
-        } else {
-            tag = who;
-        }
+        var tag = who || tagit_el.tagitX('lastTag');
         set_tags_inactive();
         tag.addClass('active-tag');
         prevSlug(URLify(tagit_el.tagitX('tagLabel', tag)));
