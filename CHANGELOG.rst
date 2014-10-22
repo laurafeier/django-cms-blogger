@@ -1,6 +1,18 @@
 CHANGELOG
 =========
 
+Revision b56c5a0 (22.10.2014, 14:27 UTC)
+----------------------------------------
+
+* LUN-1673
+
+  * dropping connection words from already existing categories.
+  * added js validation for categories field. Also, slugs for categories will strip connection words.
+
+* Misc commits
+
+  * moved styles to css file.
+
 Revision 610a704 (10.10.2014, 09:14 UTC)
 ----------------------------------------
 
