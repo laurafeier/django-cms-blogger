@@ -38,6 +38,7 @@ from .utils import (
     user_display_name, get_allowed_sites, set_cms_site, get_current_site)
 from .settings import DISALLOWED_ENTRIES_SLUGS
 from cms.templatetags.cms_admin import admin_static_url
+from django.contrib.admin.templatetags.admin_static import static
 import json
 
 
@@ -263,12 +264,19 @@ class AbstractBlogForm(forms.ModelForm):
 
 
 class BlogForm(AbstractBlogForm):
-    categories = forms.CharField(
-        widget=TagItWidget(
-            attrs={'tagit': '{allowSpaces: true, caseSensitive: false}'}),
-        help_text=_('Categories help text'))
-
+    categories = forms.CharField(help_text=_('Categories help text'))
     allowed_users = MultipleUserField(label="Add Users")
+
+    class Media:
+        css = {
+            'all': (
+                static('cms_blogger/css/redmond-jquery-ui.css'),
+                static('cms_blogger/css/jquery.tagit.css'),)
+        }
+        js = (static('cms_blogger/js/jquery-1.9.1.min.js'),
+              static('cms_blogger/js/jquery-ui.min.js'),
+              static('cms_blogger/js/tag-it.js'),
+              static('cms_blogger/js/categories-widget.js'),)
 
     class Meta:
         model = Blog

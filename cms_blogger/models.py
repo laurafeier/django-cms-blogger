@@ -643,7 +643,8 @@ class BlogCategory(models.Model, BlogRelatedPage):
     def save(self, *args, **kwargs):
         if not self.slug and self.name and self.blog:
             unique_qs = BlogCategory.objects.filter(blog=self.blog)
-            self.slug = get_unique_slug(self, self.name, unique_qs)
+            self.slug = get_unique_slug(
+                self, self.name, unique_qs, keep_connection_words=False)
         super(BlogCategory, self).save(*args, **kwargs)
 
     def __unicode__(self):

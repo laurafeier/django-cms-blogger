@@ -1,16 +1,29 @@
 from django.template.defaultfilters import slugify
+import re
+
+# from urlify.js
+_connection_words = [
+    "a", "an", "as", "at", "before", "but", "by", "for", "from",
+    "is", "in", "into", "like", "of", "off", "on", "onto", "per",
+    "since", "than", "the", "this", "that", "to", "up", "via", "with"];
+
+CONNECTION_WORDS_PATTERN = '\\b(' + '|'.join(_connection_words) + ')\\b'
 
 
-def get_unique_slug(instance, title, queryset):
+def urlify(value, keep_connection_words=True):
+    title = value[:].strip()
+    if not keep_connection_words:
+        title = re.sub(CONNECTION_WORDS_PATTERN, '', title)
+    return slugify(title).strip('-')
+
+
+def get_unique_slug(instance, title, queryset, keep_connection_words=True):
     max_length = instance._meta.get_field('slug').max_length
 
     if instance.pk:
         queryset = queryset.exclude(pk=instance.pk)
 
-    def _slugify(value):
-        return slugify(value.strip()).strip('-')[:max_length]
-
-    original = _slugify(title)
+    original = urlify(title, keep_connection_words)[:max_length]
     index = 1
     slug_candidate = original
     while queryset.filter(slug=slug_candidate).exists():
