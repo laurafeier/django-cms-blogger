@@ -1,6 +1,6 @@
 from django.conf import settings
 from filer import settings as filer_settings
-import copy
+from django.core.files.storage import get_storage_class
 
 
 UPLOAD_TO_PREFIX = getattr(
@@ -9,11 +9,11 @@ UPLOAD_TO_PREFIX = getattr(
 USE_FILER_STORAGE = getattr(
     settings, 'BLOGGER_USE_FILER_STORAGE', False)
 
-
 def _get_image_storage():
     if USE_FILER_STORAGE:
-        storage = copy.deepcopy(
-            filer_settings.FILER_PUBLICMEDIA_STORAGE)
+        engine = filer_settings.FILER_STORAGES['public']['main']['ENGINE']
+        options = filer_settings.FILER_STORAGES['public']['main']['OPTIONS']
+        storage = get_storage_class(engine)(**options)
 
         def overwrite_s3botostorage(domain):
             setattr(storage, 'custom_domain', domain)
