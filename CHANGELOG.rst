@@ -1,6 +1,15 @@
 CHANGELOG
 =========
 
+Revision ab17a5f (04.11.2014, 10:08 UTC)
+----------------------------------------
+
+No new issues.
+
+* Misc commits
+
+  * fixed filer storage copy
+
 Revision b56c5a0 (22.10.2014, 14:27 UTC)
 ----------------------------------------
 
