@@ -1,4 +1,4 @@
-{% load blogger %}
+{% load blogger sekizai_tags %}
 <link rel="stylesheet" type="text/css" href="{{STATIC_URL}}cms_blogger/css/blogger.css">
 <script type="text/javascript" src="{{STATIC_URL}}cms_blogger/js/blog-targetting.js"></script>
 <script type="text/javascript">
@@ -25,5 +25,8 @@
     </p>
     {% if entry.enable_poster_image %}
     {% include "cms_blogger/poster_image.html" %}
+    {% addtoblock "og_image" %}
+        {% if entry.poster_image %}<meta property="og:image" content="{{ entry.poster_image.url }}" />{% endif %}
+    {% endaddtoblock %}
     {% endif %}
 </div>
