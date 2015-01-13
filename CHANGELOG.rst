@@ -1,6 +1,15 @@
 CHANGELOG
 =========
 
+Revision a03520a (13.01.2015, 09:47 UTC)
+----------------------------------------
+
+* LUN-2023
+
+  * added poster image to the OG image block; * all properties in the social links need to be urlencoded
+
+No other commits.
+
 Revision ab17a5f (04.11.2014, 10:08 UTC)
 ----------------------------------------
 
