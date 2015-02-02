@@ -4,10 +4,17 @@ from django.shortcuts import get_object_or_404
 from django.contrib.sites.models import Site
 from django.db.models import Q
 from cms_layouts.layout_response import LayoutResponse
-from .models import BlogEntryPage, Blog, BlogCategory
+from .models import BlogEntryPage, Blog, HomeBlog, BlogCategory
 from .settings import POSTS_ON_LANDING_PAGE
 from .utils import paginate_queryset
 import re
+
+
+def get_blog_or_404(slug):
+    site = Site.objects.get_current()
+    if not slug:
+        return get_object_or_404(HomeBlog, site=site)
+    return get_object_or_404(Blog, slug=slug, site=site)
 
 
 def get_entries_queryset(request):
@@ -66,22 +73,12 @@ def _paginate_entries_on_blog(request, entries, blog):
 
 
 def landing_page(request, blog_slug):
-    if not blog_slug:
-        site = Site.objects.get_current()
-        if Blog.objects.filter(site=site).count() == 1:
-            blog = Blog.objects.filter(site=site)[0]
-        else:
-            return HttpResponseNotFound(
-                "<h1>The blog slug is missing from the URL</h1>")
-    else:
-        blog = get_object_or_404(
-            Blog, slug=blog_slug, site=Site.objects.get_current())
+    blog = get_blog_or_404(blog_slug)
 
     layout = blog.get_layout()
-
     if not layout:
         return HttpResponseNotFound(
-            "<h1>This Blog Landing Page does not have a "
+            "<h1>This Landing Page does not have a "
             "layout to render.</h1>")
 
     extra_params, entries = _paginate_entries_on_blog(

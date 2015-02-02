@@ -1,12 +1,9 @@
+{% spaceless %}
 {% for entry in entries %}
-    {% if forloop.last %}
-    <div class="last">
+    {% if forloop.last %}<div class="last">{% endif %}
     {% include 'cms_blogger/entry_summary.html'%}
-    </div>
-    {% else %}
-    {% include 'cms_blogger/entry_summary.html'%}
-    {% endif %}
+    {% if forloop.last %}</div>{% endif %}
 {% empty %}
 No posts available
 {% endfor %}
-
+{% endspaceless %}

@@ -1,6 +1,241 @@
 CHANGELOG
 =========
 
+Revision a03520a (13.01.2015, 09:47 UTC)
+----------------------------------------
+
+* LUN-2023
+
+  * added poster image to the OG image block; * all properties in the social links need to be urlencoded
+
+No other commits.
+
+Revision ab17a5f (04.11.2014, 10:08 UTC)
+----------------------------------------
+
+No new issues.
+
+* Misc commits
+
+  * fixed filer storage copy
+
+Revision b56c5a0 (22.10.2014, 14:27 UTC)
+----------------------------------------
+
+* LUN-1673
+
+  * dropping connection words from already existing categories.
+  * added js validation for categories field. Also, slugs for categories will strip connection words.
+
+* Misc commits
+
+  * moved styles to css file.
+
+Revision 610a704 (10.10.2014, 09:14 UTC)
+----------------------------------------
+
+* LUN-1766
+
+  * Fix facebook sharing on mobile
+
+* LUN-1845
+
+  * Better namespace global styles for blog to avoid conflicts with page's style
+
+No other commits.
+
+Revision 4cc4f3a (15.09.2014, 08:17 UTC)
+----------------------------------------
+
+* LUN-1802
+
+  * users should be able to add super landing pages with no title.
+
+* LUN-1834
+
+  * blogs with no titles should have a way to be accessed from the admin
+
+No other commits.
+
+Revision c4f9f88 (04.09.2014, 09:39 UTC)
+----------------------------------------
+
+* LUN-1706
+
+  * added intermediary form for blogs with missing layouts
+
+* Misc commits
+
+  * "fixed tests"
+  * small code changes
+  * set session site for blog forms that are accesed directly from the url
+  * added assertions for the intermediary blog form
+  * added missing layout help text
+  * added wizard forms for home blog
+  * bypass page validation errors for blog add form
+  * allow admin helper to be used without wizard forms
+  * added missing blog layout validation for intermediate form
+  * added capability to add multiple admin forms - wizard like
+
+Revision 87990de (18.08.2014, 12:40 UTC)
+----------------------------------------
+
+* LUN-1754
+
+  * changed except clause syntax to be forward compatible with Python 3.x
+  * let django handle 404s
+
+No other commits.
+
+Revision 897e0b8 (05.08.2014, 12:23 UTC)
+----------------------------------------
+
+* LUN-1689
+
+  * IE does not allow '-' character in window name
+
+* LUN-1755
+
+  * fixed IE javascript date parse for formatting.
+
+* Misc commits
+
+  * users that are not allowed on a blog's site should not have access to entries even if they are listed in the allowed users section
+
+Revision d59a7e6 (28.07.2014, 09:22 UTC)
+----------------------------------------
+
+* LUN-1737
+
+  * prevent multiple form submissions.
+
+* LUN-1739
+
+  * url for blogs feed is now named + helper that returns the rss url for a blog.
+
+* LUN-1741
+
+  * Match only the placeholder exactly
+  * Fix removing all content when the text ends with '<br>'
+
+No other commits.
+
+Revision e0bc55b (18.07.2014, 12:12 UTC)
+----------------------------------------
+
+* LUN-1687
+
+  * fixed entry template so that they use their blogs settings and not the blog passed in the context; Added home blog to default /blogs/ view.
+  * added help text for new forms
+  * fixed home blog admin permissions
+  * users should see home blogs only for sites they have permissions on.
+  * layout inline is now availble for super landing page
+  * moved entry-related actions from blog admin to blog entry admin.
+  * - implemented * home blog admin permissions * nav tool enabled * showing home blog nav nodes * home blog add & change forms
+  * added new abstract blog that will respond to /blogs/. + refactored code so that we can reuse common pieces from abstract blog.
+
+* LUN-1730
+
+  * fixed toLocaleString entry pub date display issue.
+
+* LUN-1731
+
+  * customize layout should be a button, not a link
+
+* LUN-1735
+
+  * Fix long error message not wrapping
+
+* Misc commits
+
+  * sitemap perf improvement: select-related on blog since all blog related pages use the associated blog slug in their absolute url
+  * super landing page url should be displayed in sitemaps
+  * fixed tests
+
+Revision 8112de7 (15.07.2014, 12:06 UTC)
+----------------------------------------
+
+* LUN-1659
+
+  * Make 'sample text' disappear on any editing action in text plugin
+  * Make 'Sample content' text disappear when a user clicks into the blog text editor
+
+* LUN-1724
+
+  * feed url now works with proxied sites
+
+No other commits.
+
+Revision 81ff82d (08.07.2014, 10:18 UTC)
+----------------------------------------
+
+* LUN-1619
+
+  * pub date box should not be applied on objects taht don't have publication_date
+  * added year to publish date time box
+
+* LUN-1657
+
+  * moving admin formfields fields around
+
+* LUN-1677
+
+  * layout chooser should open in a popup
+
+* LUN-1682
+
+  * fixed tests for admin entries permissions
+  * hide admin sections if user is not allowed in any blog
+
+* LUN-1708
+
+  * added current working site permission checks for blogs.
+
+* LUN-1717
+
+  * publish fields should be aware of DST.
+
+* Misc commits
+
+  * removed unused import
+  * comment change
+
+Revision 0e8196c (03.07.2014, 07:34 UTC)
+----------------------------------------
+
+* LUN-1668
+
+  * Remove entry title capitalization
+
+* LUN-1688
+
+  * Fix short desciption not wrapping in IE11
+
+* LUN-1692
+
+  * Add jshint globals
+  * fix sharing buttons on templates with jQuery < 1.8 (missing on/off functions)
+
+* LUN-1704
+
+  * RSS feed for blog + validation for entries slugs
+
+* Misc commits
+
+  * rss enclosures will have length 0 in order to not impact performance
+  * fixed validation for disallowed entry slugs
+  * rss feeds enabled for blogs.
+
+Revision 71feeba (30.06.2014, 08:31 UTC)
+----------------------------------------
+
+* LUN-1684
+
+  * blog pages should only respond to urls that start with /blogs
+  * allow proxy prefixes in the blogs urls
+
+No other commits.
+
 Revision 5f21b50 (20.06.2014, 11:53 UTC)
 ----------------------------------------
 

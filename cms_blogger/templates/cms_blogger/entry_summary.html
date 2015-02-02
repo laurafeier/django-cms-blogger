@@ -1,16 +1,8 @@
+{% load blogger %}
 <div class="blog-entry clearfix">
     <div class='left-col'>
-        <div class="date">
-            <div class="month">{{entry.publication_date|date:"M"}}</div>
-            <div class="day">{{entry.publication_date|date:"d"}}</div>
-        </div>
-        {% if not blog %}
-            {% with blog=entry.blog %}
-                {% include "cms_blogger/social_widgets.html" %}
-            {% endwith %}
-        {% else %}
-            {% include "cms_blogger/social_widgets.html" %}
-        {% endif %}
+        {% publish_date_box entry %}
+        {% include "cms_blogger/social_widgets.html" %}
     </div>
     <div class='right-col clearfix'>
         <h1 id='entry-title'><a href="{{PROXY_REWRITE_RULE}}{{entry.get_absolute_url}}">{{entry.title}}</a></h1>

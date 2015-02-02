@@ -1,4 +1,4 @@
-{%load blogger_filters %}
+{% load blogger sekizai_tags %}
 <link rel="stylesheet" type="text/css" href="{{STATIC_URL}}cms_blogger/css/blogger.css">
 <script type="text/javascript" src="{{STATIC_URL}}cms_blogger/js/blog-targetting.js"></script>
 <script type="text/javascript">
@@ -15,20 +15,7 @@
 </script>
 
 <div class='left-col'>
-    <div class="date">
-        {% with pub=entry.publication_date|js_date_str %}
-        <div class="month">
-            <script type="text/javascript">
-                document.write(({{ pub }}).toDateString().split(" ")[1]);
-            </script>
-        </div>
-        <div class="day">
-            <script type="text/javascript">
-                document.write(({{ pub }}).toDateString().split(" ")[2]);
-            </script>
-        </div>
-        {% endwith %}
-    </div>
+    {% publish_date_box entry %}
     {% include "cms_blogger/social_widgets.html" %}
 </div>
 <div class='right-col'>
@@ -38,5 +25,8 @@
     </p>
     {% if entry.enable_poster_image %}
     {% include "cms_blogger/poster_image.html" %}
+    {% addtoblock "og_image" %}
+        {% if entry.poster_image %}<meta property="og:image" content="{{ entry.poster_image.url }}" />{% endif %}
+    {% endaddtoblock %}
     {% endif %}
 </div>

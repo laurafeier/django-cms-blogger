@@ -382,6 +382,9 @@ class TestMoveAction(TestCase):
     def test_attempt_move_by_sneaky_regularuser(self):
         self.regular_user()
         response = self.move_entries(self.blog2, [])
+        self.assertEquals(response.status_code, 403)
+        self.blog2.allowed_users.add(self.regularuser)
+        response = self.move_entries(self.blog2, [])
         messages = [m.message for m in response.context['messages']]
         self.assertTrue(messages)
         self.assertIn(
@@ -426,6 +429,14 @@ class TestBlogModel(TestCase):
         # ^/(<proxy-prefix>/blogs(|/.*))$ proxy:http://<site-hostname>/blogs$2
         self.assertEquals(resp_code('/proxied/blogs/'), 404)
         self.assertEquals(resp_code('/i/am/proxied/too/blogs/'), 404)
+        self.assertEquals(resp_code('/blogs/'), 404)
+        HomeBlog().save()
+        self.assertEquals(resp_code('/blogs/'), 404)
+        # add a layout
+        layout = blog.get_layout()
+        layout.pk = None
+        layout.content_object = HomeBlog.objects.all().get()
+        layout.save()
         self.assertEquals(resp_code('/blogs/'), 200)
         self.assertEquals(resp_code('/blogs/one-title/'), 200)
         self.assertEquals(resp_code('/blogs/one-title/none/'), 404)
@@ -594,13 +605,22 @@ class TestBlogModel(TestCase):
         response = self.client.get(add_url)
         form = response.context_data['adminform'].form
         self.assertItemsEqual(sorted(form.fields.keys()), ['title', 'slug'])
-        create_page('master', 'page_template.html',
-                    language='en', published=True)
+        create_page('root_invalid', '404.html', language='en',)
+        valid = create_page('root_valid', 'page_template.html', language='en')
+        # step 1: add form tries to autogenerate from first root page
         response = self.client.post(add_url, {
             'title': 'one title', 'slug': 'one-title'})
         self.assertEqual(response.status_code, 302)
+        # step 2: layout chooser since the first root was invalid
         change_url = reverse('admin:cms_blogger_blog_change', args=(
             Blog.objects.all()[0].pk, ))
+        response = self.client.get(change_url)
+        form = response.context_data['adminform'].form
+        self.assertEquals(len(form.fields.keys()), 1)
+        # set the valid page as layout
+        response = self.client.post(change_url, {'layout_page': valid.pk})
+        self.assertEqual(response.status_code, 302)
+        # step 3: valid blog form
         response = self.client.get(change_url)
         form = response.context_data['adminform'].form
         change_fields = flatten_fieldsets(
@@ -623,6 +643,7 @@ class TestChangeLists(TestCase):
             'regular', email='regular@cms_blogger.com', password='secret')
         self.regular_user.user_permissions = Permission.objects.all()
         self.regular_user.is_staff = True
+        self.regular_user.is_active = True
         self.regular_user.save()
         # regular users will not see new sites blogs since the rule from
         #   cms_blogger.tests.utils.get_allowed_sites is applied
@@ -695,7 +716,7 @@ class TestChangeLists(TestCase):
 
         self.client.login(username='regular', password='secret')
         response = self.client.get(url)
-        self.assertEquals(len(self._items(response)), 0)
+        self.assertEquals(response.status_code, 403)
         blog.allowed_users.add(self.regular_user)
         response = self.client.get(url)
         self.assertItemsEqual(self._items(response), [entry.pk])
@@ -714,8 +735,7 @@ class TestChangeLists(TestCase):
 
         self.client.login(username='regular', password='secret')
         response = self.client.get(url)
-        qs = response.context_data['adminform'].form.fields['blog'].queryset
-        self.assertEquals(len(qs), 0)
+        self.assertEquals(response.status_code, 403)
 
         blog.allowed_users.add(self.regular_user)
         response = self.client.get(url)
@@ -825,11 +845,23 @@ class TestBlogEntryModel(TestCase):
         data['title'] = '@@#@$$##%&&**(*(*^&(^&<>?<~~~!)'
         response = self.client.post(url, data)
         self.assertTrue(len(response.context_data['errors']) >= 1)
+        data['title'] = 'rss'
+        response = self.client.post(url, data)
+        self.assertTrue(len(response.context_data['errors']) >= 1)
         data['title'] = 'Sample title'
         data['short_description'] = 'short_description'
         response = self.client.post(url, data)
         self.assertEquals(response.status_code, 302)
         self.assertFalse(BlogEntryPage.objects.get(id=draft_entry.id).is_draft)
+        # slug is generated only the first time
+        data['title'] = 'rss'
+        response = self.client.post(url, data)
+        self.assertTrue(response.status_code, 302)
+        data['title'] = '@@#@$$##%&&**(*(*^&(^&<>?<~~~!)'
+        response = self.client.post(url, data)
+        self.assertTrue(response.status_code, 302)
+        self.assertEquals(
+            BlogEntryPage.objects.get(id=draft_entry.id).slug, 'sample-title')
 
     def test_publication_date_changes(self):
         entry = BlogEntryPage.objects.create(**{

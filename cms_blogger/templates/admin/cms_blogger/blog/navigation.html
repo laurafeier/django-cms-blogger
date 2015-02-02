@@ -17,7 +17,7 @@
 <script type="text/javascript">
 var data = [{% show_menu 0 1 1 100 'admin/cms_blogger/blog/menu_nodes.html' %}];
 var tree;
-var blog_item_id = {% if initial_blog_node %}{{initial_blog_node.id}} * -1{% else %}'blog_item_id'{% endif %};
+var blog_item_id = {% if initial_blog_node %}{{initial_blog_node.menu_id}}{% else %}'blog_item_id'{% endif %};
 
 $(function() {
     tree = $('#nav-tree').tree({
